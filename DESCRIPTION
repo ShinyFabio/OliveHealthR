@@ -1,0 +1,44 @@
+Package: golemOliveHealth
+Title: OliveHealthR
+Version: 0.0.0.9000
+Authors@R: person('Fabio', 'Della Rocca', email = 'fabiodellarocca94@gmail.com', role = c('cre', 'aut'))
+Description: Software per l'analisi statistica dell'olio d'oliva.
+License: MIT + file LICENSE
+Imports: 
+    config (>= 0.3.1),
+    golem (>= 0.3.0),
+    shiny (>= 1.6.0),
+    processx,
+    attempt,
+    glue
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.1
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Depends: 
+    tidyverse,
+    tmap,
+    tmaptools,
+    sf,
+    rgdal,
+    plotly,
+    scales,
+    lubridate,
+    shinythemes,
+    shinydashboard,
+    shinyWidgets,
+    ggfortify,
+    ggcorrplot,
+    RColorBrewer,
+    dendextend,
+    DT,
+    htmltools,
+    InteractiveComplexHeatmap,
+    ComplexHeatmap
+Remotes: 
+	jokergoo/InteractiveComplexHeatmap,
+	jokergoo/ComplexHeatmap
+URL: https://github.com/ShinyFabio/golemOliveHealth.git
+BugReports: https://github.com/ShinyFabio/golemOliveHealth.git/issues
