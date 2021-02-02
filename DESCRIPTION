@@ -1,4 +1,4 @@
-Package: golemOliveHealth
+Package: OliveHealthR
 Title: OliveHealthR
 Version: 0.0.0.9000
 Authors@R: person('Fabio', 'Della Rocca', email = 'fabiodellarocca94@gmail.com', role = c('cre', 'aut'))
@@ -40,5 +40,5 @@ Depends:
 Remotes: 
 	jokergoo/InteractiveComplexHeatmap,
 	jokergoo/ComplexHeatmap
-URL: https://github.com/ShinyFabio/golemOliveHealth.git
-BugReports: https://github.com/ShinyFabio/golemOliveHealth.git/issues
+URL: https://github.com/ShinyFabio/OliveHealthR.git
+BugReports: https://github.com/ShinyFabio/OliveHealthR.git/issues

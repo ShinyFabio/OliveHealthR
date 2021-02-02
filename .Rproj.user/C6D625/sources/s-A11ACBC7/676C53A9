@@ -3,22 +3,22 @@
     "path": "C:/Users/fabio/Desktop/golemOliveHealth/dev/01_start.R",
     "project_path": "dev/01_start.R",
     "type": "r_source",
-    "hash": "0",
+    "hash": "3737225276",
     "contents": "",
-    "dirty": true,
+    "dirty": false,
     "created": 1612265463522.0,
     "source_on_save": false,
     "relative_order": 1,
     "properties": {
-        "cursorPosition": "21,14",
+        "cursorPosition": "30,0",
         "scrollLine": "12"
     },
     "folds": "",
-    "lastKnownWriteTime": 1612265591,
+    "lastKnownWriteTime": 1612279281,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1612278066078,
+    "last_content_update": 1612279281298,
     "read_only": false,
     "read_only_alternatives": []
 }
