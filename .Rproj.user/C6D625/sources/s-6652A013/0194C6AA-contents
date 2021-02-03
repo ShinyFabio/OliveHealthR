@@ -2,13 +2,13 @@ library(shiny)
 library(tidyverse)
 library(tmap)
 library(tmaptools)
-library(sf)
+#library(sf)
 library(rgdal)  #forse non serve per ora
 library(plotly)
-library(DT)
+#library(DT)
 library(htmltools)
-library(scales)
-library(lubridate)
+#library(scales)
+#library(lubridate) solo year
 library(shinythemes)
 library(shinydashboard)
 library(shinyWidgets)
@@ -19,9 +19,9 @@ library(ggfortify)
 
 #install_github("jokergoo/InteractiveComplexHeatmap")
 #install_github("jokergoo/ComplexHeatmap")
-library(InteractiveComplexHeatmap)
-library(ComplexHeatmap)
-library(dendextend)
+#library(InteractiveComplexHeatmap)
+#library(ComplexHeatmap)
+#library(dendextend)
 
 #per i corrplot
 library(ggcorrplot)
@@ -134,7 +134,7 @@ ui = navbarPage(title = "OliveHealthR", theme = shinytheme("spacelab"), id = "na
                            tabsetPanel(id = "tab2",
                              tabPanel(title = "Tabella",
                                       box(width = NULL, style = "overflow-x: scroll;",
-                                        DTOutput("content")
+                                        DT::DTOutput("content")
                                         )
                                       ),
                              
@@ -151,7 +151,7 @@ ui = navbarPage(title = "OliveHealthR", theme = shinytheme("spacelab"), id = "na
                              
                              tabPanel("Descrizione", 
                                       tags$h3(strong("Selezionare un'azienda")),
-                                      fluidRow(column(width=4, DTOutput("descriz")),
+                                      fluidRow(column(width=4, DT::DTOutput("descriz")),
                                                column(width=8, 
                                                       htmlOutput("taby12"), 
                                                       br(), 
@@ -240,7 +240,7 @@ ui = navbarPage(title = "OliveHealthR", theme = shinytheme("spacelab"), id = "na
                                                                box(width=NULL, status = "primary", selectInput("selyearfoto", "Seleziona l'anno", choices = "", multiple = FALSE))
                                                                )
                                                       ),
-                                                      fluidRow(column(12, box(width=NULL, status = "primary", DTOutput("prov2"))))
+                                                      fluidRow(column(12, box(width=NULL, status = "primary", DT::DTOutput("prov2"))))
                                                       ),
                                                conditionalPanel(condition = ("input.prov2_rows_selected ==0"),
                                                   p(strong(h4("Per favore seleziona un'azienda dalla tabella", align = "center")))
@@ -296,7 +296,7 @@ ui = navbarPage(title = "OliveHealthR", theme = shinytheme("spacelab"), id = "na
                  tabItem(tabName = "totpolsub",
                          tabBox(width=NULL,
                            tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")),
-                                      DTOutput("tablepoltot")
+                                      DT::DTOutput("tablepoltot")
                                     ),
                            tabPanel(tagList(shiny::icon("chart-bar"), HTML("&nbsp;Grafici")),
                                     
@@ -346,7 +346,7 @@ ui = navbarPage(title = "OliveHealthR", theme = shinytheme("spacelab"), id = "na
                                 
                                 
                                 tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")), 
-                                    DTOutput("tablepolind")
+                                    DT::DTOutput("tablepolind")
                                     ),
 
                                 
@@ -461,7 +461,7 @@ ui = navbarPage(title = "OliveHealthR", theme = shinytheme("spacelab"), id = "na
                                                  )
                                              ),
                                              #plotOutput("heatmapind", height = 600)
-                                            InteractiveComplexHeatmapOutput(nrow=1, width1 = 650, height1 = 430)
+                                             InteractiveComplexHeatmap::InteractiveComplexHeatmapOutput(nrow=1, width1 = 650, height1 = 430)
                                             
                                                  ) #end of div
                                                )
@@ -646,7 +646,7 @@ server = function(session,input, output){
     return(x)
   })
   
-  output$descriz = renderDT(select(descri2(), "Azienda"), selection = "single", server = FALSE, rownames = FALSE)
+  output$descriz = DT::renderDT(select(descri2(), "Azienda"), selection = "single", server = FALSE, rownames = FALSE)
   
   
   #####DESCRIZIONE####
@@ -666,7 +666,7 @@ server = function(session,input, output){
   
 
   
-  output$content = renderDT({
+  output$content = DT::renderDT({
     data()
   })
   
@@ -688,7 +688,7 @@ server = function(session,input, output){
     } else {
       output$bar1 = renderPlotly({
         dd = ggplot(data=data()) + geom_bar(mapping = aes(x = Cultivar_principale, fill = Cultivar_principale)) + 
-          scale_y_continuous(breaks = pretty_breaks()) + ggtitle("Presenza delle varie cultivar sul territorio") + 
+          scale_y_continuous(breaks = scales::pretty_breaks()) + ggtitle("Presenza delle varie cultivar sul territorio") + 
           xlab("Cultivar") + ylab("Conta") + 
           theme(axis.title = element_text(face="bold", size = 13), axis.text.x = element_text(angle = 315, hjust = 0, size = 11)) + 
           scale_fill_manual(values = c("#d62728","#2ca02c", "#ff7f0e", "#1f77b4", "#e77c7c", "#5fd35f", "#ffb574", "#57a9e2", "#17becf", "#bcbd22", "#7f7f7f", "#e377c2", "#8c564b", "#9467bd" ))
@@ -765,7 +765,7 @@ server = function(session,input, output){
   #crea la colonna anno 
   dtdrupanno = reactive({
     req(datadrupe())
-    datadrupe() %>% mutate(Anno = year(Data_campionamento))
+    datadrupe() %>% mutate(Anno = lubridate::year(Data_campionamento))
   })
   
   
@@ -909,7 +909,7 @@ server = function(session,input, output){
   ###modificare la colonna campionamento con unite (R1_2020)
   dtnumyunite = reactive({
     req(datadrupe())
-    datadrupe() %>% mutate(Anno = year(Data_campionamento)) %>% 
+    datadrupe() %>% mutate(Anno = lubridate::year(Data_campionamento)) %>% 
       unite(col = N_campionamento, N_campionamento, Anno, remove = TRUE)
     
   })
@@ -948,7 +948,7 @@ server = function(session,input, output){
 
 
   #crea la tabella
-  output$prov2 = renderDT(select(data(), c("Azienda", "Codice_azienda")), selection = "single", server = FALSE, rownames = FALSE)
+  output$prov2 = DT::renderDT(select(data(), c("Azienda", "Codice_azienda")), selection = "single", server = FALSE, rownames = FALSE)
 
 
 
@@ -1007,7 +1007,7 @@ server = function(session,input, output){
    })
    
    #crea tabella polifenoli totali
-   output$tablepoltot = renderDT({
+   output$tablepoltot = DT::renderDT({
      req(datapoltot())
      datapoltot()
      })
@@ -1163,7 +1163,7 @@ server = function(session,input, output){
    })
    
   #crea tabella polifenoli individuali
-   output$tablepolind = renderDT({ 
+   output$tablepolind = DT::renderDT({ 
      datapolind()
    })
    
@@ -1447,7 +1447,7 @@ server = function(session,input, output){
      leng = annotdata %>% select(input$selectannot) %>% table() %>% length()
      colorannot = setNames(rainbow(n = leng), c(row.names(table(annotdata))))
      colorannot = setNames(list(colorannot),paste(input$selectannot))
-     col_ha = HeatmapAnnotation(df = annotdata, which = "row", col = colorannot)
+     col_ha = ComplexHeatmap::HeatmapAnnotation(df = annotdata, which = "row", col = colorannot)
      
      
      ht=ComplexHeatmap::Heatmap(temp, name = "ug/ml",  rect_gp = gpar(col = "white", lwd = 1), row_title = "Codice azienda", 
@@ -1461,7 +1461,6 @@ server = function(session,input, output){
      
      })
    
-     #InteractiveComplexHeatmap::InteractiveComplexHeatmapWidget(input, output, session, dataheat, output_id = "heatmap_out")
    observeEvent(input$updateheat,{  
    InteractiveComplexHeatmap::renderInteractiveComplexHeatmap(input, output, session, dataheat())
 })

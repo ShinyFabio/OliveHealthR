@@ -34,7 +34,7 @@ app_server <- function( input, output, session ) {
   #carica il file come .csv
   data= reactive({
     req(input$file1)
-    read_delim(input$file1$datapath, delim = input$delim, col_names = input$header, na="", local = locale(encoding = "windows-1252")) 
+    read_delim(input$file1$datapath, delim = input$delim, col_names = input$header, na = "", local = locale(encoding = "windows-1252")) 
   })
   
   
@@ -66,7 +66,7 @@ app_server <- function( input, output, session ) {
     return(x)
   })
   
-  output$descriz = renderDT(select(descri2(), "Azienda"), selection = "single", server = FALSE, rownames = FALSE)
+  output$descriz = DT::renderDT(select(descri2(), "Azienda"), selection = "single", server = FALSE, rownames = FALSE)
   
   
   #####DESCRIZIONE####
@@ -86,7 +86,7 @@ app_server <- function( input, output, session ) {
   
   
   
-  output$content = renderDT({
+  output$content = DT::renderDT({
     data()
   })
   
@@ -108,7 +108,7 @@ app_server <- function( input, output, session ) {
     } else {
       output$bar1 = renderPlotly({
         dd = ggplot(data=data()) + geom_bar(mapping = aes(x = Cultivar_principale, fill = Cultivar_principale)) + 
-          scale_y_continuous(breaks = pretty_breaks()) + ggtitle("Presenza delle varie cultivar sul territorio") + 
+          scale_y_continuous(breaks = scales::pretty_breaks()) + ggtitle("Presenza delle varie cultivar sul territorio") + 
           xlab("Cultivar") + ylab("Conta") + 
           theme(axis.title = element_text(face="bold", size = 13), axis.text.x = element_text(angle = 315, hjust = 0, size = 11)) + 
           scale_fill_manual(values = c("#d62728","#2ca02c", "#ff7f0e", "#1f77b4", "#e77c7c", "#5fd35f", "#ffb574", "#57a9e2", "#17becf", "#bcbd22", "#7f7f7f", "#e377c2", "#8c564b", "#9467bd" ))
@@ -149,7 +149,7 @@ app_server <- function( input, output, session ) {
   ###stampa mappa
   output$map1 = renderTmap({
     req(input$select3)
-    utmcoord23 <- SpatialPointsDataFrame(filtereddata(), datmap1(), proj4string = CRS("+proj=utm +zone=33 +datum=WGS84"))
+    utmcoord23 <- sp::SpatialPointsDataFrame(filtereddata(), datmap1(), proj4string = sp::CRS("+proj=utm +zone=33 +datum=WGS84"))
     
     tm_shape(campania)+ tm_polygons(col= "provincia") + tm_shape(utmcoord23) + 
       tm_dots(col = colnames(showcolumn2()), scale = 1.5, id= colnames(showcolumn2()), popup.vars = TRUE)
@@ -185,7 +185,7 @@ app_server <- function( input, output, session ) {
   #crea la colonna anno 
   dtdrupanno = reactive({
     req(datadrupe())
-    datadrupe() %>% mutate(Anno = year(Data_campionamento))
+    datadrupe() %>% mutate(Anno = lubridate::year(Data_campionamento))
   })
   
   
@@ -210,7 +210,7 @@ app_server <- function( input, output, session ) {
   output$map2 = renderTmap({
     req(input$select2map)
     
-    utmcoord23 <- SpatialPointsDataFrame(filtereddata(), dtdrupfilt(), proj4string = CRS("+proj=utm +zone=33 +datum=WGS84"))
+    utmcoord23 <- sp::SpatialPointsDataFrame(filtereddata(), dtdrupfilt(), proj4string = sp::CRS("+proj=utm +zone=33 +datum=WGS84"))
     
     tm_shape(campania)+ tm_polygons(col= "provincia") + tm_shape(utmcoord23) + 
       tm_dots(col = colnames(showcolumnmap2()), scale = 1.5, id= colnames(showcolumnmap2()), popup.vars = TRUE)
@@ -253,7 +253,7 @@ app_server <- function( input, output, session ) {
   output$map3 = renderTmap({
     req(input$select3map)
     
-    utmcoord23 <- SpatialPointsDataFrame(filtereddata(), dtdrupfiltmap2(), proj4string = CRS("+proj=utm +zone=33 +datum=WGS84"))
+    utmcoord23 <- sp::SpatialPointsDataFrame(filtereddata(), dtdrupfiltmap2(), proj4string = sp::CRS("+proj=utm +zone=33 +datum=WGS84"))
     
     tm_shape(campania)+ tm_polygons(col= "provincia") + tm_shape(utmcoord23) + 
       tm_dots(col = colnames(showcolumnmap3()), scale = 1.5, id= colnames(showcolumnmap3()), popup.vars = TRUE)
@@ -329,7 +329,7 @@ app_server <- function( input, output, session ) {
   ###modificare la colonna campionamento con unite (R1_2020)
   dtnumyunite = reactive({
     req(datadrupe())
-    datadrupe() %>% mutate(Anno = year(Data_campionamento)) %>% 
+    datadrupe() %>% mutate(Anno = lubridate::year(Data_campionamento)) %>% 
       unite(col = N_campionamento, N_campionamento, Anno, remove = TRUE)
     
   })
@@ -368,7 +368,7 @@ app_server <- function( input, output, session ) {
   
   
   #crea la tabella
-  output$prov2 = renderDT(select(data(), c("Azienda", "Codice_azienda")), selection = "single", server = FALSE, rownames = FALSE)
+  output$prov2 = DT::renderDT(select(data(), c("Azienda", "Codice_azienda")), selection = "single", server = FALSE, rownames = FALSE)
   
   
   
@@ -427,7 +427,7 @@ app_server <- function( input, output, session ) {
   })
   
   #crea tabella polifenoli totali
-  output$tablepoltot = renderDT({
+  output$tablepoltot = DT::renderDT({
     req(datapoltot())
     datapoltot()
   })
@@ -583,7 +583,7 @@ app_server <- function( input, output, session ) {
   })
   
   #crea tabella polifenoli individuali
-  output$tablepolind = renderDT({ 
+  output$tablepolind = DT::renderDT({ 
     datapolind()
   })
   
@@ -833,7 +833,7 @@ app_server <- function( input, output, session ) {
     #observeEvent(dtindfiltheat(),{
     req(dtheatsorted())
     #creo la matrice con rownames 
-    temp =dtheatsorted() %>% select(-Anno, - N_campionamento, -input$selectannot) %>% as.data.frame() %>% column_to_rownames("Codice_azienda")
+    temp = dtheatsorted() %>% select(-Anno, - N_campionamento, -input$selectannot) %>% as.data.frame() %>% column_to_rownames("Codice_azienda")
     
     #scale none, row, column
     if(input$selscaleheat == "column"){
@@ -867,43 +867,23 @@ app_server <- function( input, output, session ) {
     leng = annotdata %>% select(input$selectannot) %>% table() %>% length()
     colorannot = setNames(rainbow(n = leng), c(row.names(table(annotdata))))
     colorannot = setNames(list(colorannot),paste(input$selectannot))
-    col_ha = HeatmapAnnotation(df = annotdata, which = "row", col = colorannot)
+    col_ha = ComplexHeatmap::HeatmapAnnotation(df = annotdata, which = "row", col = colorannot)
     
     
-    ht=ComplexHeatmap::Heatmap(temp, name = "ug/ml",  rect_gp = gpar(col = "white", lwd = 1), row_title = "Codice azienda", 
-                               column_title = "Polifenoli", row_names_gp = gpar(fontsize = 11),
+    ht=ComplexHeatmap::Heatmap(temp, name = "ug/ml",  rect_gp = grid::gpar(col = "white", lwd = 1), row_title = "Codice azienda", 
+                               column_title = "Polifenoli", row_names_gp = grid::gpar(fontsize = 11),
                                cluster_rows = row_dend, cluster_columns = col_dend, 
                                left_annotation = col_ha,
                                column_split = col_split, row_split = row_split)#,
-    #height = nrow(temp)*unit(6, "mm"))
     ht = ComplexHeatmap::draw(ht)
     return(ht)
     
   })
   
-  #InteractiveComplexHeatmap::InteractiveComplexHeatmapWidget(input, output, session, dataheat, output_id = "heatmap_out")
   observeEvent(input$updateheat,{  
     InteractiveComplexHeatmap::renderInteractiveComplexHeatmap(input, output, session, dataheat())
   })
-  # observeEvent(!is.null(dataheat()),{
-  #   dt=dataheat()
-  #   InteractiveComplexHeatmap::InteractiveComplexHeatmapWidget(input, output, session, ht, output_id = "heatmap_out")
-  # })
-  
-  # heatmaply::heatmaply(temp, dist_method = input$seldistheat,  hclust_method = input$selhclustheat, dendrogram = input$seldendtypeheat,
-  #                     scale = input$selscaleheat,  k_col = input$slidercolheat, k_row= input$sliderrowheat, fontsize_row = 7)
-  # 
-  # reactive(if(!is.null(heatmapind())){
-  # 
-  #    renderInteractiveComplexHeatmap(input, output, session, heatmapind())
-  # 
-  # })
-  
-  # , height = function() {
-  #   size=ComplexHeatmap::ht_size(ht)
-  #   as.double(gsub("mm", "",size2 ))
-  #   }
-  
+
   
   ###################### CORRELATION PLOT POLIFENOLI ####################################
   
@@ -927,12 +907,11 @@ app_server <- function( input, output, session ) {
   
   output$corrplotind = renderPlotly({
     
-    temp =dtindfiltcorr() %>% select(-Anno, - N_campionamento, -Azienda, - Codice_azienda)# %>% as.data.frame() %>% column_to_rownames(var = "Codice_azienda")
-    temp2=round(cor(temp),1)
+    temp = dtindfiltcorr() %>% select(-Anno, - N_campionamento, -Azienda, - Codice_azienda)
     par(xpd=TRUE)
     
     plot = ggcorrplot::ggcorrplot(temp2, hc.order = TRUE, type = "lower", outline.col = "white", show.diag = TRUE)
-    plotly::ggplotly(plot)
+    ggplotly(plot)
     #corrplot::corrplot.mixed(temp2, mar = c(0, 0, 5, 0),tl.pos = "lt",  diag = "l", tl.col = "black", tl.srt = 45, 
     #                         upper.col = brewer.pal(n=8, name="RdYlBu"), lower.col = brewer.pal(n=8, name="RdYlBu"))
     
@@ -973,12 +952,6 @@ app_server <- function( input, output, session ) {
   
   
   
-  # ####plot pca
-  # output$plotpca = renderPlot({
-  #   plot(pcadati(),main="Plot delle componenti principali")
-  # })
-  # 
-  
   ###plot loadings
   output$loadings = renderPlotly({
     req(pcadati())
@@ -1001,11 +974,11 @@ app_server <- function( input, output, session ) {
     var = as.data.frame(cbind(var)) %>% tibble::rownames_to_column()
     colnames(var) = c("Componenti_principali", "Varianza_spiegata")
     
-    screegg = ggplot2::ggplot(var, aes(Componenti_principali,Varianza_spiegata)) +
+    screegg = ggplot(var, aes(Componenti_principali,Varianza_spiegata)) +
       geom_line(colour = "red", group = 1, linetype = "dashed", size = 1) + geom_point(size = 4, colour = "red") + 
       labs(x = "Componenti principali", y = "Varianza spiegata (%)", title = "Screeplot") +
       scale_y_continuous(limits = c(0, 1), breaks = c(seq(0, 1, by = 0.1)))
-    plotly::ggplotly(screegg)
+    ggplotly(screegg)
     
   })
   
@@ -1013,7 +986,7 @@ app_server <- function( input, output, session ) {
   ###biplot
   output$biplot = renderPlotly({
     req(pcadati())
-    temp=autoplot(pcadati(), data = data(), colour = input$colbiplot, loadings = TRUE, loadings.colour = 'blue', loadings.label = TRUE, loadings.label.size = 4)
+    temp = autoplot(pcadati(), data = data(), colour = input$colbiplot, loadings = TRUE, loadings.colour = 'blue', loadings.label = TRUE, loadings.label.size = 4)
     ggplotly(temp)
   })
   
@@ -1058,7 +1031,7 @@ app_server <- function( input, output, session ) {
   output$mappol = renderTmap({
     req(input$mapxpol)
     
-    utmcoord23 <- SpatialPointsDataFrame(filtereddata(), datapolifmap2(), proj4string = CRS("+proj=utm +zone=33 +datum=WGS84"))
+    utmcoord23 <- sp::SpatialPointsDataFrame(filtereddata(), datapolifmap2(), proj4string = sp::CRS("+proj=utm +zone=33 +datum=WGS84"))
     
     tm_shape(campania)+ tm_polygons(col= "provincia") + tm_shape(utmcoord23) + 
       tm_dots(col = colnames(showcolumnmappol()), scale = 1.5, id= colnames(showcolumnmappol()), popup.vars = TRUE)
@@ -1099,7 +1072,7 @@ app_server <- function( input, output, session ) {
   output$mappol2 = renderTmap({
     req(input$mapxpol2)
     
-    utmcoord23 <- SpatialPointsDataFrame(filtereddata(), datapolifmap22(), proj4string = CRS("+proj=utm +zone=33 +datum=WGS84"))
+    utmcoord23 <- sp::SpatialPointsDataFrame(filtereddata(), datapolifmap22(), proj4string = sp::CRS("+proj=utm +zone=33 +datum=WGS84"))
     
     tm_shape(campania)+ tm_polygons(col= "provincia") + tm_shape(utmcoord23) + 
       tm_dots(col = colnames(showcolumnmappol2()), scale = 1.5, id= colnames(showcolumnmappol2()), popup.vars = TRUE)

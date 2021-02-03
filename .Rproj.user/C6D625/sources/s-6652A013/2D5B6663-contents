@@ -108,7 +108,7 @@ app_ui <- function(request) {
                                               tabsetPanel(id = "tab2",
                                                           tabPanel(title = "Tabella",
                                                                    box(width = NULL, style = "overflow-x: scroll;",
-                                                                       DTOutput("content")
+                                                                       DT::DTOutput("content")
                                                                    )
                                                           ),
                                                           
@@ -125,7 +125,7 @@ app_ui <- function(request) {
                                                           
                                                           tabPanel("Descrizione", 
                                                                    tags$h3(strong("Selezionare un'azienda")),
-                                                                   fluidRow(column(width=4, DTOutput("descriz")),
+                                                                   fluidRow(column(width=4, DT::DTOutput("descriz")),
                                                                             column(width=8, 
                                                                                    htmlOutput("taby12"), 
                                                                                    br(), 
@@ -214,7 +214,7 @@ app_ui <- function(request) {
                                                           box(width=NULL, status = "primary", selectInput("selyearfoto", "Seleziona l'anno", choices = "", multiple = FALSE))
                                                    )
                                                  ),
-                                                 fluidRow(column(12, box(width=NULL, status = "primary", DTOutput("prov2"))))
+                                                 fluidRow(column(12, box(width=NULL, status = "primary", DT::DTOutput("prov2"))))
                                           ),
                                           conditionalPanel(condition = ("input.prov2_rows_selected ==0"),
                                                            p(strong(h4("Per favore seleziona un'azienda dalla tabella", align = "center")))
@@ -270,7 +270,7 @@ app_ui <- function(request) {
                               tabItem(tabName = "totpolsub",
                                       tabBox(width=NULL,
                                              tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")),
-                                                      DTOutput("tablepoltot")
+                                                      DT::DTOutput("tablepoltot")
                                              ),
                                              tabPanel(tagList(shiny::icon("chart-bar"), HTML("&nbsp;Grafici")),
                                                       
@@ -320,7 +320,7 @@ app_ui <- function(request) {
                                              
                                              
                                              tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")), 
-                                                      DTOutput("tablepolind")
+                                                      DT::DTOutput("tablepolind")
                                              ),
                                              
                                              
@@ -435,7 +435,7 @@ app_ui <- function(request) {
                                                                              )
                                                                          ),
                                                                          #plotOutput("heatmapind", height = 600)
-                                                                         InteractiveComplexHeatmapOutput(nrow=1, width1 = 650, height1 = 430)
+                                                                         InteractiveComplexHeatmap::InteractiveComplexHeatmapOutput(nrow=1, width1 = 650, height1 = 430)
                                                                          
                                                                      ) #end of div
                                                                    )
