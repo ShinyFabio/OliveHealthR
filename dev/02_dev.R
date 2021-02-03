@@ -18,14 +18,11 @@
 usethis::use_package( "tidyverse" , type = "depends")
 usethis::use_package( "tmap" , type = "depends")
 usethis::use_package( "tmaptools" , type = "depends")
-#usethis::use_package( "sf" , type = "depends")
-#usethis::use_package( "rgdal" , type = "depends")
 usethis::use_package( "plotly" , type = "depends")
 usethis::use_package( "shinythemes" , type = "depends")
 usethis::use_package( "shinydashboard" , type = "depends")
 usethis::use_package( "shinyWidgets" , type = "depends")
 usethis::use_package( "ggfortify" , type = "depends")
-#usethis::use_package( "RColorBrewer" , type = "depends")
 usethis::use_package( "scales" , type = "depends")
 usethis::use_package( "htmltools" , type = "depends")
 
@@ -37,6 +34,10 @@ usethis::use_package( "DT" , type = "imports")
 usethis::use_package( "lubridate" , type = "imports")
 usethis::use_package( "grid" , type = "imports")
 usethis::use_package( "sp" , type = "imports")
+
+#usethis::use_package( "sf" , type = "depends")
+#usethis::use_package( "rgdal" , type = "depends")
+#usethis::use_package( "RColorBrewer" , type = "depends")
 
 devtools::document()
 
