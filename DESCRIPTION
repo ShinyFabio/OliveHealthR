@@ -39,5 +39,6 @@ Depends:
 Remotes: 
 	jokergoo/InteractiveComplexHeatmap,
 	jokergoo/ComplexHeatmap
+	Thinkr-open/golem
 URL: https://github.com/ShinyFabio/OliveHealthR.git
 BugReports: https://github.com/ShinyFabio/OliveHealthR.git/issues
