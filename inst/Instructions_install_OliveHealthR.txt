@@ -1,13 +1,20 @@
-1. Install devtools
+1. Update R to the latest version R (>= 4.0.0)
+
+2. Install Rtools. 
+
+3. Install devtools if not already installed
 install.packages(pkgs = "devtools")
 
-2. Install golem from GitHub
+4. Install golem from GitHub (>= 0.3.0)
 devtools::install_github("Thinkr-open/golem")
 
-3. Install OliveHealthR from GitHub
+5. Install ComplexHeatmap from GitHub (>= 2.7.6.1004)
+
+6. Install OliveHealthR from GitHub with relatives dependencies
 devtools::install_github("ShinyFabio/OliveHealthR")
 
-4. Install all dependecies
+7. Attach the library using
+library(OliveHealthR)
 
-5. Launch OliveHealthR
+7. Launch OliveHealthR using
 OliveHealthR::run_app()
