@@ -7,5 +7,7 @@ devtools::install_github("Thinkr-open/golem")
 3. Install OliveHealthR from GitHub
 devtools::install_github("ShinyFabio/OliveHealthR")
 
-4. Launch OliveHealthR
+4. Install all dependecies
+
+5. Launch OliveHealthR
 OliveHealthR::run_app()
