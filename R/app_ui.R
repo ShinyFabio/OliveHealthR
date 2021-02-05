@@ -434,9 +434,8 @@ app_ui <- function(request) {
                                                                                column(4, selectInput("numheat", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE))
                                                                              )
                                                                          ),
-                                                                         #plotOutput("heatmapind", height = 600)
-                                                                         InteractiveComplexHeatmap::InteractiveComplexHeatmapOutput(nrow=1, width1 = 650, height1 = 430)
-                                                                         
+                                                                         htmlOutput("heatmap_output")
+
                                                                      ) #end of div
                                                                    )
                                                                  ) #end of sidebarlayout

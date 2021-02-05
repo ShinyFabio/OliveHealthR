@@ -780,10 +780,6 @@ app_server <- function( input, output, session ) {
   
   
   
-  
-  
-  
-  
   #aggiorna il selectinput , "selyearheatind" in base agli anni presenti e filtra
   observeEvent(datapolind(), {
     updateSelectInput(session, "selyearheatind", choices = row.names(table(select(datapolind(), "Anno"))))
@@ -880,8 +876,9 @@ app_server <- function( input, output, session ) {
     
   })
   
-  observeEvent(input$updateheat,{  
-    InteractiveComplexHeatmap::renderInteractiveComplexHeatmap(input, output, session, dataheat())
+  observeEvent(input$updateheat,{
+    dataheat2 = dataheat()
+    InteractiveComplexHeatmap::InteractiveComplexHeatmapWidget(input, output, session, dataheat2, output_id = "heatmap_output", layout = "1|23", width1 = 650, height1 = 430)
   })
 
   
