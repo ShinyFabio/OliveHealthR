@@ -37,8 +37,8 @@ Depends:
     htmltools,
     scales
 Remotes: 
-	jokergoo/InteractiveComplexHeatmap,
-	jokergoo/ComplexHeatmap,
-	Thinkr-open/golem
+	github::jokergoo/InteractiveComplexHeatmap,
+	github::jokergoo/ComplexHeatmap,
+	github::Thinkr-open/golem
 URL: https://github.com/ShinyFabio/OliveHealthR.git
 BugReports: https://github.com/ShinyFabio/OliveHealthR.git/issues
