@@ -1,0 +1,11 @@
+1. Install devtools
+install.packages(pkgs = "devtools")
+
+2. Install golem from GitHub
+devtools::install_github("Thinkr-open/golem")
+
+3. Install OliveHealthR from GitHub
+devtools::install_github("ShinyFabio/OliveHealthR")
+
+4. Launch OliveHealthR
+OliveHealthR::run_app()
