@@ -1,0 +1,53 @@
+Codice_azienda;N_campionamento;Data_campionamento;Fase_fenologica;Indice_maturazione;Note
+SA_01;R1;05/10/2020;85;2;
+SA_02;R1;05/10/2020;81;2;
+SA_03;R1;05/10/2020;85;4;
+SA_04;R1;05/10/2020;85;2;
+SA_05;R1;05/10/2020;81;2;
+SA_06;R1;05/10/2020;79;4;
+SA_07;R1;05/10/2020;75;3;
+SA_08;R1;05/10/2020;79;4;
+SA_09;R1;05/10/2020;75;4;
+SA_10;R1;05/10/2020;85;7;
+NA_01;R1;06/10/2020;79;0;
+NA_02;R1;06/10/2020;79;0;
+AV_01;R1;05/10/2020;81;1;
+AV_02;R1;05/10/2020;81;0;
+AV_03;R1;05/10/2020;81;0;
+AV_04;R1;05/10/2020;81;1;
+AV_05;R1;05/10/2020;81;0;
+AV_06;R1;05/10/2020;79;0;
+BN_01;R1;11/10/2020;85;1;
+BN_02;R1;11/10/2020;81;1;
+BN_03;R1;11/10/2020;85;0;
+BN_04;R1;06/10/2020;81;1;
+BN_05;R1;11/10/2020;81;0;
+CE_01;R1;12/10/2020;79;0;
+CE_02;R1;12/10/2020;79;0;
+CE_03;R1;12/10/2020;79;0;
+SA_01;R2;15/11/2020;89;4;
+SA_02;R2;29/10/2020;89;8;
+SA_03;R2;29/10/2020;89;8;
+SA_04;R2;09/11/2020;89;8;
+SA_05;R2;09/11/2020;89;8;
+SA_06;R2;09/11/2020;89;7;La raccolta inizierà questo fine settimana
+SA_07;R2;09/11/2020;89;7;La varietà matura per la metà di novembre e subito dopo inzierà la raccolta
+SA_08;R2;29/10/2020;85;4;Il periodo di raccolta è fine ottobre/prima decade di novembre. L'azienda raccoglie entro la fine del mese di ottobre.
+SA_09;R2;29/10/2020;85;7;Il periodo ottimale di raccolta della pisciottana è metà novembre nelle zone collinari (quella scelta per il campionamento)
+SA_10;R2;29/10/2020;89;8;
+NA_01;R2;11/11/2020;89;7;Le olive si presentano con qualche giorno di sovramaturazione
+NA_02;R2;11/11/2020;89;7;Le olive sono nel periodo ottimale di raccolta
+AV_01;R2;04/11/2020;89;4;Le olive sono pronte per la raccolta
+AV_02;R2;04/11/2020;89;2;Le olive sono pronte per la raccolta
+AV_03;R2;04/11/2020;89;8;Le olive presentano 10gg circa di sovramaturazione
+AV_04;R2;04/11/2020;89;6;Le olive sono nel periodo ottimale di raccolta
+AV_05;R2;09/11/2020;89;7;Le olive sono pronte per la raccolta
+AV_06;R2;16/11/2020;89;8;Le olive sono nel periodo ottimale di raccolta
+BN_01;R2;03/11/2020;85;1;Le olive necessitano di ulteriori 12 giorni di maturazione
+BN_02;R2;03/11/2020;85;2;Le olive necessitano di ulteriori 5 giorni di maturazione
+BN_03;R2;02/11/2020;85;2;Le olive necessitano di ulteriori 7 giorni di maturazione
+BN_04;R2;03/11/2020;85;2;Le olive necessitano di ulteriori 7 giorni di maturazione
+BN_05;R2;03/11/2020;85;2;Le olive necessitano di ulteriori 8 giorni di maturazione
+CE_01;R2;02/11/2020;89;3;Le olive sono pronte per la raccolta
+CE_02;R2;02/11/2020;89;8;Le olive sono nel periodo ottimale di raccolta
+CE_03;R2;02/11/2020;89;7;Le olive sono nel periodo ottimale di raccolta
