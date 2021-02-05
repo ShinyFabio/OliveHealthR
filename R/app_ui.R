@@ -51,10 +51,10 @@ app_ui <- function(request) {
                
                ##### Lista menuItem #### 
                tabPanel(title = "Codice", value = "panel2", 
-                        dashboardPage(
-                          dashboardHeader(title = "OliveHealthR"),
-                          dashboardSidebar(
-                            sidebarMenu(
+                        shinydashboard::dashboardPage(
+                          shinydashboard::dashboardHeader(title = "OliveHealthR"),
+                          shinydashboard::dashboardSidebar(
+                            shinydashboard::sidebarMenu(
                               menuItem("Azienda", tabName = "azienda", startExpanded = TRUE,
                                        menuSubItem("Home", tabName = "homesub"),
                                        menuSubItem("Mappa", tabName = "mappa1sub")
