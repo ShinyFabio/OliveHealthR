@@ -903,7 +903,8 @@ app_server <- function( input, output, session ) {
   output$corrplotind = renderPlotly({
     
     temp = dtindfiltcorr() %>% dplyr::select(-Anno, - N_campionamento, -Azienda, - Codice_azienda)
-    par(xpd=TRUE)
+    temp2 = round(stats::cor(temp),1)
+    par(xpd = TRUE)
     
     plot = ggcorrplot::ggcorrplot(temp2, hc.order = TRUE, type = "lower", outline.col = "white", show.diag = TRUE)
     ggplotly(plot)
