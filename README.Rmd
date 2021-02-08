@@ -23,19 +23,21 @@ The goal of OliveHealthR is to ...
 
 ## Installation
 
-You can install the released version of OliveHealthR from [CRAN](https://CRAN.R-project.org) with:
+You can install OliveHealthR from [GitHub](https://github.com/ShinyFabio/OliveHealthR2) with:
 
 ``` r
-install.packages("OliveHealthR")
+devtools::install_github("ShinyFabio/OliveHealthR2")
 ```
+Be sure that your R version is at least 4.0.0.
 
-## Example
+## Launch
 
-This is a basic example which shows you how to solve a common problem:
+To launch the app use this code
 
-```{r example}
-library(OliveHealthR)
-## basic example code
+
+``` r
+library(OliveHealthR2)
+OliveHealthR2::run_app()
 ```
 
 What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:

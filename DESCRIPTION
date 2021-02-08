@@ -47,3 +47,6 @@ Depends:
     stats,
     grDevices
 VignetteBuilder: knitr
+Remotes: 
+	github::jokergoo/InteractiveComplexHeatmap,
+	github::jokergoo/ComplexHeatmap

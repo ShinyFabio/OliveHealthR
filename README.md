@@ -13,57 +13,22 @@ The goal of OliveHealthR is to …
 
 ## Installation
 
-You can install the released version of OliveHealthR from
-[CRAN](https://CRAN.R-project.org) with:
+You can install OliveHealthR from
+[GitHub](https://github.com/ShinyFabio/OliveHealthR2) with:
 
 ``` r
-install.packages("OliveHealthR")
+devtools::install_github("ShinyFabio/OliveHealthR2")
 ```
 
-## Example
+Be sure that your R version is at least 4.0.0.
 
-This is a basic example which shows you how to solve a common problem:
+## Launch
+
+To launch the app use this code
 
 ``` r
-library(OliveHealthR)
-#> Carico il pacchetto richiesto: tmap
-#> Carico il pacchetto richiesto: tmaptools
-#> Carico il pacchetto richiesto: plotly
-#> Carico il pacchetto richiesto: ggplot2
-#> 
-#> Attaching package: 'plotly'
-#> The following object is masked from 'package:ggplot2':
-#> 
-#>     last_plot
-#> The following object is masked from 'package:stats':
-#> 
-#>     filter
-#> The following object is masked from 'package:graphics':
-#> 
-#>     layout
-#> Carico il pacchetto richiesto: shinythemes
-#> Carico il pacchetto richiesto: shinydashboard
-#> 
-#> Attaching package: 'shinydashboard'
-#> The following object is masked from 'package:graphics':
-#> 
-#>     box
-#> Carico il pacchetto richiesto: shinyWidgets
-#> Carico il pacchetto richiesto: ggfortify
-#> Carico il pacchetto richiesto: scales
-#> Carico il pacchetto richiesto: htmltools
-#> Carico il pacchetto richiesto: dplyr
-#> 
-#> Attaching package: 'dplyr'
-#> The following objects are masked from 'package:stats':
-#> 
-#>     filter, lag
-#> The following objects are masked from 'package:base':
-#> 
-#>     intersect, setdiff, setequal, union
-#> Carico il pacchetto richiesto: tidyr
-#> Carico il pacchetto richiesto: tibble
-## basic example code
+library(OliveHealthR2)
+OliveHealthR2::run_app()
 ```
 
 What is special about using `README.Rmd` instead of just `README.md`?
