@@ -34,7 +34,7 @@ app_server <- function( input, output, session ) {
   #carica il file come .csv
   data= reactive({
     req(input$file1)
-    read_delim(input$file1$datapath, delim = input$delim, col_names = input$header, na = "", local = locale(encoding = "windows-1252")) 
+    readr::read_delim(input$file1$datapath, delim = input$delim, col_names = input$header, na = "", local = readr::locale(encoding = "windows-1252")) 
   })
   
   
@@ -42,7 +42,7 @@ app_server <- function( input, output, session ) {
   #carico il file descrizione csv
   descri2= reactive({
     req(input$desc1)
-    read_delim(input$desc1$datapath, delim = input$delim, col_names = input$header, local = locale(encoding = "windows-1252")) 
+    readr::read_delim(input$desc1$datapath, delim = input$delim, col_names = input$header, local = readr::locale(encoding = "windows-1252")) 
   })
   
   
@@ -50,7 +50,7 @@ app_server <- function( input, output, session ) {
   #carica il file drupe come .csv
   drupe= reactive({
     req(input$drupeinput)
-    x = read_delim(input$drupeinput$datapath, delim = input$delim, col_names = input$header, local = locale(date_format = "%d/%m/%Y", encoding = "windows-1252"))
+    x = readr::read_delim(input$drupeinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(date_format = "%d/%m/%Y", encoding = "windows-1252"))
     x$Indice_maturazione = factor(x$Indice_maturazione, levels = c(0:8), ordered = TRUE)
     x$Fase_fenologica = factor(x$Fase_fenologica, levels = c(51, 55, 59, 61, 65, 69, 71, 75, 79, 81, 85, 89), ordered = TRUE)
     return(x)
@@ -61,12 +61,12 @@ app_server <- function( input, output, session ) {
   #carico il file polifenoli come .csv
   polif = reactive({
     req(input$polifinput)
-    x = read_delim(input$polifinput$datapath, delim = input$delim, col_names = input$header, local = locale(decimal_mark = ",", encoding = "windows-1252"))
-    x$Presenza_larve = parse_factor(as.character(x$Presenza_larve), levels = c("0","1","2"), ordered = TRUE)
+    x = readr::read_delim(input$polifinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = ",", encoding = "windows-1252"))
+    x$Presenza_larve = readr::parse_factor(as.character(x$Presenza_larve), levels = c("0","1","2"), ordered = TRUE)
     return(x)
   })
   
-  output$descriz = DT::renderDT(select(descri2(), "Azienda"), selection = "single", server = FALSE, rownames = FALSE)
+  output$descriz = DT::renderDT(dplyr::select(descri2(), "Azienda"), selection = "single", server = FALSE, rownames = FALSE)
   
   
   #####DESCRIZIONE####
@@ -92,7 +92,7 @@ app_server <- function( input, output, session ) {
   
   ############## Cultivar principale #################
   output$numcult = renderText({
-    cult = data() %>% select(Cultivar_principale) %>% table() %>% length()
+    cult = data() %>% dplyr::select(Cultivar_principale) %>% table() %>% length()
     HTML(paste("Nel dataset sono presenti", "<b>", cult, "</b>", "cultivar ripartite secondo il seguente grafico:"))
   })
   
@@ -122,14 +122,14 @@ app_server <- function( input, output, session ) {
   ##### Mappa Aziende ####
   #seleziono le colonne contenenti UTM che serviranno per tutte le mappe
   filtereddata = reactive({
-    data() %>% select("UTM_33T_E", "UTM_33T_N")
+    data() %>% dplyr::select("UTM_33T_E", "UTM_33T_N")
   }) 
   
   
   
   
   #creo datmap1 senza le colonne UTM
-  datmap1 = reactive({data() %>% select(!starts_with("UTM"))
+  datmap1 = reactive({data() %>% dplyr::select(!starts_with("UTM"))
   })
   
   ###seleziona colonna da mappare (MAPPA 1)
@@ -165,8 +165,8 @@ app_server <- function( input, output, session ) {
   #fare il join di data con le drupe
   datadrupe = reactive({
     req(drupe())
-    z = data() %>% select(!starts_with("UTM"))
-    inner_join(x = z, y = drupe(), by = "Codice_azienda")
+    z = data() %>% dplyr::select(!starts_with("UTM"))
+    dplyr::inner_join(x = z, y = drupe(), by = "Codice_azienda")
   })
   
   ###seleziona colonna da mappare MAPPA 2
@@ -185,24 +185,24 @@ app_server <- function( input, output, session ) {
   #crea la colonna anno 
   dtdrupanno = reactive({
     req(datadrupe())
-    datadrupe() %>% mutate(Anno = lubridate::year(Data_campionamento))
+    datadrupe() %>% dplyr::mutate(Anno = lubridate::year(Data_campionamento))
   })
   
   
   #aggiorna il selectinput "selyear" in base agli anni presenti
   observeEvent(dtdrupanno(), {
-    updateSelectInput(session, "selyear", choices = row.names(table(select(dtdrupanno(), "Anno"))))
+    updateSelectInput(session, "selyear", choices = row.names(table(dplyr::select(dtdrupanno(), "Anno"))))
   })
   #filtra in base all'anno selezionato
   dtmapyear = reactive({
-    dtdrupanno() %>% filter(Anno == input$selyear)
+    dtdrupanno() %>% dplyr::filter(Anno == input$selyear)
   })
   
   
   #scegliere quale campionamento filtrare
   dtdrupfilt = reactive({
     req(dtmapyear())
-    filter(dtmapyear(), N_campionamento == input$num)
+    dplyr::filter(dtmapyear(), N_campionamento == input$num)
   })
   
   
@@ -236,16 +236,16 @@ app_server <- function( input, output, session ) {
   
   #aggiorna il selectinput "selyear" in base agli anni presenti
   observeEvent(dtdrupanno(), {
-    updateSelectInput(session, "selyear2", choices = row.names(table(select(dtdrupanno(), "Anno"))))
+    updateSelectInput(session, "selyear2", choices = row.names(table(dplyr::select(dtdrupanno(), "Anno"))))
   })
   #filtra in base all'anno selezionato
   dtdrupanno2 = reactive({
-    dtdrupanno() %>% filter(Anno == input$selyear2)
+    dtdrupanno() %>% dplyr::filter(Anno == input$selyear2)
   })
   
   dtdrupfiltmap2 = reactive({
     req(dtdrupanno2())
-    filter(dtdrupanno2(), N_campionamento == input$num2map)
+    dplyr::filter(dtdrupanno2(), N_campionamento == input$num2map)
   })
   
   #stampa mappa2
@@ -302,17 +302,17 @@ app_server <- function( input, output, session ) {
   
   #aggiorna il selectinput , "selyearscatter" in base agli anni presenti e filtra
   observeEvent(dtdrupanno(), {
-    updateSelectInput(session, "selyearscatter", choices = row.names(table(select(dtdrupanno(), "Anno"))))
+    updateSelectInput(session, "selyearscatter", choices = row.names(table(dplyr::select(dtdrupanno(), "Anno"))))
   })
   dtplotyear2 = reactive({
-    dtdrupanno() %>% filter(Anno == input$selyearscatter)
+    dtdrupanno() %>% dplyr::filter(Anno == input$selyearscatter)
   })
   
   
   ###scegliere anche il campionamento (scatter plot)
   dtdrupfilt2 = reactive({
     req(dtplotyear2())
-    filter(dtplotyear2(), N_campionamento == input$num2)
+    dplyr::filter(dtplotyear2(), N_campionamento == input$num2)
   })
   
   ###grafico classico (scatter plot)   , position = "jitter" , alpha = 0.7
@@ -329,15 +329,15 @@ app_server <- function( input, output, session ) {
   ###modificare la colonna campionamento con unite (R1_2020)
   dtnumyunite = reactive({
     req(datadrupe())
-    datadrupe() %>% mutate(Anno = lubridate::year(Data_campionamento)) %>% 
-      unite(col = N_campionamento, N_campionamento, Anno, remove = TRUE)
+    datadrupe() %>% dplyr::mutate(Anno = lubridate::year(Data_campionamento)) %>% 
+      tidyr::unite(col = N_campionamento, N_campionamento, Anno, remove = TRUE)
     
   })
   
   ###salvare quanti campionamenti ci sono nei file
   numerocamp = reactive({
     req(dtnumyunite())
-    dtnumyunite() %>% select(N_campionamento) %>% table() %>% row.names()
+    dtnumyunite() %>% dplyr::select(N_campionamento) %>% table() %>% row.names()
   })
   
   ###aggiornare il checkbox in base al numero dei campionamenti
@@ -349,7 +349,7 @@ app_server <- function( input, output, session ) {
   ###filtrare in base al numero di campionamento per colorare il barplot
   colorcamp = reactive({
     req(dtnumyunite())
-    dtnumyunite() %>% filter(N_campionamento %in% input$checkcamp)
+    dtnumyunite() %>% dplyr::filter(N_campionamento %in% input$checkcamp)
   })
   
   
@@ -368,14 +368,14 @@ app_server <- function( input, output, session ) {
   
   
   #crea la tabella
-  output$prov2 = DT::renderDT(select(data(), c("Azienda", "Codice_azienda")), selection = "single", server = FALSE, rownames = FALSE)
+  output$prov2 = DT::renderDT(dplyr::select(data(), c("Azienda", "Codice_azienda")), selection = "single", server = FALSE, rownames = FALSE)
   
   
   
   
   #aggiorna il selectinput "selyearfoto" in base agli anni presenti e seleziono
   observeEvent(dtdrupanno(), {
-    updateSelectInput(session, "selyearfoto", choices = row.names(table(select(dtdrupanno(), "Anno"))))
+    updateSelectInput(session, "selyearfoto", choices = row.names(table(dplyr::select(dtdrupanno(), "Anno"))))
   })
   
   
@@ -383,25 +383,25 @@ app_server <- function( input, output, session ) {
   selprov = reactive({
     req(input$prov2_rows_selected)
     nroww=input$prov2_rows_selected
-    x= select(data(), "Codice_azienda")
-    y= select(data(), "Provincia")
-    z=paste("www/foto_drupe_foglie", input$selyearfoto, input$campfoto, sep = "/")
+    x= dplyr::select(data(), "Codice_azienda")
+    y= dplyr::select(data(), "Provincia")
+    z = paste("www/foto_drupe_foglie", input$selyearfoto, input$campfoto, sep = "/")
     paste(z, y[nroww,], x[nroww,], sep = "/")
   })
   
   
   #foto foglie
   output$phfoglia = renderUI({
-    x=paste(selprov(), "foglie", sep="_")
-    foglia=paste0(x,".jpg")
+    x = paste(selprov(), "foglie", sep="_")
+    foglia = paste0(x,".jpg")
     tags$img(src = foglia, width = "75%", height = "75%")
   })
   
   #foto drupe
   output$phdrupa = renderUI({
-    x=paste(selprov(), "drupe", sep="_")
-    drupa=paste0(x, ".jpg")
-    tags$img(src= drupa, width = "75%", height = "75%")
+    x = paste(selprov(), "drupe", sep="_")
+    drupa = paste0(x, ".jpg")
+    tags$img(src = drupa, width = "75%", height = "75%")
   })
   
   
@@ -411,11 +411,11 @@ app_server <- function( input, output, session ) {
   #fare il join di data con i polifenoli
   datapolif = reactive({
     req(polif())
-    z= data() %>% select("Codice_azienda", "Azienda")
-    x=inner_join(x = z, y = polif(), by = "Codice_azienda")
-    u1=within(x, levels(Presenza_larve)[levels(Presenza_larve) == "0"] <- "Non individuabili") 
-    u2=within(u1, levels(Presenza_larve)[levels(Presenza_larve) == "1"] <- "Poche larve")
-    u3=within(u2, levels(Presenza_larve)[levels(Presenza_larve) == "2"] <- "Molte larve")
+    z = data() %>% dplyr::select("Codice_azienda", "Azienda")
+    x = dplyr::inner_join(x = z, y = polif(), by = "Codice_azienda")
+    u1 = within(x, levels(Presenza_larve)[levels(Presenza_larve) == "0"] <- "Non individuabili") 
+    u2 = within(u1, levels(Presenza_larve)[levels(Presenza_larve) == "1"] <- "Poche larve")
+    u3 = within(u2, levels(Presenza_larve)[levels(Presenza_larve) == "2"] <- "Molte larve")
     return(u3)
   })
   
@@ -423,7 +423,7 @@ app_server <- function( input, output, session ) {
   
   #data polifenoli totali
   datapoltot= reactive({
-    select(datapolif(), c("Codice_azienda", "Azienda", "Anno", "N_campionamento", "Polifenoli_tot", "Presenza_larve"))
+    dplyr::select(datapolif(), c("Codice_azienda", "Azienda", "Anno", "N_campionamento", "Polifenoli_tot", "Presenza_larve"))
   })
   
   #crea tabella polifenoli totali
@@ -472,17 +472,17 @@ app_server <- function( input, output, session ) {
   
   #aggiorna il selectinput , "selyearscattertot" in base agli anni presenti e filtra
   observeEvent(datapoltot(), {
-    updateSelectInput(session, "selyearscattertot", choices = row.names(table(select(datapoltot(), "Anno"))))
+    updateSelectInput(session, "selyearscattertot", choices = row.names(table(dplyr::select(datapoltot(), "Anno"))))
   })
   dtplotyeartot2 = reactive({
-    datapoltot() %>% filter(Anno == input$selyearscattertot)
+    datapoltot() %>% dplyr::filter(Anno == input$selyearscattertot)
   })
   
   
   ###scegliere anche il campionamento (scatter plot)
   dtdrupfilttot2 = reactive({
     req(dtplotyeartot2())
-    filter(dtplotyeartot2(), N_campionamento == input$numtot)
+    dplyr::filter(dtplotyeartot2(), N_campionamento == input$numtot)
   })
   
   
@@ -495,7 +495,7 @@ app_server <- function( input, output, session ) {
       xlab2 = paste(colx, "(mg/g drupe)")
     } else{ xlab2=colnames(showcoltotx())
     }
-    xlab3=gsub("_", " ", xlab2)
+    xlab3 = gsub("_", " ", xlab2)
     return(xlab3)
   })
   
@@ -507,7 +507,7 @@ app_server <- function( input, output, session ) {
       ylab2 = paste(coly, "(mg/g drupe)")
     } else{ ylab2 = colnames(showcoltoty())
     }
-    ylab3=gsub("_", " ", ylab2)
+    ylab3 = gsub("_", " ", ylab2)
     return(ylab3)
   })
   
@@ -520,7 +520,7 @@ app_server <- function( input, output, session ) {
       xlab2 = paste(colx, "(µg/ml)")
     } else{xlab2=colnames(fillcolumntot())
     }
-    xlab3=gsub("_", " ", xlab2)
+    xlab3 = gsub("_", " ", xlab2)
     return(xlab3)
   })
   
@@ -539,14 +539,14 @@ app_server <- function( input, output, session ) {
   ###modificare la colonna campionamento con unite (R1_2020)
   datapoltotyearunite = reactive({
     req(datapoltot())
-    datapoltot() %>% unite(col = N_campionamento, N_campionamento, Anno, remove = TRUE)
+    datapoltot() %>% tidyr::unite(col = N_campionamento, N_campionamento, Anno, remove = TRUE)
     
   })
   
   ###salvare quanti campionamenti ci sono nei file
   numerocamptot = reactive({
     req(datapoltotyearunite())
-    datapoltotyearunite() %>% select(N_campionamento) %>% table() %>% row.names()
+    datapoltotyearunite() %>% dplyr::select(N_campionamento) %>% table() %>% row.names()
   })
   
   ###aggiornare il checkbox in base al numero dei campionamenti
@@ -558,7 +558,7 @@ app_server <- function( input, output, session ) {
   ###filtrare in base al numero di campionamento per colorare il barplot
   colorcamptot = reactive({
     req(datapoltotyearunite())
-    datapoltotyearunite() %>% filter(N_campionamento %in% input$checkcamptot)
+    datapoltotyearunite() %>% dplyr::filter(N_campionamento %in% input$checkcamptot)
   })
   
   
@@ -579,7 +579,7 @@ app_server <- function( input, output, session ) {
   
   #data polifenoli individuali
   datapolind= reactive({
-    select(datapolif(), !c("Polifenoli_tot", "Presenza_larve"))
+    dplyr::select(datapolif(), !c("Polifenoli_tot", "Presenza_larve"))
   })
   
   #crea tabella polifenoli individuali
@@ -627,17 +627,17 @@ app_server <- function( input, output, session ) {
   
   #aggiorna il selectinput , "selyearscatterind" in base agli anni presenti e filtra
   observeEvent(datapolind(), {
-    updateSelectInput(session, "selyearscatterind", choices = row.names(table(select(datapolind(), "Anno"))))
+    updateSelectInput(session, "selyearscatterind", choices = row.names(table(dplyr::select(datapolind(), "Anno"))))
   })
   dtplotyearind2 = reactive({
-    datapolind() %>% filter(Anno == input$selyearscatterind)
+    datapolind() %>% dplyr::filter(Anno == input$selyearscatterind)
   })
   
   
   ###scegliere anche il campionamento (scatter plot)
   dtdrupfiltind2 = reactive({
     req(dtplotyearind2())
-    filter(dtplotyearind2(), N_campionamento == input$numind)
+    dplyr::filter(dtplotyearind2(), N_campionamento == input$numind)
   })
   
   
@@ -650,7 +650,7 @@ app_server <- function( input, output, session ) {
       ylab2 = paste(coly, "(µg/ml)")
     } else{ylab2 = colnames(showcolindy())
     }
-    ylab3=gsub("_", " ", ylab2)
+    ylab3 = gsub("_", " ", ylab2)
     return(ylab3)
   })
   
@@ -660,9 +660,9 @@ app_server <- function( input, output, session ) {
     colt= colnames(datapoltot())
     if(colx %in% colt == FALSE){
       xlab2 = paste(colx, "(µg/ml)")
-    } else{xlab2=colnames(showcolindx())
+    } else{xlab2 = colnames(showcolindx())
     }
-    xlab3=gsub("_", " ", xlab2)
+    xlab3 = gsub("_", " ", xlab2)
     return(xlab3)
   })
   
@@ -672,9 +672,9 @@ app_server <- function( input, output, session ) {
     colt= colnames(datapoltot())
     if(colx %in% colt == FALSE){
       xlab2 = paste(colx, "(µg/ml)")
-    } else{xlab2=colnames(fillcolumnind())
+    } else{xlab2 = colnames(fillcolumnind())
     }
-    xlab3=gsub("_", " ", xlab2)
+    xlab3 = gsub("_", " ", xlab2)
     return(xlab3)
   })
   ####grafico classico (scatter plot)   , position = "jitter" , alpha = 0.7
@@ -717,14 +717,14 @@ app_server <- function( input, output, session ) {
   ###modificare la colonna campionamento con unite (R1_2020)
   datapolindyearunite = reactive({
     req(datapolind())
-    datapolind() %>% unite(col = N_campionamento, N_campionamento, Anno, remove = FALSE)
+    datapolind() %>% tidyr::unite(col = N_campionamento, N_campionamento, Anno, remove = FALSE)
     
   })
   
   ###salvare quanti campionamenti ci sono nei file
   numerocampind = reactive({
     req(datapolindyearunite())
-    datapolindyearunite() %>% select(N_campionamento) %>% table() %>% row.names()
+    datapolindyearunite() %>% dplyr::select(N_campionamento) %>% table() %>% row.names()
   })
   
   ###aggiornare il checkbox in base al numero dei campionamenti
@@ -736,7 +736,7 @@ app_server <- function( input, output, session ) {
   ###filtrare in base al numero di campionamento per colorare il barplot
   colorcampind = reactive({
     req(datapolindyearunite())
-    datapolindyearunite() %>% filter(N_campionamento %in% input$checkcampind)
+    datapolindyearunite() %>% dplyr::filter(N_campionamento %in% input$checkcampind)
   })
   
   
@@ -749,7 +749,7 @@ app_server <- function( input, output, session ) {
       ylab2 = paste(coly, "(µg/ml)")
     } else{ylab2 = colnames(showcolindybar())
     }
-    ylab3=gsub("_", " ", ylab2)
+    ylab3 = gsub("_", " ", ylab2)
     return(ylab3)
   })
   
@@ -759,9 +759,9 @@ app_server <- function( input, output, session ) {
     colt= colnames(datapoltot())
     if(colx %in% colt == FALSE){
       xlab2 = paste(colx, "(µg/ml)")
-    } else{xlab2=colnames(showcolindxbar())
+    } else{xlab2 = colnames(showcolindxbar())
     }
-    xlab3=gsub("_", " ", xlab2)
+    xlab3 = gsub("_", " ", xlab2)
     return(xlab3)
   })
   
@@ -782,17 +782,17 @@ app_server <- function( input, output, session ) {
   
   #aggiorna il selectinput , "selyearheatind" in base agli anni presenti e filtra
   observeEvent(datapolind(), {
-    updateSelectInput(session, "selyearheatind", choices = row.names(table(select(datapolind(), "Anno"))))
+    updateSelectInput(session, "selyearheatind", choices = row.names(table(dplyr::select(datapolind(), "Anno"))))
   })
   dtheatyearind = reactive({
-    datapolind() %>% filter(Anno == input$selyearheatind)
+    datapolind() %>% dplyr::filter(Anno == input$selyearheatind)
   })
   
   
   ###scegliere anche il campionamento (scatter plot)
   dtindfiltheat = reactive({
     req(dtheatyearind())
-    filter(dtheatyearind(), N_campionamento == input$numheat)
+    dplyr::filter(dtheatyearind(), N_campionamento == input$numheat)
   })
   
   
@@ -801,9 +801,9 @@ app_server <- function( input, output, session ) {
     
     req(dtindfiltheat())
     seletannota = input$selectannot
-    dati = select(data(), Codice_azienda, input$selectannot)
-    datipolif = select(dtindfiltheat(), -Azienda)
-    htdata = inner_join(datipolif, dati, by = "Codice_azienda")
+    dati = dplyr::select(data(), Codice_azienda, input$selectannot)
+    datipolif = dplyr::select(dtindfiltheat(), -Azienda)
+    htdata = dplyr::inner_join(datipolif, dati, by = "Codice_azienda")
     
     if(input$heatsort == TRUE){
       htdata[do.call(order, htdata[as.character(seletannota[1])]), ]
@@ -818,18 +818,16 @@ app_server <- function( input, output, session ) {
   #creo slider per colonna
   output$sliderheatcol <- renderUI({
     req(dtheatsorted())
-    len =dtheatsorted() %>% select(-Anno, - N_campionamento,  -Codice_azienda, -input$selectannot)
+    len = dtheatsorted() %>% dplyr::select(-Anno, - N_campionamento,  -Codice_azienda, -input$selectannot)
     sliderInput("slidercolheat", "Numero cluster:", min=2, max=length(len), value=2, step = 1)
   })
   
   
   #creo l'heatmap
-  #output$heatmapind = renderPlot({
   dataheat = reactive({
-    #observeEvent(dtindfiltheat(),{
     req(dtheatsorted())
     #creo la matrice con rownames 
-    temp = dtheatsorted() %>% select(-Anno, - N_campionamento, -input$selectannot) %>% as.data.frame() %>% column_to_rownames("Codice_azienda")
+    temp = dtheatsorted() %>% dplyr::select(-Anno, - N_campionamento, -input$selectannot) %>% as.data.frame() %>% tibble::column_to_rownames("Codice_azienda")
     
     #scale none, row, column
     if(input$selscaleheat == "column"){
@@ -840,7 +838,7 @@ app_server <- function( input, output, session ) {
     
     #dendrogram = none', 'row', 'column' or 'both' 
     if(input$rowdend == TRUE){
-      row_dend = temp %>% dist(method = input$seldistheatrow) %>% hclust(method = input$selhclustheatrow) %>% as.dendrogram()
+      row_dend = temp %>% stats::dist(method = input$seldistheatrow) %>% stats::hclust(method = input$selhclustheatrow) %>% stats::as.dendrogram()
       row_dend = dendextend::color_branches(row_dend, k = input$sliderrowheat)
       row_split = input$sliderrowheat
     } else {
@@ -850,7 +848,7 @@ app_server <- function( input, output, session ) {
     }
     
     if(input$columndend == TRUE){
-      col_dend = temp %>% t() %>% dist(method = input$seldistheatcol) %>% hclust(method = input$selhclustheatcol) %>% as.dendrogram()
+      col_dend = temp %>% t() %>% stats::dist(method = input$seldistheatcol) %>% stats::hclust(method = input$selhclustheatcol) %>% stats::as.dendrogram()
       col_dend = dendextend::color_branches(col_dend, k = input$slidercolheat)
       col_split = input$slidercolheat
     } else {
@@ -859,10 +857,10 @@ app_server <- function( input, output, session ) {
     }
     
     
-    annotdata = select(dtheatsorted(), Codice_azienda, input$selectannot) %>% as.data.frame() %>% column_to_rownames("Codice_azienda")
-    leng = annotdata %>% select(input$selectannot) %>% table() %>% length()
-    colorannot = setNames(rainbow(n = leng), c(row.names(table(annotdata))))
-    colorannot = setNames(list(colorannot),paste(input$selectannot))
+    annotdata = dplyr::select(dtheatsorted(), Codice_azienda, input$selectannot) %>% as.data.frame() %>% tibble::column_to_rownames("Codice_azienda")
+    leng = annotdata %>% dplyr::select(input$selectannot) %>% table() %>% length()
+    colorannot = stats::setNames(grDevices::rainbow(n = leng), c(row.names(table(annotdata))))
+    colorannot = stats::setNames(list(colorannot), paste(input$selectannot))
     col_ha = ComplexHeatmap::HeatmapAnnotation(df = annotdata, which = "row", col = colorannot)
     
     
@@ -870,7 +868,7 @@ app_server <- function( input, output, session ) {
                                column_title = "Polifenoli", row_names_gp = grid::gpar(fontsize = 11),
                                cluster_rows = row_dend, cluster_columns = col_dend, 
                                left_annotation = col_ha,
-                               column_split = col_split, row_split = row_split)#,
+                               column_split = col_split, row_split = row_split)
     ht = ComplexHeatmap::draw(ht)
     return(ht)
     
@@ -886,10 +884,10 @@ app_server <- function( input, output, session ) {
   
   #aggiorna il selectinput , "selyearheatind" in base agli anni presenti e filtra
   observeEvent(datapolind(), {
-    updateSelectInput(session, "selyearcorrind", choices = row.names(table(select(datapolind(), "Anno"))))
+    updateSelectInput(session, "selyearcorrind", choices = row.names(table(dplyr::select(datapolind(), "Anno"))))
   })
   dtcorryearind = reactive({
-    datapolind() %>% filter(Anno == input$selyearcorrind)
+    datapolind() %>% dplyr::filter(Anno == input$selyearcorrind)
   })
   
   
@@ -897,14 +895,14 @@ app_server <- function( input, output, session ) {
   ###scegliere anche il campionamento (scatter plot)
   dtindfiltcorr = reactive({
     req(dtcorryearind())
-    filter(dtcorryearind(), N_campionamento == input$numcorr)
+    dplyr::filter(dtcorryearind(), N_campionamento == input$numcorr)
   })
   
   ###creo il corrplot
   
   output$corrplotind = renderPlotly({
     
-    temp = dtindfiltcorr() %>% select(-Anno, - N_campionamento, -Azienda, - Codice_azienda)
+    temp = dtindfiltcorr() %>% dplyr::select(-Anno, - N_campionamento, -Azienda, - Codice_azienda)
     par(xpd=TRUE)
     
     plot = ggcorrplot::ggcorrplot(temp2, hc.order = TRUE, type = "lower", outline.col = "white", show.diag = TRUE)
@@ -922,22 +920,22 @@ app_server <- function( input, output, session ) {
   
   #aggiorna il selectinput , "selyearheatind" in base agli anni presenti e filtra
   observeEvent(datapolind(), {
-    updateSelectInput(session, "selyearpca", choices = row.names(table(select(datapolind(), Anno))))
+    updateSelectInput(session, "selyearpca", choices = row.names(table(dplyr::select(datapolind(), Anno))))
   })
   dtpcayearind = reactive({
-    datapolind() %>% filter(Anno == input$selyearpca)
+    datapolind() %>% dplyr::filter(Anno == input$selyearpca)
   })
   
   
   ###scegliere anche il campionamento (scatter plot)
   dtindfiltpca = reactive({
     req(dtpcayearind())
-    filter(dtpcayearind(), N_campionamento == input$numpca)
+    dplyr::filter(dtpcayearind(), N_campionamento == input$numpca)
   })
   
   pcadati = reactive({
-    data = dtindfiltpca() %>% select(-Anno, -N_campionamento, -Azienda) %>% as.data.frame() %>% tibble::column_to_rownames("Codice_azienda")
-    princomp(data, cor= input$selcorpca)
+    data = dtindfiltpca() %>% dplyr::select(-Anno, -N_campionamento, -Azienda) %>% as.data.frame() %>% tibble::column_to_rownames("Codice_azienda")
+    stats::princomp(data, cor = input$selcorpca)
   })
   
   #slider dinamico per la scelta delle pcs
@@ -954,7 +952,7 @@ app_server <- function( input, output, session ) {
     req(pcadati())
     pca = pcadati()
     loadpca = as.data.frame(pca$loadings[, input$selpcs])
-    loadpca = rownames_to_column(loadpca)
+    loadpca = tibble::rownames_to_column(loadpca)
     
     pcasdev = as.data.frame(round(pca$sdev^2/sum(pca$sdev^2)*100, 2))
     
@@ -1011,16 +1009,16 @@ app_server <- function( input, output, session ) {
   
   #aggiorna il selectinput "selyear" in base agli anni presenti
   observeEvent(datapolif(), {
-    updateSelectInput(session, "selyearpol", choices = row.names(table(select(datapolif(), "Anno"))))
+    updateSelectInput(session, "selyearpol", choices = row.names(table(dplyr::select(datapolif(), "Anno"))))
   })
   #filtra in base all'anno selezionato
   datapolif2 = reactive({
-    datapolif() %>% filter(Anno == input$selyearpol)
+    datapolif() %>% dplyr::filter(Anno == input$selyearpol)
   })
   
   datapolifmap2 = reactive({
     req(datapolif2())
-    filter(datapolif2(), N_campionamento == input$numpol)
+    dplyr::filter(datapolif2(), N_campionamento == input$numpol)
   })
   
   #stampa mappa2
@@ -1052,16 +1050,16 @@ app_server <- function( input, output, session ) {
   
   #aggiorna il selectinput "selyearpol2" in base agli anni presenti
   observeEvent(datapolif(), {
-    updateSelectInput(session, "selyearpol2", choices = row.names(table(select(datapolif(), "Anno"))))
+    updateSelectInput(session, "selyearpol2", choices = row.names(table(dplyr::select(datapolif(), "Anno"))))
   })
   #filtra in base all'anno selezionato
   datapolif22 = reactive({
-    datapolif() %>% filter(Anno == input$selyearpol2)
+    datapolif() %>% dplyr::filter(Anno == input$selyearpol2)
   })
   
   datapolifmap22 = reactive({
     req(datapolif22())
-    filter(datapolif22(), N_campionamento == input$numpol2)
+    dplyr::filter(datapolif22(), N_campionamento == input$numpol2)
   })
   
   #stampa mappa 2

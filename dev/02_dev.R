@@ -15,7 +15,7 @@
 
 ## Dependencies ----
 ## Add one line by package you want to add as dependency
-usethis::use_package( "tidyverse" , type = "depends")
+#usethis::use_package( "tidyverse" , type = "depends")
 usethis::use_package( "tmap" , type = "depends")
 usethis::use_package( "tmaptools" , type = "depends")
 usethis::use_package( "plotly" , type = "depends")
@@ -38,6 +38,15 @@ usethis::use_package( "sp" , type = "imports")
 #usethis::use_package( "sf" , type = "depends")
 #usethis::use_package( "rgdal" , type = "depends")
 #usethis::use_package( "RColorBrewer" , type = "depends")
+
+usethis::use_package( "ggplot2" , type = "depends")
+usethis::use_package( "readr" , type = "imports")
+usethis::use_package( "dplyr" , type = "depends")
+usethis::use_package( "tidyr" , type = "depends")
+usethis::use_package( "tibble" , type = "depends")
+usethis::use_package( "stats" , type = "depends")
+usethis::use_package( "grDevices" , type = "depends")
+
 
 devtools::document()
 
