@@ -961,7 +961,7 @@ app_server <- function( input, output, session ) {
     
     colnames(loadpca) = c("Polifenoli", paste0("PC", input$selpcs))
     loadplot = ggplot(loadpca) + geom_col(aes(x = Polifenoli, y = loadpca[,2], fill = Polifenoli)) +
-      labs(y = paste0 ("PC2", " ", "(", pcasdev[as.numeric(2), ], "%", ")"))
+      labs(y = paste0("PC2", " ", "(", pcasdev[as.numeric(2), ], "%", ")"), title = "Loadings")
     ggplotly(loadplot)
   })
   
@@ -984,7 +984,8 @@ app_server <- function( input, output, session ) {
   ###biplot
   output$biplot = renderPlotly({
     req(pcadati())
-    temp = autoplot(pcadati(), data = data(), colour = input$colbiplot, loadings = TRUE, loadings.colour = 'blue', loadings.label = TRUE, loadings.label.size = 4)
+    temp = autoplot(pcadati(), data = data(), colour = input$colbiplot, loadings = TRUE, loadings.colour = 'blue', 
+                    loadings.label = TRUE, loadings.label.size = 4, title = "Screeplot")
     ggplotly(temp)
   })
   

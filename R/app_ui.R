@@ -463,14 +463,13 @@ app_ui <- function(request) {
                                              tabPanel(tagList(shiny::icon("chart-line"), HTML("&nbsp;PCA")),
                                                       #tabsetPanel(
                                                       sidebarLayout(
-                                                        sidebarPanel(width = 3,
+                                                        sidebarPanel(width = 2,
                                                                      selectInput("selyearpca", "Seleziona l'anno", choices = "", multiple = FALSE),
                                                                      selectInput("numpca", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE),
                                                                      radioGroupButtons(inputId = "selcorpca", label = "Matrice:", choices = c("Correlazione" = TRUE, "Covarianza" = FALSE), 
                                                                                        individual = TRUE, checkIcon = list(yes = tags$i(class = "fa fa-circle", style = "color: steelblue"),
-                                                                                                                           no = tags$i(class = "fa fa-circle-o", style = "color: steelblue"))),
-                                                                     #sliderInput("selpcs", "Numero di Componenti Principali (PC)", min = 1, max = 10, value = 2)
-                                                                     uiOutput("sliderpc")
+                                                                                                                           no = tags$i(class = "fa fa-circle-o", style = "color: steelblue")))
+                                                                     
                                                         ),
                                                         
                                                         
@@ -484,18 +483,25 @@ app_ui <- function(request) {
                                                             ),
                                                             
                                                             tabPanel("Loadings",
-                                                                     
-                                                                     plotlyOutput("loadings")
+                                                                     br(),
+                                                                     fluidRow(
+                                                                       column(4, box(width = NULL, status = "primary", uiOutput("sliderpc")))
+                                                                     ),
+                                                                     fluidRow(plotlyOutput("loadings"))
                                                             ),
+                                                            
                                                             tabPanel("Biplot",
                                                                      br(),
-                                                                     box(status = "primary", width = 4, selectInput("colbiplot", "Seleziona colonna riempimento", choices = c("Provincia", "Cultivar_principale", "Areale"))),
-                                                                     
-                                                                     plotlyOutput("biplot", height = "500px")
+                                                                     fluidRow(
+                                                                       column(4, 
+                                                                              box(width = NULL, status = "primary", selectInput("colbiplot", "Seleziona colonna riempimento", choices = c("Provincia", "Cultivar_principale", "Areale")))
+                                                                       )
+                                                                     ),
+                                                                     fluidRow(plotlyOutput("biplot", height = "500px"))
                                                             )
+                                                            
                                                           )
-                                                          
-                                                        )
+                                                        ) #end of mainpanel
                                                         
                                                         
                                                       ) #end of sidebarLayout

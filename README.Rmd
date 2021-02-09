@@ -54,43 +54,43 @@ This shiny app performs various analysis and plotting based on files being uploa
 ### "File aziende (.csv)"
 The most important file is "2_Dati_monitoraggio.csv". In order to make the app work, this csv file has some columns that have to follow some writing rules. The following columns are mandatory:
 
-- "Codice_azienda" filled with the code of the company (eg SA_01, AV_12 etc.)
-- "Azienda" filled with the name (eg. Az.Agr.Perretta_Nicola). Don't use "-" or spaces in the name
-- "Provincia" filled with the province (eg. SA, AV)
-- "UTM_33T_E" filled with the UTM 33T East coordinate
-- "UTM_33T_N" filled with the UTM 33T North coordinate
-- "Cultivar_principale" filled with the main cultivar (use "_" instead of space)
+- __"Codice_azienda"__ filled with the code of the company (eg SA_01, AV_12 etc.)
+- __"Azienda"__ filled with the name (eg. Az.Agr.Perretta_Nicola). Don't use "-" or spaces in the name
+- __"Provincia"__ filled with the province (eg. SA, AV)
+- __"UTM_33T_E"__ filled with the UTM 33T East coordinate
+- __"UTM_33T_N"__ filled with the UTM 33T North coordinate
+- __"Cultivar_principale"__ filled with the main cultivar (use "_" instead of space)
 
 
 ### "File descrizione .csv"
 
 This is an optional csv file containing some info about companies. It contains:
 
-- "Codice_azienda" same
-- "Azienda" same
-- "Descrizione" filled with the description of the company
-- "Contatti" filled with the phone number, email and others infos
+- __"Codice_azienda"__ same
+- __"Azienda"__ same
+- __"Descrizione"__ filled with the description of the company
+- __"Contatti"__ filled with the phone number, email and others infos
 
 
 ### "file CSV con dati drupe"
 
 Here you can upload the phenological phase and ripening index extracted from the record cards. It follows the following structure:
 
-- "Codice_azienda" same
-- "N_campionamento" filled with "R1" or "R2" where R1 refers to the first sampling (September/October) abd R2 refers to the last sampling (end of October/ beginning of November so when the olives are completely ripe)
-- "Data_campionamento" filled with the sampling date (in the form of dd/mm/yyyy)
-- "Fase_fenologica" (filled with a number)
-- "Indice_maturazione" (filled with a number)
-- "Note" filled with possible notes
+- __"Codice_azienda"__ same
+- __"N_campionamento"__ filled with "R1" or "R2" where R1 refers to the first sampling (September/October) abd R2 refers to the last sampling (end of October/ beginning of November so when the olives are completely ripe)
+- __"Data_campionamento"__ filled with the sampling date (in the form of dd/mm/yyyy)
+- __"Fase_fenologica"__ (filled with a number)
+- __"Indice_maturazione"__ (filled with a number)
+- __"Note"__ filled with possible notes
 
 ### "file CSV con dati polifenoli"
 
 Here you can upload the polyphenols datas. The csv file follows this structure:
 
-- "Codice_azienda" same
-- "N_campionamento" same
-- "Polifenoli_tot" filled with the concentration of total polyphenols (mg/g drupes)
-- "Presenza_larve" filled with the larvae presence indicator (from 0 to 2)
+- __"Codice_azienda"__ same
+- __"N_campionamento"__ same
+- __"Polifenoli_tot"__ filled with the concentration of total polyphenols (mg/g drupes)
+- __"Presenza_larve"__ filled with the larvae presence indicator (from 0 to 2)
 - Various polyphenols (eg. "Acido_Gallico"). unit of measure: ug/ml of oil
 
 
@@ -99,12 +99,6 @@ Here you can upload the polyphenols datas. The csv file follows this structure:
 
 
 
-
-
-
-
-
-In "Home" tab load the "File aziende" csv file (should be called "2_Dati_monitoraggio.csv"). 
 
 ## Other 
 
