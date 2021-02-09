@@ -12,8 +12,8 @@ Imports:
     attempt,
     DT,
     glue,
-    InteractiveComplexHeatmap,
     ComplexHeatmap,
+    InteractiveComplexHeatmap,
     dendextend,
     ggcorrplot,
     lubridate,
@@ -48,5 +48,5 @@ Depends:
     grDevices
 VignetteBuilder: knitr
 Remotes: 
-	github::jokergoo/InteractiveComplexHeatmap,
-	github::jokergoo/ComplexHeatmap
+	github::jokergoo/ComplexHeatmap,
+	github::jokergoo/InteractiveComplexHeatmap
