@@ -9,9 +9,19 @@
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 <!-- badges: end -->
 
-The goal of OliveHealthR is to …
+The goal of OliveHealthR is to analyze and map all the information
+obtained from the [OliveHealth](https://olivehealth.it) project. The
+planned activities will concern the mapping of the olive groves of the 5
+Campania provinces (Italy) and the analysis of the health component (eg
+polyphenols) on samples such as leaves, drupes and oil.
 
 ## Installation
+
+Install devtools if not already installed.
+
+``` r
+install.packages("devtools")
+```
 
 You can install OliveHealthR from
 [GitHub](https://github.com/ShinyFabio/OliveHealthR2) with:
@@ -30,6 +40,8 @@ To launch the app use this code
 library(OliveHealthR2)
 OliveHealthR2::run_app()
 ```
+
+## Other
 
 What is special about using `README.Rmd` instead of just `README.md`?
 You can include R chunks like so:
