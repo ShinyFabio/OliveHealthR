@@ -1,8 +1,8 @@
 Package: OliveHealthR
-Title: Software per l'analisi statistica dell'olio d'oliva
+Title: A Shiny App for statistical and graphical analysis of data from the Olivehealth project
 Version: 0.0.0.9000
 Authors@R: person('Fabio', 'Della Rocca', email = 'fabiodellarocca94@gmail.com', role = c('cre', 'aut'))
-Description: Software per l'analisi statistica dell'olio d'oliva.
+Description: OliveHealthR analyzes and maps all the information obtained from the OliveHealth project. The planned activities will concern the mapping of the olive groves of the 5 Campania provinces (Italy) and the analysis of the health component (eg polyphenols) on samples such as leaves, drupes and oil.
 License: MIT + file LICENSE
 Imports: 
     config,
@@ -31,6 +31,7 @@ Suggests:
     rmarkdown
 Config/testthat/edition: 3
 Depends: 
+    R (>= 4.0.0),
     tmap,
     tmaptools,
     plotly,

@@ -38,7 +38,7 @@ To launch the app use this code
 
 ``` r
 library(OliveHealthR2)
-OliveHealthR2::run_app()
+OliveHealthR2::run_OliveHealthR()
 ```
 
 ## How to use
@@ -103,9 +103,6 @@ structure:
     (from 0 to 2)
   - Various polyphenols (eg. “Acido\_Gallico”). unit of measure: ug/ml
     of oil
-
-In “Home” tab load the “File aziende” csv file (should be called
-“2\_Dati\_monitoraggio.csv”).
 
 ## Other
 

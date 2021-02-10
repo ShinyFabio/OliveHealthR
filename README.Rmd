@@ -44,7 +44,7 @@ To launch the app use this code
 
 ``` r
 library(OliveHealthR2)
-OliveHealthR2::run_app()
+OliveHealthR2::run_OliveHealthR()
 ```
 
 ## How to use

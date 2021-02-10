@@ -15,8 +15,8 @@
 ## Add meta data about your application
 golem::fill_desc(
   pkg_name = "OliveHealthR", # The Name of the package containing the App 
-  pkg_title = "Software per l'analisi statistica dell'olio d'oliva", # The Title of the package containing the App 
-  pkg_description = "Software per l'analisi statistica dell'olio d'oliva.", # The Description of the package containing the App 
+  pkg_title = "A Shiny App for statistical and graphical analysis of data from the Olivehealth project", # The Title of the package containing the App 
+  pkg_description = "OliveHealthR analyzes and maps all the information obtained from the OliveHealth project. The planned activities will concern the mapping of the olive groves of the 5 Campania provinces (Italy) and the analysis of the health component (eg polyphenols) on samples such as leaves, drupes and oil.", # The Description of the package containing the App 
   author_first_name = "Fabio", # Your First Name
   author_last_name = "Della Rocca", # Your Last Name
   author_email = "fabiodellarocca94@gmail.com", # Your Email
