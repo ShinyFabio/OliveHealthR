@@ -452,7 +452,7 @@ app_ui <- function(request) {
                                              
                                              
                                              
-                                             tabPanel(tagList(shiny::icon("chart-line"), HTML("&nbsp;PCA")),
+                                             tabPanel(tagList(shiny::icon("chart-line"), HTML("&nbsp;PCA")), 
                                                       #tabsetPanel(
                                                       sidebarLayout(
                                                         sidebarPanel(width = 2,
