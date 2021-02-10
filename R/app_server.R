@@ -34,7 +34,7 @@ app_server <- function( input, output, session ) {
   
   
   #carica il file come .csv
-  data= reactive({
+  data = reactive({
     req(input$file1)
     readr::read_delim(input$file1$datapath, delim = input$delim, col_names = input$header, na = "", local = readr::locale(encoding = "windows-1252")) 
   })
@@ -42,9 +42,12 @@ app_server <- function( input, output, session ) {
   
   
   #carico il file descrizione csv
-  descri2= reactive({
+  descri2 = reactive({
     req(input$desc1)
-    readr::read_delim(input$desc1$datapath, delim = input$delim, col_names = input$header, local = readr::locale(encoding = "windows-1252")) 
+    req(data())
+    temp = readr::read_delim(input$desc1$datapath, delim = input$delim, col_names = input$header, local = readr::locale(encoding = "windows-1252"))
+    temp2 = data() %>% dplyr::select(Codice_azienda, Azienda)
+    dplyr::inner_join(x = temp, y = temp2, by = "Codice_azienda")
   })
   
   
@@ -68,10 +71,16 @@ app_server <- function( input, output, session ) {
     return(x)
   })
   
-  output$descriz = DT::renderDT(dplyr::select(descri2(), "Azienda"), selection = "single", server = FALSE, rownames = FALSE)
   
+  
+  output$content = DT::renderDT({
+    data()
+  })
   
   #####DESCRIZIONE####
+  
+  output$descriz = DT::renderDT(dplyr::select(descri2(), "Azienda"), selection = "single", server = FALSE, rownames = FALSE)
+
   ####selezionare la riga dell'azienda    
   y11 = reactive({
     nroww=input$descriz_rows_selected
@@ -79,18 +88,15 @@ app_server <- function( input, output, session ) {
   })
   #e stamparla
   output$taby12 = renderUI({
-    HTML(paste(y11()[,3]))
+    HTML(paste(y11()[,2]))
   })
   #stampo anche i contatti
   output$contatti = renderUI({
-    HTML(paste("<b>",y11()[,4],"</b>"))
+    HTML(paste("<b>",y11()[,3],"</b>"))
   })
   
   
-  
-  output$content = DT::renderDT({
-    data()
-  })
+
   
   ############## Cultivar principale #################
   output$numcult = renderText({

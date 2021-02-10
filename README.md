@@ -70,7 +70,6 @@ This is an optional csv file containing some info about companies. It
 contains:
 
   - **“Codice\_azienda”** same
-  - **“Azienda”** same
   - **“Descrizione”** filled with the description of the company
   - **“Contatti”** filled with the phone number, email and others infos
 
@@ -81,8 +80,8 @@ from the record cards. It follows the following structure:
 
   - **“Codice\_azienda”** same
   - **“N\_campionamento”** filled with “R1” or “R2” where R1 refers to
-    the first sampling (September/October) abd R2 refers to the last
-    sampling (end of October/ beginning of November so when the olives
+    the first sampling (September/October) and R2 refers to the last
+    sampling (end of October/beginning of November i.e. when the olives
     are completely ripe)
   - **“Data\_campionamento”** filled with the sampling date (in the form
     of dd/mm/yyyy)

@@ -67,7 +67,6 @@ The most important file is "2_Dati_monitoraggio.csv". In order to make the app w
 This is an optional csv file containing some info about companies. It contains:
 
 - __"Codice_azienda"__ same
-- __"Azienda"__ same
 - __"Descrizione"__ filled with the description of the company
 - __"Contatti"__ filled with the phone number, email and others infos
 
@@ -77,7 +76,7 @@ This is an optional csv file containing some info about companies. It contains:
 Here you can upload the phenological phase and ripening index extracted from the record cards. It follows the following structure:
 
 - __"Codice_azienda"__ same
-- __"N_campionamento"__ filled with "R1" or "R2" where R1 refers to the first sampling (September/October) abd R2 refers to the last sampling (end of October/ beginning of November so when the olives are completely ripe)
+- __"N_campionamento"__ filled with "R1" or "R2" where R1 refers to the first sampling (September/October) and R2 refers to the last sampling (end of October/beginning of November i.e. when the olives are completely ripe)
 - __"Data_campionamento"__ filled with the sampling date (in the form of dd/mm/yyyy)
 - __"Fase_fenologica"__ (filled with a number)
 - __"Indice_maturazione"__ (filled with a number)
