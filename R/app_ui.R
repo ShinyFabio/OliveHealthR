@@ -102,24 +102,22 @@ app_ui <- function(request) {
                                                                       fileInput("polifinput", "file CSV con dati polifenoli")
                                                      )
                                         ),
-                                        mainPanel(
-                                          tags$head(tags$script(src="www/general.js")),
-                                          div(class="delParentClass",
+                                        mainPanel(width = 10,
                                               tabsetPanel(id = "tab2",
                                                           tabPanel(title = "Tabella",
-                                                                   box(width = NULL, style = "overflow-x: scroll;",
+                                                                   box(width = NULL, status = "primary", style = "overflow-x: scroll;",
                                                                        DT::DTOutput("content")
                                                                    )
                                                           ),
                                                           
                                                           tabPanel("Cultivar",
-                                                                   box(width=NULL,h4(htmlOutput("numcult"))),
+                                                                   box(width=NULL, status = "primary", h4(htmlOutput("numcult"))),
                                                                    br(),
                                                                    fluidRow(column(width = 2,
-                                                                                   box(width = NULL,
+                                                                                   box(width = NULL, status = "primary",
                                                                                        radioButtons("selplotcult", label = h4("Tipo di grafico"), choices = list("Grafico a torta" = 1, "Grafico a barre" = 2), selected = 2))
                                                                    ),
-                                                                   column(width=10,box(width=NULL,uiOutput("cultplot")))
+                                                                   column(width=10, box(width=NULL, status = "primary", uiOutput("cultplot")))
                                                                    )
                                                           ),
                                                           
@@ -134,8 +132,7 @@ app_ui <- function(request) {
                                                                    )
                                                           )
                                               )#end of tabsetpanel
-                                          )#end of div()
-                                          
+
                                         )#end of mainpanel
                                       )#end of sidebarlayout
                               ),#end of tabitem "Home"
@@ -148,7 +145,7 @@ app_ui <- function(request) {
                                                      hr(), 
                                                      selectInput("select3", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE)
                                         ),
-                                        mainPanel(
+                                        mainPanel(width = 9,
                                           conditionalPanel(condition = ("input.update != 0"),
                                                            tmapOutput("map1")
                                           )
@@ -167,9 +164,7 @@ app_ui <- function(request) {
                                                      selectInput("selecty", "Seleziona la colonna Y", choices = "", multiple = FALSE)
                                         ),
                                         
-                                        mainPanel(
-                                          tags$head(tags$script(src="www/general.js")),  #mi serve per fare il box di dimensioni maggiori
-                                          div(class="delParentClass",
+                                        mainPanel(width = 10,
                                               tabsetPanel(
                                                 tabPanel("Scatter plot",
                                                          br(),
@@ -186,12 +181,12 @@ app_ui <- function(request) {
                                                                          br(),
                                                                          box(width = NULL, status = "primary", checkboxGroupInput("checkcamp", "Seleziona campionamento", choices = ""))
                                                          ),
-                                                         column(width = 10, box(width=NULL, tatus = "primary", plotlyOutput("barplot1")))
+                                                         column(width = 10, br(), box(width=NULL, status = "primary", plotlyOutput("barplot1")))
                                                          )
                                                 )#end of tabpanel
                                               )#end of tabset
-                                          )#end of div
                                         )#end of mainpanel
+                                        
                                       )#end of sidebarlayout
                               ),#end of tabitem "grafici"
                               
@@ -267,11 +262,14 @@ app_ui <- function(request) {
                               
                               ##### TabItem Analisi Laboratorio #####
                               
+                              # Tab polifenoli totali ----------------------------------------------------------------
                               tabItem(tabName = "totpolsub",
                                       tabBox(width=NULL,
+                                             
                                              tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")),
                                                       DT::DTOutput("tablepoltot")
                                              ),
+                                             
                                              tabPanel(tagList(shiny::icon("chart-bar"), HTML("&nbsp;Grafici")),
                                                       
                                                       sidebarLayout(
@@ -280,9 +278,7 @@ app_ui <- function(request) {
                                                                      selectInput("selectytot", "Seleziona la colonna Y", choices = "", multiple = FALSE)
                                                         ),
                                                         
-                                                        mainPanel(
-                                                          tags$head(tags$script(src="www/general.js")),  #mi serve per fare il box di dimensioni maggiori
-                                                          div(class="delParentClass",
+                                                        mainPanel(width = 10,
                                                               tabsetPanel(
                                                                 tabPanel("Scatter plot",
                                                                          br(),
@@ -301,11 +297,10 @@ app_ui <- function(request) {
                                                                                   br(),
                                                                                   box(width = NULL, status = "primary", checkboxGroupInput("checkcamptot", "Seleziona campionamento", choices = ""))
                                                                            ),
-                                                                           column(width = 10, box(width=NULL, tatus = "primary", plotlyOutput("barplottot")))
+                                                                           column(width = 10, br(), box(width=NULL, status = "primary", plotlyOutput("barplottot")))
                                                                          )#end of fluidRow
                                                                 )
                                                               )#end of tabsetpanel
-                                                          )#end of div
                                                         )
                                                       )
                                                       
@@ -314,13 +309,15 @@ app_ui <- function(request) {
                                       
                               ), #end of tabitem "totpolsub"
                               
-                              
+                              # Tab polifenoli individuali ----------------------------------------------------------------------------
                               tabItem(tabName = "inpolsub",
                                       tabBox(width=NULL,
                                              
                                              
                                              tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")), 
-                                                      DT::DTOutput("tablepolind")
+                                                      box(width = NULL, status = "primary", style = "overflow-x: scroll;",
+                                                          DT::DTOutput("tablepolind")
+                                                      )
                                              ),
                                              
                                              
@@ -333,10 +330,7 @@ app_ui <- function(request) {
                                                                                 selectInput("selectyind", "Seleziona la colonna Y", choices = "", multiple = FALSE)
                                                                    ),
                                                                    
-                                                                   mainPanel(
-                                                                     tags$head(tags$script(src="www/general.js")),  #mi serve per fare il box di dimensioni maggiori
-                                                                     div(class="delParentClass",
-                                                                         
+                                                                   mainPanel(width = 10,
                                                                          br(),
                                                                          box(width=NULL, status = "primary",
                                                                              fluidRow(
@@ -345,7 +339,6 @@ app_ui <- function(request) {
                                                                                column(3, selectInput("selectfillind", "Colonna da usare come riempimento", choices = "", multiple = FALSE))
                                                                              )),
                                                                          plotlyOutput("scatterindpol")
-                                                                     )
                                                                    )
                                                                  ) #end of sidebarlayout
                                                         ), #end of tabpanel scatterplot
@@ -360,11 +353,9 @@ app_ui <- function(request) {
                                                                                 checkboxGroupInput("checkcampind", "Seleziona campionamento", choices = "")
                                                                    ),
                                                                    
-                                                                   mainPanel(
-                                                                     tags$head(tags$script(src="www/general.js")),  #mi serve per fare il box di dimensioni maggiori
-                                                                     div(class="delParentClass",
+                                                                   mainPanel(width = 10,
+                                                                         br(),
                                                                          box(width=12, status = "primary", plotlyOutput("barplotind"))
-                                                                     ) #end of div
                                                                    )
                                                                  ) #end of sidebarlayout
                                                                  
@@ -375,68 +366,64 @@ app_ui <- function(request) {
                                                                  
                                                                  sidebarLayout(
                                                                    sidebarPanel(width = 3,
+                                                                     div(actionButton("updateheat", label = "Carica!", class = "btn btn-primary btn-lg", width = "160px", style='padding:5px; font-size:200%; font-weight: bold;'), align= "center"),
+                                                                     br(),
+                                                                     h4(strong("Dati")),
+                                                                     fluidRow(
+                                                                       column(6, selectInput("numheat", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)),
+                                                                       column(6, br(), selectInput("selyearheatind", "Seleziona l'anno", choices = "", multiple = FALSE))
+                                                                     ),
+                                                                     hr(),
+                                                                     h4(strong("Preprocessing")),
+                                                                     selectInput("selscaleheat", "Scala i dati:", choices = c("No" = "none", "Per riga" = "row", "Per colonna" = "column"), selected = "none"),
+                                                                     hr(),
+                                                                     h4(strong("Opzioni dendrogramma")),
+                                                                     br(),
+                                                                     
+                                                                     ###voglio il dendrograma su riga o colonna o entrambi?
+                                                                     h5(strong("Scegli dove mostrare il dendrogramma")),
+                                                                     fluidRow(
+                                                                       column(6, materialSwitch(inputId = "rowdend", label = "Riga",  value = TRUE, status = "primary")),
+                                                                       column(6, materialSwitch(inputId = "columndend", label = "Colonna",  value = TRUE, status = "primary"))
+                                                                     ),
+                                                                     hr(),
+                                                                     selectInput("selectannot", h4(strong("Aggiungi annotazione:")), choices = c("Provincia", "Cultivar_principale", "Areale")),
+
+                                                                     conditionalPanel(condition = "input.rowdend == 0",
+                                                                                      h5(strong("Ordinare i dati per annotazione?")),
+                                                                                      awesomeCheckbox("heatsort", label = "Ordina", value = TRUE)
+                                                                     ),
+                                                                     
+                                                                     conditionalPanel(
+                                                                       condition = "input.rowdend == 1",
+                                                                       hr(),
+                                                                       h4(strong("Dendrogramma su riga")),
+                                                                       fluidRow(
+                                                                         column(6, selectInput("seldistheatrow", "Funzione di distanza:", choices = c("euclidean", "maximum", "manhattan", "canberra", "minkowski"),
+                                                                                               selected = "euclidean")),
+                                                                         column(6,selectInput("selhclustheatrow", "Metodo clustering:", choices = c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty", "median", "centroid"),
+                                                                                              selected = "complete"))
+                                                                       ),
+                                                                       sliderInput("sliderrowheat", "Numero cluster:", min = 2, max = 10, value = 2),
+                                                                     ),
                                                                                 
-                                                                                div(actionButton("updateheat", label = "Carica!", class = "btn btn-primary btn-lg", width = "160px", style='padding:5px; font-size:200%; font-weight: bold;'), align= "center"),
-                                                                                br(),
-                                                                                h4(strong("Preprocessing")),
-                                                                                selectInput("selscaleheat", "Scala i dati:", choices = c("No" = "none", "Per riga" = "row", "Per colonna" = "column"), selected = "none"),
-                                                                                hr(),
-                                                                                h4(strong("Opzioni dendrogramma")),
-                                                                                br(),
-                                                                                ###voglio il dendrograma su riga o colonna o entrambi?
-                                                                                h5(strong("Scegli dove mostrare il dendrogramma")),
-                                                                                fluidRow(
-                                                                                  column(6, materialSwitch(inputId = "rowdend", label = "Riga",  value = TRUE, status = "primary")),
-                                                                                  column(6, materialSwitch(inputId = "columndend", label = "Colonna",  value = TRUE, status = "primary"))
-                                                                                ),
-                                                                                hr(),
-                                                                                selectInput("selectannot", h4(strong("Aggiungi annotazione:")), choices = c("Provincia", "Cultivar_principale", "Areale")),
-                                                                                
-                                                                                conditionalPanel(condition = "input.rowdend == 0",
-                                                                                                 h5(strong("Ordinare i dati per annotazione?")),
-                                                                                                 awesomeCheckbox("heatsort", label = "Ordina", value = TRUE)
-                                                                                ),
-                                                                                conditionalPanel(condition = "input.rowdend == 1",
-                                                                                                 hr(),
-                                                                                                 h4(strong("Dendrogramma su riga")),
-                                                                                                 fluidRow(
-                                                                                                   column(6, selectInput("seldistheatrow", "Funzione di distanza:", choices = c("euclidean", "maximum", "manhattan", "canberra", "minkowski"),
-                                                                                                                         selected = "euclidean")),
-                                                                                                   column(6,selectInput("selhclustheatrow", "Metodo clustering:", choices = c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty", "median", "centroid"),
-                                                                                                                        selected = "complete"))
-                                                                                                 ),
-                                                                                                 sliderInput("sliderrowheat", "Numero cluster:", min = 2, max = 10, value = 2),
-                                                                                ),
-                                                                                
-                                                                                conditionalPanel(condition = "input.columndend == 1",
-                                                                                                 hr(),
-                                                                                                 h4(strong("Dendrogramma su colonna")),
-                                                                                                 fluidRow(
-                                                                                                   column(6,selectInput("seldistheatcol", "Funzione di distanza:", choices = c("euclidean", "maximum", "manhattan", "canberra", "minkowski"),
-                                                                                                                        selected = "euclidean")),
-                                                                                                   column(6,selectInput("selhclustheatcol", "Metodo clustering:", choices = c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty", "median", "centroid"),
-                                                                                                                        selected = "complete"))
-                                                                                                 ),
-                                                                                                 uiOutput("sliderheatcol"),
-                                                                                                 #sliderInput("slidercolheat", "Numero cluster:", min = 0, max = 10, value = 2),               
-                                                                                )
-                                                                                
-                                                                   ),
+                                                                     
+                                                                     conditionalPanel(condition = "input.columndend == 1",
+                                                                       hr(),
+                                                                       h4(strong("Dendrogramma su colonna")),
+                                                                       fluidRow(
+                                                                         column(6,selectInput("seldistheatcol", "Funzione di distanza:", choices = c("euclidean", "maximum", "manhattan", "canberra", "minkowski"),
+                                                                                              selected = "euclidean")),
+                                                                         column(6,selectInput("selhclustheatcol", "Metodo clustering:", choices = c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty", "median", "centroid"),
+                                                                                              selected = "complete"))
+                                                                       ),
+                                                                       uiOutput("sliderheatcol"),
+                                                                     )
+                                                                   ), #end of sidebarpanel
                                                                    
-                                                                   mainPanel(
-                                                                     tags$head(tags$script(src="www/general2.js")),  #mi serve per fare il box di dimensioni maggiori
-                                                                     div(class="delParentClass",
-                                                                         
+                                                                   mainPanel(width = 9,
                                                                          br(),
-                                                                         box(width=NULL, status = "primary",
-                                                                             fluidRow(
-                                                                               column(4, selectInput("selyearheatind", "Seleziona l'anno", choices = "", multiple = FALSE)),
-                                                                               column(4, selectInput("numheat", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE))
-                                                                             )
-                                                                         ),
                                                                          htmlOutput("heatmap_output")
-                                                                         
-                                                                     ) #end of div
                                                                    )
                                                                  ) #end of sidebarlayout
                                                                  
@@ -444,15 +431,20 @@ app_ui <- function(request) {
                                                         
                                                         
                                                         tabPanel("Correlation Plot",
-                                                                 br(),
-                                                                 box(width=NULL, status = "primary",
-                                                                     fluidRow(
-                                                                       column(3, selectInput("selyearcorrind", "Seleziona l'anno", choices = "", multiple = FALSE)),
-                                                                       column(3, selectInput("numcorr", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE))
-                                                                     )),
-                                                                 br(),
-                                                                 fluidRow(box(width=6, plotlyOutput("corrplotind")))
-                                                        )
+                                                                 sidebarLayout(
+                                                                   sidebarPanel(width = 2,
+                                                                     selectInput("selyearcorrind", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                                                     selectInput("numcorr", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)
+                                                                   ),
+                                                                   
+                                                                   mainPanel(width = 10,
+                                                                   br(),
+                                                                   box(width=7, status = "primary", plotlyOutput("corrplotind"))
+                                                                   ) #end of mainpanel
+                                                                 ) #end of sidebarlayout
+                                                                 
+                                                                 
+                                                        ) #end of tabpanel correlation
                                                         
                                                       )#end of tabsetpanel
                                              ), #end of tabPanel Grafici
@@ -473,7 +465,7 @@ app_ui <- function(request) {
                                                         ),
                                                         
                                                         
-                                                        mainPanel(
+                                                        mainPanel(width = 10,
                                                           tabsetPanel(
                                                             
                                                             
@@ -534,7 +526,7 @@ app_ui <- function(request) {
                                                        selectInput("numpol2", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)
                                                      )
                                         ), 
-                                        mainPanel(
+                                        mainPanel(width = 9,
                                           conditionalPanel(condition = ("input.upmappol != 0"),
                                                            tmapOutput("mappol")
                                           ),
