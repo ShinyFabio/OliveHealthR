@@ -3,6 +3,27 @@
 #' @param input,output,session Internal parameters for {shiny}. 
 #'     DO NOT REMOVE.
 #' @import shiny
+#' @import ggplot2
+#' @import stats
+#' @import plotly
+#' @import tmap
+#' @import tmaptools
+#' @import ggfortify
+#' @import htmltools
+#' @import scales
+#' @importFrom dplyr select inner_join mutate filter
+#' @importFrom tidyr unite
+#' @importFrom tibble column_to_rownames rownames_to_column
+#' @importFrom grid gpar
+#' @importFrom sp SpatialPointsDataFrame CRS
+#' @importFrom lubridate year
+#' @importFrom InteractiveComplexHeatmap InteractiveComplexHeatmapWidget
+#' @importFrom readr read_delim locale parse_factor
+#' @importFrom ComplexHeatmap Heatmap HeatmapAnnotation draw
+#' @importFrom ggcorrplot ggcorrplot
+#' @importFrom DT renderDT
+#' @importFrom grDevices rainbow
+#' @importFrom dendextend color_branches
 #' @noRd
 app_server <- function( input, output, session ) {
   # List the first level callModules here
@@ -916,9 +937,7 @@ app_server <- function( input, output, session ) {
     
     plot = ggcorrplot::ggcorrplot(temp2, hc.order = TRUE, type = "lower", outline.col = "white", show.diag = TRUE)
     ggplotly(plot)
-    #corrplot::corrplot.mixed(temp2, mar = c(0, 0, 5, 0),tl.pos = "lt",  diag = "l", tl.col = "black", tl.srt = 45, 
-    #                         upper.col = brewer.pal(n=8, name="RdYlBu"), lower.col = brewer.pal(n=8, name="RdYlBu"))
-    
+   
   })
   
   

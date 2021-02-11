@@ -19,6 +19,7 @@ Imports:
     lubridate,
     grid,
     sp,
+    grDevices,
     readr
 Encoding: UTF-8
 LazyData: true
@@ -45,8 +46,7 @@ Depends:
     dplyr,
     tidyr,
     tibble,
-    stats,
-    grDevices
+    stats
 VignetteBuilder: knitr
 Remotes: 
 	github::jokergoo/ComplexHeatmap,

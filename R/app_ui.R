@@ -3,6 +3,13 @@
 #' @param request Internal parameter for `{shiny}`. 
 #'     DO NOT REMOVE.
 #' @import shiny
+#' @import shinydashboard
+#' @import shinyWidgets
+#' @import plotly
+#' @import tmap
+#' @import tmaptools
+#' @import htmltools
+#' @importFrom DT DTOutput
 #' @noRd
 app_ui <- function(request) {
   tagList(

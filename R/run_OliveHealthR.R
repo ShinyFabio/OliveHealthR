@@ -1,6 +1,16 @@
-#' Run the Shiny Application
+#' Launches the web shiny App "OliveHealthR"
 #'
-#' @param ... A series of options to be used inside the app.
+#' @description Simple function to connect UI and Server of the shiny App and launch it inside the default browser.
+#'
+#' @usage run_OliveHealthR()
+#' 
+#' @note OliveHealthR is builded with {golem}.
+#' 
+#' @examples 
+#' \dontrun{
+#' libraray(OliveHealthR)
+#' run_OliveHealthR()
+#' }
 #'
 #' @export
 #' @importFrom shiny shinyApp

@@ -2,13 +2,20 @@
 % Please edit documentation in R/run_OliveHealthR.R
 \name{run_OliveHealthR}
 \alias{run_OliveHealthR}
-\title{Run the Shiny Application}
+\title{Launches the web shiny App "OliveHealthR"}
 \usage{
-run_OliveHealthR(...)
-}
-\arguments{
-\item{...}{A series of options to be used inside the app.}
+run_OliveHealthR()
 }
 \description{
-Run the Shiny Application
+Simple function to connect UI and Server of the shiny App and launch it inside the default browser.
+}
+\note{
+OliveHealthR is builded with {golem}.
+}
+\examples{
+\dontrun{
+libraray(OliveHealthR)
+run_OliveHealthR()
+}
+
 }
