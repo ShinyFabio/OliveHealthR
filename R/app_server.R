@@ -163,11 +163,7 @@ app_server <- function( input, output, session ) {
   
   ###seleziona colonna da mappare (MAPPA 1)
   showcolumn2 = reactive({
-    req(datmap1())
-    if (is.null(input$select3) || input$select3 == "")
-      datmap1()
-    else
-      datmap1()[, colnames(datmap1()) %in% input$select3]
+    Olv_select_col(data = datmap1(), input = input$select3)
   })
   
   observeEvent(data(), {
@@ -177,15 +173,9 @@ app_server <- function( input, output, session ) {
   
   ###stampa mappa
   output$map1 = renderTmap({
-    req(input$select3)
-    utmcoord23 <- sp::SpatialPointsDataFrame(filtereddata(), datmap1(), proj4string = sp::CRS("+proj=utm +zone=33 +datum=WGS84"))
-    
-    tm_shape(campania)+ tm_polygons(col= "provincia") + tm_shape(utmcoord23) + 
-      tm_dots(col = colnames(showcolumn2()), scale = 1.5, id= colnames(showcolumn2()), popup.vars = TRUE)
+    make_tmap(pointcoord = filtereddata(), datainfo = datmap1(), dotlegend = showcolumn2(), shp = campania)
   })
-  
-  
-  
+
   
   ##### MAPPE DATADRUPE #####
   ####
@@ -198,14 +188,10 @@ app_server <- function( input, output, session ) {
     dplyr::inner_join(x = z, y = drupe(), by = "Codice_azienda")
   })
   
-  ###seleziona colonna da mappare MAPPA 2
+  #seleziona colonna da mappare MAPPA 2
   showcolumnmap2 = reactive({
-    req(drupe())  #datadrupe
-    if (is.null(input$select2map) || input$select2map == "")
-      drupe()
-    else
-      drupe()[, colnames(drupe()) %in% input$select2map]
-  })
+    Olv_select_col(data = drupe(), input = input$select2map)
+  })  
   
   observeEvent(drupe(), {
     updateSelectInput(session, "select2map", choices = colnames(drupe()))
@@ -237,25 +223,15 @@ app_server <- function( input, output, session ) {
   
   #stampo mappa2
   output$map2 = renderTmap({
-    req(input$select2map)
-    
-    utmcoord23 <- sp::SpatialPointsDataFrame(filtereddata(), dtdrupfilt(), proj4string = sp::CRS("+proj=utm +zone=33 +datum=WGS84"))
-    
-    tm_shape(campania)+ tm_polygons(col= "provincia") + tm_shape(utmcoord23) + 
-      tm_dots(col = colnames(showcolumnmap2()), scale = 1.5, id= colnames(showcolumnmap2()), popup.vars = TRUE)
+    make_tmap(pointcoord = filtereddata(), datainfo = dtdrupfilt(), dotlegend = showcolumnmap2(), shp = campania)
   })
-  
   
   
   #### stampa terza mappa (drupe) ###
   
   ###seleziona colonna da mappare MAPPA 2
   showcolumnmap3 = reactive({
-    req(drupe())
-    if (is.null(input$select3map) || input$select3map == "")
-      drupe()
-    else
-      drupe()[, colnames(drupe()) %in% input$select3map]
+    Olv_select_col(data = drupe(), input = input$select3map)
   })
   
   observeEvent(drupe(), {
@@ -280,49 +256,35 @@ app_server <- function( input, output, session ) {
   #stampa mappa2
   
   output$map3 = renderTmap({
-    req(input$select3map)
-    
-    utmcoord23 <- sp::SpatialPointsDataFrame(filtereddata(), dtdrupfiltmap2(), proj4string = sp::CRS("+proj=utm +zone=33 +datum=WGS84"))
-    
-    tm_shape(campania)+ tm_polygons(col= "provincia") + tm_shape(utmcoord23) + 
-      tm_dots(col = colnames(showcolumnmap3()), scale = 1.5, id= colnames(showcolumnmap3()), popup.vars = TRUE)
+    make_tmap(pointcoord = filtereddata(), datainfo = dtdrupfiltmap2(), dotlegend = showcolumnmap3(), shp = campania)
   })
-  
   
   ##########  Grafici datadrupe  #########
   
   
   
   #selezionare colonna X da plottare
-  
   showcolumnx = reactive({
-    req(datadrupe())
-    if(is.null(input$selectx) || input$selectx == "")
-      datadrupe() else
-        datadrupe()[, colnames(datadrupe()) %in% input$selectx]
-  })
+    Olv_select_col(data = datadrupe(), input = input$selectx)
+  })  
+  
   observeEvent(datadrupe(), {
     updateSelectInput(session, "selectx", choices=colnames(datadrupe()))
   })
   
   ###selezionare colonna Y da plottare
   showcolumny = reactive({
-    req(datadrupe())
-    if(is.null(input$selecty) || input$selecty == "")
-      datadrupe() else
-        datadrupe()[, colnames(datadrupe()) %in% input$selecty]
-  })
+    Olv_select_col(data = datadrupe(), input = input$selecty)
+  }) 
   observeEvent(datadrupe(), {
     updateSelectInput(session, "selecty", choices=colnames(datadrupe()))
   })
   
   ###selezionare colonna per il riempimento
   fillcolumn = reactive({
-    req(datadrupe())
-    if(is.null(input$selectfill) || input$selectfill == "")
-      datadrupe() else
-        datadrupe()[, colnames(datadrupe()) %in% input$selectfill]
-  })
+    Olv_select_col(data = datadrupe(), input = input$selectfill)
+  }) 
+  
   observeEvent(datadrupe(), {
     updateSelectInput(session, "selectfill", choices=colnames(datadrupe()))
   })
@@ -466,22 +428,18 @@ app_server <- function( input, output, session ) {
   
   #selezionare colonna X da plottare
   showcoltotx = reactive({
-    req(datapoltot())
-    if(is.null(input$selectxtot) || input$selectxtot == "")
-      datapoltot() else
-        datapoltot()[, colnames(datapoltot()) %in% input$selectxtot]
-  })
+    Olv_select_col(data = datapoltot(), input = input$selectxtot)
+  })  
+  
   observeEvent(datapoltot(), {
     updateSelectInput(session, "selectxtot", choices=colnames(datapoltot()))
   })
   
   ###selezionare colonna Y da plottare
+
   showcoltoty = reactive({
-    req(datapoltot())
-    if(is.null(input$selectytot) || input$selectytot == "")
-      datapoltot() else
-        datapoltot()[, colnames(datapoltot()) %in% input$selectytot]
-  })
+    Olv_select_col(data = datapoltot(), input = input$selectytot)
+  })  
   observeEvent(datapoltot(), {
     updateSelectInput(session, "selectytot", choices=colnames(datapoltot()))
   })
@@ -489,11 +447,8 @@ app_server <- function( input, output, session ) {
   
   ###selezionare colonna per il riempimento
   fillcolumntot = reactive({
-    req(datapoltot())
-    if(is.null(input$selectfilltot) || input$selectfilltot == "")
-      datapoltot() else
-        datapoltot()[, colnames(datapoltot()) %in% input$selectfilltot]
-  })
+    Olv_select_col(data = datapoltot(), input = input$selectfilltot)
+  }) 
   observeEvent(datapoltot(), {
     updateSelectInput(session, "selectfilltot", choices=colnames(datapoltot()))
   })
@@ -620,35 +575,29 @@ app_server <- function( input, output, session ) {
   ###################SCATTER PLOT INDIVIDUALI#################
   
   #selezionare colonna X da plottare
-  
   showcolindx = reactive({
-    req(datapolind())
-    if(is.null(input$selectxind) || input$selectxind == "")
-      datapolind() else
-        datapolind()[, colnames(datapolind()) %in% input$selectxind]
-  })
+    Olv_select_col(data = datapolind(), input = input$selectxind)
+  })  
+  
   observeEvent(datapolind(), {
     updateSelectInput(session, "selectxind", choices=colnames(datapolind()))
   })
   
   ###selezionare colonna Y da plottare
   showcolindy = reactive({
-    req(datapolind())
-    if(is.null(input$selectyind) || input$selectyind == "")
-      datapolind() else
-        datapolind()[, colnames(datapolind()) %in% input$selectyind]
+    Olv_select_col(data = datapolind(), input = input$selectyind)
   })
+  
   observeEvent(datapolind(), {
     updateSelectInput(session, "selectyind", choices=colnames(datapolind()))
   })
   
   ###selezionare colonna per il riempimento
+
   fillcolumnind = reactive({
-    req(datapolind())
-    if(is.null(input$selectfillind) || input$selectfillind == "")
-      datapolind() else
-        datapolind()[, colnames(datapolind()) %in% input$selectfillind]
+    Olv_select_col(data = datapolind(), input = input$selectfillind)
   })
+  
   observeEvent(datapolind(), {
     updateSelectInput(session, "selectfillind", choices=colnames(datapolind()))
   })
@@ -720,24 +669,20 @@ app_server <- function( input, output, session ) {
   ###############BOXPLOT INDIVIDUALI##########
   
   #selezionare colonna X da plottare
-  
   showcolindxbar = reactive({
-    req(datapolind())
-    if(is.null(input$selectxindbar) || input$selectxindbar == "")
-      datapolind() else
-        datapolind()[, colnames(datapolind()) %in% input$selectxindbar]
-  })
+    Olv_select_col(data = datapolind(), input = input$selectxindbar)
+  })  
+  
+  
   observeEvent(datapolind(), {
     updateSelectInput(session, "selectxindbar", choices=colnames(datapolind()))
   })
   
   ###selezionare colonna Y da plottare
   showcolindybar = reactive({
-    req(datapolind())
-    if(is.null(input$selectyindbar) || input$selectyindbar == "")
-      datapolind() else
-        datapolind()[, colnames(datapolind()) %in% input$selectyindbar]
-  })
+    Olv_select_col(data = datapolind(), input = input$selectyindbar)
+  }) 
+  
   observeEvent(datapolind(), {
     updateSelectInput(session, "selectyindbar", choices=colnames(datapolind()))
   })
@@ -1016,20 +961,14 @@ app_server <- function( input, output, session ) {
   
   
   
-  
-  
-  
+
   
   #################### MAPPA POLIFENOLI ###########################################
   
-  
+  #seleziona colonna
   showcolumnmappol = reactive({
-    req(datapolif())
-    if (is.null(input$mapxpol) || input$mapxpol == "")
-      datapolif()
-    else
-      datapolif()[, colnames(datapolif()) %in% input$mapxpol]
-  })
+    Olv_select_col(data = datapolif(), input = input$mapxpol)
+  }) 
   
   observeEvent(datapolif(), {
     updateSelectInput(session, "mapxpol", choices = colnames(datapolif()))
@@ -1050,27 +989,19 @@ app_server <- function( input, output, session ) {
     dplyr::filter(datapolif2(), N_campionamento == input$numpol)
   })
   
-  #stampa mappa2
-  
+  #stampa mappa
   output$mappol = renderTmap({
-    req(input$mapxpol)
-    
-    utmcoord23 <- sp::SpatialPointsDataFrame(filtereddata(), datapolifmap2(), proj4string = sp::CRS("+proj=utm +zone=33 +datum=WGS84"))
-    
-    tm_shape(campania)+ tm_polygons(col= "provincia") + tm_shape(utmcoord23) + 
-      tm_dots(col = colnames(showcolumnmappol()), scale = 1.5, id= colnames(showcolumnmappol()), popup.vars = TRUE)
+    make_tmap(pointcoord = filtereddata(), datainfo = datapolifmap2(), dotlegend = showcolumnmappol(), shp = campania)
   })
+  
   
   
   ############# AGGIUNGERE SECONDA MAPPA POLIFENOLI########
   
+  #seleziona colonna
   showcolumnmappol2 = reactive({
-    req(datapolif())
-    if (is.null(input$mapxpol2) || input$mapxpol2 == "")
-      datapolif()
-    else
-      datapolif()[, colnames(datapolif()) %in% input$mapxpol2]
-  })
+    Olv_select_col(data = datapolif(), input = input$mapxpol2)
+  }) 
   
   observeEvent(datapolif(), {
     updateSelectInput(session, "mapxpol2", choices = colnames(datapolif()))
@@ -1092,14 +1023,8 @@ app_server <- function( input, output, session ) {
   })
   
   #stampa mappa 2
-  
   output$mappol2 = renderTmap({
-    req(input$mapxpol2)
-    
-    utmcoord23 <- sp::SpatialPointsDataFrame(filtereddata(), datapolifmap22(), proj4string = sp::CRS("+proj=utm +zone=33 +datum=WGS84"))
-    
-    tm_shape(campania)+ tm_polygons(col= "provincia") + tm_shape(utmcoord23) + 
-      tm_dots(col = colnames(showcolumnmappol2()), scale = 1.5, id= colnames(showcolumnmappol2()), popup.vars = TRUE)
+    make_tmap(pointcoord = filtereddata(), datainfo = datapolifmap22(), dotlegend = showcolumnmappol2(), shp = campania)
   })
   
 }

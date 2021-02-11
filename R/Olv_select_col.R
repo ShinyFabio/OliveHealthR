@@ -1,0 +1,31 @@
+#' Select column from a dataframe
+#'
+#' @import shiny
+#' 
+#' @param data The dataset used to select the column. Should be a reactive value (e.g. datmap1())
+#' @param input the input from the ui (e.g. the input from a \code{selectInput()}).
+#' 
+#' @examples \dontrun{
+#' 
+#'   showcolumn2 = reactive({
+#'   
+#'   Olv_select_col(
+#'   data = datmap1(),       #a dataset made with read_csv() 
+#'   input = input$select3   #the input from a shiny::selectInput()
+#'   )
+#'   
+#'   })
+#' 
+#' }
+#'
+
+
+
+
+Olv_select_col = function(data, input){
+    req(data)
+    if (is.null(input) || input == "")
+      return(data)
+    else
+      data[, colnames(data) %in% input]
+}
