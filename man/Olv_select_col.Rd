@@ -9,10 +9,10 @@ Olv_select_col(data, input)
 \arguments{
 \item{data}{The dataset used to select the column. Should be a reactive value (e.g. datmap1())}
 
-\item{input}{the input from the ui (e.g. the input from a \code{selectInput()}).}
+\item{input}{the input from the ui (e.g. the input from a \code{selectInput()}) in the form of \code{input$...}.}
 }
 \description{
-Select column from a dataframe
+Save the name of a column dataframe using an input from the UI. Can be for example from a \code{selectInput()}.
 }
 \examples{
 \dontrun{

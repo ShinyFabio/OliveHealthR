@@ -173,7 +173,7 @@ app_server <- function( input, output, session ) {
   
   ###stampa mappa
   output$map1 = renderTmap({
-    make_tmap(pointcoord = filtereddata(), datainfo = datmap1(), dotlegend = showcolumn2(), shp = campania)
+    make_tmap(pointcoord = filtereddata(), datainfo = datmap1(), dotlegend = showcolumn2())
   })
 
   
@@ -223,7 +223,7 @@ app_server <- function( input, output, session ) {
   
   #stampo mappa2
   output$map2 = renderTmap({
-    make_tmap(pointcoord = filtereddata(), datainfo = dtdrupfilt(), dotlegend = showcolumnmap2(), shp = campania)
+    make_tmap(pointcoord = filtereddata(), datainfo = dtdrupfilt(), dotlegend = showcolumnmap2())
   })
   
   
@@ -256,7 +256,7 @@ app_server <- function( input, output, session ) {
   #stampa mappa2
   
   output$map3 = renderTmap({
-    make_tmap(pointcoord = filtereddata(), datainfo = dtdrupfiltmap2(), dotlegend = showcolumnmap3(), shp = campania)
+    make_tmap(pointcoord = filtereddata(), datainfo = dtdrupfiltmap2(), dotlegend = showcolumnmap3())
   })
   
   ##########  Grafici datadrupe  #########
@@ -423,8 +423,7 @@ app_server <- function( input, output, session ) {
     datapoltot()
   })
   
-  
-  
+
   
   #selezionare colonna X da plottare
   showcoltotx = reactive({
@@ -470,43 +469,20 @@ app_server <- function( input, output, session ) {
   })
   
   
-  #aggiungo unità di misura e sostituisco _ con lo spazio
   xlabtot = reactive({
-    colx = colnames(showcoltotx())
-    colt= colnames(datapolind())
-    coly = colnames(showcoltoty())
-    if(colx %in% colt == FALSE && coly != "Presenza_larve"){
-      xlab2 = paste(colx, "(mg/g drupe)")
-    } else{ xlab2=colnames(showcoltotx())
-    }
-    xlab3 = gsub("_", " ", xlab2)
-    return(xlab3)
+    label_with_unit(data = datapolind(), colname = showcoltotx(), unit = "(mg/g drupe)", optional = "Presenza_larve")
   })
-  
+
   ylabtot = reactive({
-    coly = colnames(showcoltoty())
-    colx = colnames(showcoltotx())
-    colt= colnames(datapolind())
-    if(coly %in% colt == FALSE && coly != "Presenza_larve"){
-      ylab2 = paste(coly, "(mg/g drupe)")
-    } else{ ylab2 = colnames(showcoltoty())
-    }
-    ylab3 = gsub("_", " ", ylab2)
-    return(ylab3)
+    label_with_unit(data = datapolind(), colname = showcoltoty(), unit = "(mg/g drupe)", optional = "Presenza_larve")
   })
   
+
   filllabtot = reactive({
-    req(datapoltot())
-    coly = colnames(showcoltoty())
-    colx = colnames(fillcolumntot())
-    colt= colnames(datapolind())
-    if(colx %in% colt == FALSE){
-      xlab2 = paste(colx, "(µg/ml)")
-    } else{xlab2=colnames(fillcolumntot())
-    }
-    xlab3 = gsub("_", " ", xlab2)
-    return(xlab3)
+    label_with_unit(data = datapolind(), colname = fillcolumntot(), unit = "(mg/g drupe)", optional = "Presenza_larve")
   })
+  
+
   
   ###grafico classico (scatter plot)   , position = "jitter" , alpha = 0.7
   output$totscatplot = renderPlotly({
@@ -551,7 +527,7 @@ app_server <- function( input, output, session ) {
   output$barplottot = renderPlotly({
     temp2=ggplot(data=colorcamptot()) + 
       geom_col(mapping = aes_string(x = colnames(showcoltotx()), y = colnames(showcoltoty()), fill = "N_campionamento"), position = position_dodge2(preserve = "single")) + 
-      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(gsub("_", " ", ylabind())) + xlab(gsub("_", " ", xlabind()))
+      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(ylabtot()) + xlab(xlabtot())
     ggplotly(temp2) %>% layout(legend = list(title = list(text = "N_campionamento")))
   })
   
@@ -619,42 +595,21 @@ app_server <- function( input, output, session ) {
   })
   
   
-  #aggiungo unità di misura e sostituisco _ con lo spazio
-  ylabind= reactive({
-    req(datapoltot())
-    coly = colnames(showcolindy())
-    colt= colnames(datapoltot())
-    if(coly %in% colt == FALSE){
-      ylab2 = paste(coly, "(µg/ml)")
-    } else{ylab2 = colnames(showcolindy())
-    }
-    ylab3 = gsub("_", " ", ylab2)
-    return(ylab3)
-  })
-  
   xlabind = reactive({
-    req(datapoltot())
-    colx = colnames(showcolindx())
-    colt= colnames(datapoltot())
-    if(colx %in% colt == FALSE){
-      xlab2 = paste(colx, "(µg/ml)")
-    } else{xlab2 = colnames(showcolindx())
-    }
-    xlab3 = gsub("_", " ", xlab2)
-    return(xlab3)
+    label_with_unit(data = datapoltot(), colname = showcolindx(), unit = "(µg/ml)")
   })
   
-  filllabind = reactive({
-    req(datapoltot())
-    colx = colnames(fillcolumnind())
-    colt= colnames(datapoltot())
-    if(colx %in% colt == FALSE){
-      xlab2 = paste(colx, "(µg/ml)")
-    } else{xlab2 = colnames(fillcolumnind())
-    }
-    xlab3 = gsub("_", " ", xlab2)
-    return(xlab3)
+  
+  ylabind = reactive({
+    label_with_unit(data = datapoltot(), colname = showcolindy(), unit = "(µg/ml)")
   })
+  
+
+  filllabind = reactive({
+    label_with_unit(data = datapoltot(), colname = fillcolumnind(), unit = "(µg/ml)")
+  })
+  
+
   ####grafico classico (scatter plot)   , position = "jitter" , alpha = 0.7
   output$scatterindpol = renderPlotly({
     
@@ -713,33 +668,15 @@ app_server <- function( input, output, session ) {
     datapolindyearunite() %>% dplyr::filter(N_campionamento %in% input$checkcampind)
   })
   
-  
-  #aggiungo unità di misura e sostituisco _ con lo spazio
-  ylabindbar= reactive({
-    req(datapoltot())
-    coly = colnames(showcolindybar())
-    colt= colnames(datapoltot())
-    if(coly %in% colt == FALSE){
-      ylab2 = paste(coly, "(µg/ml)")
-    } else{ylab2 = colnames(showcolindybar())
-    }
-    ylab3 = gsub("_", " ", ylab2)
-    return(ylab3)
-  })
-  
   xlabindbar = reactive({
-    req(datapoltot())
-    colx = colnames(showcolindxbar())
-    colt= colnames(datapoltot())
-    if(colx %in% colt == FALSE){
-      xlab2 = paste(colx, "(µg/ml)")
-    } else{xlab2 = colnames(showcolindxbar())
-    }
-    xlab3 = gsub("_", " ", xlab2)
-    return(xlab3)
+    label_with_unit(data = datapoltot(), colname = showcolindxbar(), unit = "(µg/ml)")
   })
   
+  ylabindbar = reactive({
+    label_with_unit(data = datapoltot(), colname = showcolindybar(), unit = "(µg/ml)")
+  })
   
+
   ###grafico a barre
   output$barplotind = renderPlotly({
     temp2=ggplot(data=colorcampind()) + 
@@ -991,7 +928,7 @@ app_server <- function( input, output, session ) {
   
   #stampa mappa
   output$mappol = renderTmap({
-    make_tmap(pointcoord = filtereddata(), datainfo = datapolifmap2(), dotlegend = showcolumnmappol(), shp = campania)
+    make_tmap(pointcoord = filtereddata(), datainfo = datapolifmap2(), dotlegend = showcolumnmappol())
   })
   
   
@@ -1024,7 +961,7 @@ app_server <- function( input, output, session ) {
   
   #stampa mappa 2
   output$mappol2 = renderTmap({
-    make_tmap(pointcoord = filtereddata(), datainfo = datapolifmap22(), dotlegend = showcolumnmappol2(), shp = campania)
+    make_tmap(pointcoord = filtereddata(), datainfo = datapolifmap22(), dotlegend = showcolumnmappol2())
   })
   
 }

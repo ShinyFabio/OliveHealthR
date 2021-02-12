@@ -1,9 +1,11 @@
 #' Select column from a dataframe
+#' 
+#' @description Save the name of a column dataframe using an input from the UI. Can be for example from a \code{selectInput()}.
 #'
 #' @import shiny
 #' 
 #' @param data The dataset used to select the column. Should be a reactive value (e.g. datmap1())
-#' @param input the input from the ui (e.g. the input from a \code{selectInput()}).
+#' @param input the input from the ui (e.g. the input from a \code{selectInput()}) in the form of \code{input$...}.
 #' 
 #' @examples \dontrun{
 #' 

@@ -5,7 +5,7 @@
 #' @param pointcoord A dataset filled with two columns (UTM_33T_N and UTM_33T_E). Each row is a point with its UTM 33T cordinates.
 #' @param datainfo A dataset with points informations. These informations will be shown on the map.
 #' @param dotlegend An informative column used for the legend and for the mapping of the dots (e.g. "Polifenoli_totali" or "Azienda").
-#' @param shp A shapefile used for the background in the UTM 33T coordinate system.
+#' @param shp A shapefile used for the background in the UTM 33T coordinate system. By default shp = campania (a shapefile saved in .rda format).
 #' 
 #' 
 #' 
@@ -26,7 +26,7 @@
 #' 
 
 
-make_tmap = function(pointcoord, datainfo, dotlegend, shp){
+make_tmap = function(pointcoord, datainfo, dotlegend, shp = campania){
   
     utmcoord23 <- sp::SpatialPointsDataFrame(pointcoord, datainfo, proj4string = sp::CRS("+proj=utm +zone=33 +datum=WGS84"))
     
