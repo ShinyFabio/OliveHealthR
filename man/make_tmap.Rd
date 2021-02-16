@@ -4,12 +4,10 @@
 \alias{make_tmap}
 \title{Make a tmap object that can be rendered in shiny}
 \usage{
-make_tmap(pointcoord, datainfo, dotlegend, shp = campania)
+make_tmap(data, dotlegend, shp = campania)
 }
 \arguments{
-\item{pointcoord}{A dataset filled with two columns (UTM_33T_N and UTM_33T_E). Each row is a point with its UTM 33T cordinates.}
-
-\item{datainfo}{A dataset with points informations. These informations will be shown on the map.}
+\item{data}{A dataframe with the coordinates columns(UTM_33T_N and UTM_33T_E) and relatives infos.}
 
 \item{dotlegend}{An informative column used for the legend and for the mapping of the dots (e.g. "Polifenoli_totali" or "Azienda").}
 
@@ -22,10 +20,8 @@ This function render a tmap using a shapefile (campania) as background and a tab
 \dontrun{
 
 output$map1 = make_tmap(
- pointcoord = filtereddata(), 
- datainfo = datmap1(), 
- dotlegend = showcolumn2(), 
- shp = campania)
+ data = data = dtdrupfilt(), dotlegend = showcolumnmap2()
+ )
 }
 
 

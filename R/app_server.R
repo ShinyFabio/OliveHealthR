@@ -24,6 +24,7 @@
 #' @importFrom DT renderDT
 #' @importFrom grDevices rainbow
 #' @importFrom dendextend color_branches
+#' @importFrom sf st_as_sf st_crs
 #' @noRd
 app_server <- function( input, output, session ) {
   # List the first level callModules here
@@ -149,14 +150,9 @@ app_server <- function( input, output, session ) {
   
   
   ##### Mappa Aziende ####
-  #seleziono le colonne contenenti UTM che serviranno per tutte le mappe
-  filtereddata = reactive({
-    data() %>% dplyr::select("UTM_33T_E", "UTM_33T_N")
-  }) 
   
   
-  
-  
+
   #creo datmap1 senza le colonne UTM
   datmap1 = reactive({data() %>% dplyr::select(!starts_with("UTM"))
   })
@@ -173,7 +169,7 @@ app_server <- function( input, output, session ) {
   
   ###stampa mappa
   output$map1 = renderTmap({
-    make_tmap(pointcoord = filtereddata(), datainfo = datmap1(), dotlegend = showcolumn2())
+    make_tmap(data = data(), dotlegend = showcolumn2())
   })
 
   
@@ -181,11 +177,17 @@ app_server <- function( input, output, session ) {
   ####
   ####seconda mappa (datadrupe)##
   
+
   #fare il join di data con le drupe
-  datadrupe = reactive({
+  datadrupemap = reactive({
     req(drupe())
-    z = data() %>% dplyr::select(!starts_with("UTM"))
-    dplyr::inner_join(x = z, y = drupe(), by = "Codice_azienda")
+    dplyr::inner_join(x = data(), y = drupe(), by = "Codice_azienda")
+  })
+  
+  #rimuovere colonne coordinate
+  datadrupe = reactive({
+    req(datadrupemap())
+    datadrupemap() %>% dplyr::select(!starts_with("UTM"))
   })
   
   #seleziona colonna da mappare MAPPA 2
@@ -199,8 +201,8 @@ app_server <- function( input, output, session ) {
   
   #crea la colonna anno 
   dtdrupanno = reactive({
-    req(datadrupe())
-    datadrupe() %>% dplyr::mutate(Anno = lubridate::year(Data_campionamento))
+    req(datadrupemap())
+    datadrupemap() %>% dplyr::mutate(Anno = lubridate::year(Data_campionamento)) #cambiato datadrupe
   })
   
   
@@ -223,7 +225,7 @@ app_server <- function( input, output, session ) {
   
   #stampo mappa2
   output$map2 = renderTmap({
-    make_tmap(pointcoord = filtereddata(), datainfo = dtdrupfilt(), dotlegend = showcolumnmap2())
+    make_tmap(data = dtdrupfilt(), dotlegend = showcolumnmap2())
   })
   
   
@@ -256,7 +258,7 @@ app_server <- function( input, output, session ) {
   #stampa mappa2
   
   output$map3 = renderTmap({
-    make_tmap(pointcoord = filtereddata(), datainfo = dtdrupfiltmap2(), dotlegend = showcolumnmap3())
+    make_tmap(data = dtdrupfiltmap2(), dotlegend = showcolumnmap3())
   })
   
   ##########  Grafici datadrupe  #########
@@ -400,14 +402,19 @@ app_server <- function( input, output, session ) {
   
   #polif
   #fare il join di data con i polifenoli
-  datapolif = reactive({
+  datapolifmap = reactive({
     req(polif())
-    z = data() %>% dplyr::select("Codice_azienda", "Azienda")
+    z = data() %>% dplyr::select("Codice_azienda", "Azienda", "UTM_33T_E", "UTM_33T_N")
     x = dplyr::inner_join(x = z, y = polif(), by = "Codice_azienda")
     u1 = within(x, levels(Presenza_larve)[levels(Presenza_larve) == "0"] <- "Non individuabili") 
     u2 = within(u1, levels(Presenza_larve)[levels(Presenza_larve) == "1"] <- "Poche larve")
     u3 = within(u2, levels(Presenza_larve)[levels(Presenza_larve) == "2"] <- "Molte larve")
     return(u3)
+  })
+  
+  datapolif = reactive({
+    req(datapolifmap())
+    datapolifmap() %>% dplyr::select(!starts_with("UTM"))
   })
   
   #######polifenoli totali#####
@@ -918,7 +925,7 @@ app_server <- function( input, output, session ) {
   })
   #filtra in base all'anno selezionato
   datapolif2 = reactive({
-    datapolif() %>% dplyr::filter(Anno == input$selyearpol)
+    datapolifmap() %>% dplyr::filter(Anno == input$selyearpol)
   })
   
   datapolifmap2 = reactive({
@@ -928,7 +935,7 @@ app_server <- function( input, output, session ) {
   
   #stampa mappa
   output$mappol = renderTmap({
-    make_tmap(pointcoord = filtereddata(), datainfo = datapolifmap2(), dotlegend = showcolumnmappol())
+    make_tmap(data = datapolifmap2(), dotlegend = showcolumnmappol())
   })
   
   
@@ -951,7 +958,7 @@ app_server <- function( input, output, session ) {
   })
   #filtra in base all'anno selezionato
   datapolif22 = reactive({
-    datapolif() %>% dplyr::filter(Anno == input$selyearpol2)
+    datapolifmap() %>% dplyr::filter(Anno == input$selyearpol2)
   })
   
   datapolifmap22 = reactive({
@@ -961,7 +968,7 @@ app_server <- function( input, output, session ) {
   
   #stampa mappa 2
   output$mappol2 = renderTmap({
-    make_tmap(pointcoord = filtereddata(), datainfo = datapolifmap22(), dotlegend = showcolumnmappol2())
+    make_tmap(data =  datapolifmap22() ,dotlegend = showcolumnmappol2())
   })
   
 }

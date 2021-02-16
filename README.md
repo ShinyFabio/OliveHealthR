@@ -32,6 +32,19 @@ devtools::install_github("ShinyFabio/OliveHealthR2")
 
 Be sure that your R version is at least 4.0.0.
 
+### Ubuntu (tested on 18.04)
+
+If your OS is Ubuntu you have to perform some additional steps. In
+command line run these lines:
+
+``` r
+sudo apt install build-essential libcurl4-gnutls-dev libxml2-dev libssl-dev   #for {devtools} library
+sudo apt-get install libcairo2-dev                                            #for {Cairo} library
+sudo apt-get install libxt-dev                                                #for {Cairo} library
+sudo apt install libudunits2-dev                                              #for {units} library
+sudo apt install libgdal-dev                                                  #for {sf} library
+```
+
 ## Launch
 
 To launch the app use this code
