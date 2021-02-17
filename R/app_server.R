@@ -11,7 +11,7 @@
 #' @import ggfortify
 #' @import htmltools
 #' @import scales
-#' @importFrom dplyr select inner_join mutate filter
+#' @importFrom dplyr select inner_join mutate filter rename
 #' @importFrom tidyr unite
 #' @importFrom tibble column_to_rownames rownames_to_column
 #' @importFrom grid gpar
@@ -21,7 +21,7 @@
 #' @importFrom readr read_delim locale parse_factor
 #' @importFrom ComplexHeatmap Heatmap HeatmapAnnotation draw
 #' @importFrom ggcorrplot ggcorrplot
-#' @importFrom DT renderDT
+#' @importFrom DT renderDT datatable formatRound
 #' @importFrom grDevices rainbow
 #' @importFrom dendextend color_branches
 #' @importFrom sf st_as_sf st_crs
@@ -427,7 +427,10 @@ app_server <- function( input, output, session ) {
   #crea tabella polifenoli totali
   output$tablepoltot = DT::renderDT({
     req(datapoltot())
-    datapoltot()
+    temp = datapoltot() %>% dplyr::rename("Polifenoli_tot_(mg/g)" = "Polifenoli_tot")
+    DT::datatable(temp, options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% 
+      DT::formatRound(columns = "Polifenoli_tot_(mg/g)", digits = 2) 
+    
   })
   
 
