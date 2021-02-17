@@ -552,9 +552,15 @@ app_server <- function( input, output, session ) {
     dplyr::select(datapolif(), !c("Polifenoli_tot", "Presenza_larve"))
   })
   
-  #crea tabella polifenoli individuali
+  #crea tabella polifenoli individuali con l'unità di misura
   output$tablepolind = DT::renderDT({ 
-    datapolind()
+    req(datapolind())
+    temp = datapolind()
+    for(i in seq(6,length(temp))){
+      names(temp)[i] = paste0(names(temp)[i], "_(ug/ml)")
+    }
+    return(temp)
+    
   })
   
   
@@ -691,7 +697,7 @@ app_server <- function( input, output, session ) {
   output$barplotind = renderPlotly({
     temp2=ggplot(data=colorcampind()) + 
       geom_col(mapping = aes_string(x = colnames(showcolindxbar()), y = colnames(showcolindybar()), fill = "N_campionamento"), position = position_dodge2(preserve = "single")) + 
-      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(gsub("_", " ", ylabindbar())) + xlab(gsub("_", " ", xlabindbar()))
+      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(ylabindbar()) + xlab(xlabindbar())
     ggplotly(temp2) %>% layout(legend = list(title = list(text = "N_campionamento")))
   })
   
