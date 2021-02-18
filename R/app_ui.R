@@ -105,8 +105,8 @@ app_ui <- function(request) {
                                                                       tags$h3("File con dati"),
                                                                       radioButtons("tipofile", label = "Tipo di file", choices = list("Descrittivo" = 1, "Quantitativo" = 2),
                                                                                    selected = 1),
-                                                                      fileInput("drupeinput", "file CSV con dati drupe"),
-                                                                      fileInput("polifinput", "file CSV con dati polifenoli")
+                                                                      fileInput("drupeinput", "File schede campionamento (.csv)"),
+                                                                      fileInput("polifinput", "File dati polifenoli (.csv)")
                                                      )
                                         ),
                                         mainPanel(width = 10,
@@ -183,7 +183,7 @@ app_ui <- function(request) {
                                                              )),
                                                          plotlyOutput("plotxy")
                                                 ),
-                                                tabPanel("barplot",
+                                                tabPanel("Barplot",
                                                          fluidRow(column(width = 2,
                                                                          br(),
                                                                          box(width = NULL, status = "primary", checkboxGroupInput("checkcamp", "Seleziona campionamento", choices = ""))

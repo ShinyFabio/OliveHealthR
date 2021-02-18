@@ -101,7 +101,12 @@ app_server <- function( input, output, session ) {
   
   #####DESCRIZIONE####
   
-  output$descriz = DT::renderDT(dplyr::select(descri2(), "Azienda"), selection = "single", server = FALSE, rownames = FALSE)
+  #join con data per aggiungere la colonna "Azienda"
+  
+  output$descriz = DT::renderDT({
+    req(descri2())
+    dplyr::select(descri2(), "Azienda")
+    }, selection = "single", server = FALSE, rownames = FALSE)
 
   ####selezionare la riga dell'azienda    
   y11 = reactive({
