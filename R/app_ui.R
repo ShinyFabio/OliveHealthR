@@ -5,7 +5,7 @@
 #' @import shiny
 #' @import shinydashboard
 #' @import shinyWidgets
-#' @import plotly
+#' @importFrom plotly plotlyOutput
 #' @import tmap
 #' @import tmaptools
 #' @import htmltools
@@ -181,14 +181,14 @@ app_ui <- function(request) {
                                                                column(3, selectInput("num2", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)),
                                                                column(3, selectInput("selectfill", "Colonna da usare come riempimento", choices = "", multiple = FALSE))
                                                              )),
-                                                         plotlyOutput("plotxy")
+                                                         plotly::plotlyOutput("plotxy")
                                                 ),
                                                 tabPanel("Barplot",
                                                          fluidRow(column(width = 2,
                                                                          br(),
                                                                          box(width = NULL, status = "primary", checkboxGroupInput("checkcamp", "Seleziona campionamento", choices = ""))
                                                          ),
-                                                         column(width = 10, br(), box(width=NULL, status = "primary", plotlyOutput("barplot1")))
+                                                         column(width = 10, br(), box(width=NULL, status = "primary", plotly::plotlyOutput("barplot1")))
                                                          )
                                                 )#end of tabpanel
                                               )#end of tabset
@@ -295,7 +295,7 @@ app_ui <- function(request) {
                                                                                column(3, selectInput("numtot", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)),
                                                                                column(3, selectInput("selectfilltot", "Colonna da usare come riempimento", choices = "", multiple = FALSE))
                                                                              )),
-                                                                         plotlyOutput("totscatplot")
+                                                                         plotly::plotlyOutput("totscatplot")
                                                                 ),
                                                                 
                                                                 tabPanel("Barplot",
@@ -304,7 +304,7 @@ app_ui <- function(request) {
                                                                                   br(),
                                                                                   box(width = NULL, status = "primary", checkboxGroupInput("checkcamptot", "Seleziona campionamento", choices = ""))
                                                                            ),
-                                                                           column(width = 10, br(), box(width=NULL, status = "primary", plotlyOutput("barplottot")))
+                                                                           column(width = 10, br(), box(width=NULL, status = "primary", plotly::plotlyOutput("barplottot")))
                                                                          )#end of fluidRow
                                                                 )
                                                               )#end of tabsetpanel
@@ -345,7 +345,7 @@ app_ui <- function(request) {
                                                                                column(3, selectInput("numind", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)),
                                                                                column(3, selectInput("selectfillind", "Colonna da usare come riempimento", choices = "", multiple = FALSE))
                                                                              )),
-                                                                         plotlyOutput("scatterindpol")
+                                                                         plotly::plotlyOutput("scatterindpol")
                                                                    )
                                                                  ) #end of sidebarlayout
                                                         ), #end of tabpanel scatterplot
@@ -362,7 +362,7 @@ app_ui <- function(request) {
                                                                    
                                                                    mainPanel(width = 10,
                                                                          br(),
-                                                                         box(width=12, status = "primary", plotlyOutput("barplotind"))
+                                                                         box(width=12, status = "primary", plotly::plotlyOutput("barplotind"))
                                                                    )
                                                                  ) #end of sidebarlayout
                                                                  
@@ -446,7 +446,7 @@ app_ui <- function(request) {
                                                                    
                                                                    mainPanel(width = 10,
                                                                    br(),
-                                                                   box(width=7, status = "primary", plotlyOutput("corrplotind"))
+                                                                   box(width=7, status = "primary", plotly::plotlyOutput("corrplotind"))
                                                                    ) #end of mainpanel
                                                                  ) #end of sidebarlayout
                                                                  
@@ -478,7 +478,7 @@ app_ui <- function(request) {
                                                             
                                                             tabPanel("Screeplot",
                                                                      br(),
-                                                                     plotlyOutput("screeplot", width = "75%")         
+                                                                     plotly::plotlyOutput("screeplot", width = "75%")         
                                                             ),
                                                             
                                                             tabPanel("Loadings",
@@ -486,7 +486,7 @@ app_ui <- function(request) {
                                                                      fluidRow(
                                                                        column(4, box(width = NULL, status = "primary", uiOutput("sliderpc")))
                                                                      ),
-                                                                     fluidRow(plotlyOutput("loadings"))
+                                                                     fluidRow(plotly::plotlyOutput("loadings"))
                                                             ),
                                                             
                                                             tabPanel("Biplot",
@@ -496,7 +496,7 @@ app_ui <- function(request) {
                                                                               box(width = NULL, status = "primary", selectInput("colbiplot", "Seleziona colonna riempimento", choices = c("Provincia", "Cultivar_principale", "Areale")))
                                                                        )
                                                                      ),
-                                                                     fluidRow(plotlyOutput("biplot", height = "500px"))
+                                                                     fluidRow(plotly::plotlyOutput("biplot", height = "500px"))
                                                             )
                                                             
                                                           )

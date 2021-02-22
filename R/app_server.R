@@ -3,9 +3,9 @@
 #' @param input,output,session Internal parameters for {shiny}. 
 #'     DO NOT REMOVE.
 #' @import shiny
-#' @import ggplot2
-#' @import stats
-#' @import plotly
+#' @importFrom plotly renderPlotly ggplotly layout
+#' @rawNamespace import(ggplot2, except = last_plot)
+#' @rawNamespace import(stats, except = filter)
 #' @import tmap
 #' @import tmaptools
 #' @import ggfortify
@@ -134,14 +134,14 @@ app_server <- function( input, output, session ) {
   #####grafico cultivar con scelta del tipo di grafico   
   output$cultplot = renderUI({
     if(input$selplotcult == 1){
-      output$pie1 = renderPlotly({
-        data() %>% plot_ly(labels = ~Cultivar_principale, type= "pie", textposition = 'inside', textinfo = 'label+value',
+      output$pie1 = plotly::renderPlotly({
+        data() %>% plotly::plot_ly(labels = ~Cultivar_principale, type= "pie", textposition = 'inside', textinfo = 'label+value',
                            marker = list(colors = colors,line = list(color = '#FFFFFF', width = 1)), 
-                           showlegend = FALSE) %>% layout(title = "Presenza delle varie cultivar sul territorio")
+                           showlegend = FALSE) %>% plotly::layout(title = "Presenza delle varie cultivar sul territorio")
       })
       plotlyOutput("pie1")
     } else {
-      output$bar1 = renderPlotly({
+      output$bar1 = plotly::renderPlotly({
         dd = ggplot(data=data()) + geom_bar(mapping = aes(x = Cultivar_principale, fill = Cultivar_principale)) + 
           scale_y_continuous(breaks = scales::pretty_breaks()) + ggtitle("Presenza delle varie cultivar sul territorio") + 
           xlab("Cultivar") + ylab("Conta") + 
@@ -149,7 +149,7 @@ app_server <- function( input, output, session ) {
           scale_fill_manual(values = c("#d62728","#2ca02c", "#ff7f0e", "#1f77b4", "#e77c7c", "#5fd35f", "#ffb574", "#57a9e2", "#17becf", "#bcbd22", "#7f7f7f", "#e377c2", "#8c564b", "#9467bd" ))
         
       })
-      plotlyOutput("bar1")
+      plotly::plotlyOutput("bar1")
     }
   })
   
@@ -314,11 +314,11 @@ app_server <- function( input, output, session ) {
   })
   
   ###grafico classico (scatter plot)   , position = "jitter" , alpha = 0.7
-  output$plotxy = renderPlotly({
+  output$plotxy = plotly::renderPlotly({
     temp = ggplot(data = dtdrupfilt2()) +
       geom_count(mapping = aes_string(x = colnames(showcolumnx()), y = colnames(showcolumny()), colour = colnames(fillcolumn()))) +
       scale_size_continuous(range = c(3,9)) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
-    ggplotly(temp) %>% layout(legend = list(title = list(text = colnames(fillcolumn()))))
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fillcolumn()))))
   })
   
   
@@ -353,11 +353,11 @@ app_server <- function( input, output, session ) {
   
   
   ###grafico a barre
-  output$barplot1 = renderPlotly({
+  output$barplot1 = plotly::renderPlotly({
     temp2=ggplot(data=colorcamp()) + 
       geom_col(mapping = aes_string(x = colnames(showcolumnx()), y = colnames(showcolumny()), fill = "N_campionamento"), position = position_dodge2(preserve = "single")) + 
       theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank())
-    ggplotly(temp2) %>% layout(legend = list(title = list(text = "N_campionamento")))
+    plotly::ggplotly(temp2) %>% plotly::layout(legend = list(title = list(text = "N_campionamento")))
   })
   
   
@@ -500,12 +500,12 @@ app_server <- function( input, output, session ) {
 
   
   ###grafico classico (scatter plot)   , position = "jitter" , alpha = 0.7
-  output$totscatplot = renderPlotly({
+  output$totscatplot = plotly::renderPlotly({
     temp = ggplot(data = dtdrupfilttot2()) + 
       geom_count(mapping = aes_string(x = colnames(showcoltotx()), y = colnames(showcoltoty()), colour = colnames(fillcolumntot()))) + 
       ylab(ylabtot()) + xlab(xlabtot()) + labs(colour=filllabtot()) + #scale_size_continuous(range = c(3,9)) + 
       theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
-    ggplotly(temp) %>% layout(legend = list(title = list(text = filllabtot())))
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = filllabtot())))
   })
   
   
@@ -539,11 +539,11 @@ app_server <- function( input, output, session ) {
   
   
   ###grafico a barre
-  output$barplottot = renderPlotly({
+  output$barplottot = plotly::renderPlotly({
     temp2=ggplot(data=colorcamptot()) + 
       geom_col(mapping = aes_string(x = colnames(showcoltotx()), y = colnames(showcoltoty()), fill = "N_campionamento"), position = position_dodge2(preserve = "single")) + 
       theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(ylabtot()) + xlab(xlabtot())
-    ggplotly(temp2) %>% layout(legend = list(title = list(text = "N_campionamento")))
+    plotly::ggplotly(temp2) %>% plotly::layout(legend = list(title = list(text = "N_campionamento")))
   })
   
   
@@ -632,13 +632,13 @@ app_server <- function( input, output, session ) {
   
 
   ####grafico classico (scatter plot)   , position = "jitter" , alpha = 0.7
-  output$scatterindpol = renderPlotly({
+  output$scatterindpol = plotly::renderPlotly({
     
     temp = ggplot(data = dtdrupfiltind2()) + 
       geom_count(mapping = aes_string(x = colnames(showcolindx()), y = colnames(showcolindy()), colour = colnames(fillcolumnind()))) + 
       ylab(ylabind()) + xlab(xlabind()) + labs(colour=filllabind()) +#scale_size_continuous(range = c(3,9)) + 
       theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
-    ggplotly(temp) %>% layout(legend = list(title = list(text = filllabind())))
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = filllabind())))
   })
   
   
@@ -699,11 +699,11 @@ app_server <- function( input, output, session ) {
   
 
   ###grafico a barre
-  output$barplotind = renderPlotly({
+  output$barplotind = plotly::renderPlotly({
     temp2=ggplot(data=colorcampind()) + 
       geom_col(mapping = aes_string(x = colnames(showcolindxbar()), y = colnames(showcolindybar()), fill = "N_campionamento"), position = position_dodge2(preserve = "single")) + 
       theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(ylabindbar()) + xlab(xlabindbar())
-    ggplotly(temp2) %>% layout(legend = list(title = list(text = "N_campionamento")))
+    plotly::ggplotly(temp2) %>% plotly::layout(legend = list(title = list(text = "N_campionamento")))
   })
   
   
@@ -796,7 +796,7 @@ app_server <- function( input, output, session ) {
     col_ha = ComplexHeatmap::HeatmapAnnotation(df = annotdata, which = "row", col = colorannot)
     
     
-    ht=ComplexHeatmap::Heatmap(temp, name = "ug/ml",  rect_gp = grid::gpar(col = "white", lwd = 1), row_title = "Codice azienda", 
+    ht = ComplexHeatmap::Heatmap(temp, name = "ug/ml",  rect_gp = grid::gpar(col = "white", lwd = 1), row_title = "Codice azienda", 
                                column_title = "Polifenoli", row_names_gp = grid::gpar(fontsize = 11),
                                cluster_rows = row_dend, cluster_columns = col_dend, 
                                left_annotation = col_ha,
@@ -832,14 +832,14 @@ app_server <- function( input, output, session ) {
   
   ###creo il corrplot
   
-  output$corrplotind = renderPlotly({
+  output$corrplotind = plotly::renderPlotly({
     
     temp = dtindfiltcorr() %>% dplyr::select(-Anno, - N_campionamento, -Azienda, - Codice_azienda)
     temp2 = round(stats::cor(temp),1)
     par(xpd = TRUE)
     
     plot = ggcorrplot::ggcorrplot(temp2, hc.order = TRUE, type = "lower", outline.col = "white", show.diag = TRUE)
-    ggplotly(plot)
+    plotly::ggplotly(plot)
    
   })
   
@@ -879,7 +879,7 @@ app_server <- function( input, output, session ) {
   
   
   ###plot loadings
-  output$loadings = renderPlotly({
+  output$loadings = plotly::renderPlotly({
     req(pcadati())
     pca = pcadati()
     loadpca = as.data.frame(pca$loadings[, input$selpcs])
@@ -890,11 +890,11 @@ app_server <- function( input, output, session ) {
     colnames(loadpca) = c("Polifenoli", paste0("PC", input$selpcs))
     loadplot = ggplot(loadpca) + geom_col(aes(x = Polifenoli, y = loadpca[,2], fill = Polifenoli)) +
       labs(y = paste0("PC2", " ", "(", pcasdev[as.numeric(2), ], "%", ")"), title = "Loadings")
-    ggplotly(loadplot)
+    plotly::ggplotly(loadplot)
   })
   
   ###screeplot
-  output$screeplot <- renderPlotly({
+  output$screeplot <- plotly::renderPlotly({
     pca = pcadati()
     var = cumsum(pca$sdev^2/sum(pca$sdev^2)) 
     var = as.data.frame(cbind(var)) %>% tibble::rownames_to_column()
@@ -904,17 +904,17 @@ app_server <- function( input, output, session ) {
       geom_line(colour = "red", group = 1, linetype = "dashed", size = 1) + geom_point(size = 4, colour = "red") + 
       labs(x = "Componenti principali", y = "Varianza spiegata (%)", title = "Screeplot") +
       scale_y_continuous(limits = c(0, 1), breaks = c(seq(0, 1, by = 0.1)))
-    ggplotly(screegg)
+    plotly::ggplotly(screegg)
     
   })
   
   
   ###biplot
-  output$biplot = renderPlotly({
+  output$biplot = plotly::renderPlotly({
     req(pcadati())
     temp = autoplot(pcadati(), data = data(), colour = input$colbiplot, loadings = TRUE, loadings.colour = 'blue', 
                     loadings.label = TRUE, loadings.label.size = 4, title = "Screeplot")
-    ggplotly(temp)
+    plotly::ggplotly(temp)
   })
   
   

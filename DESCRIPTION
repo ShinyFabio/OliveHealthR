@@ -20,6 +20,8 @@ Imports:
     grid,
     grDevices,
     readr,
+    plotly,
+    dplyr,
     sf
 Encoding: UTF-8
 LazyData: true
@@ -35,7 +37,6 @@ Depends:
     R (>= 4.0.0),
     tmap,
     tmaptools,
-    plotly,
     shinythemes,
     shinydashboard,
     shinyWidgets,
@@ -43,7 +44,6 @@ Depends:
     scales,
     htmltools,
     ggplot2,
-    dplyr,
     tidyr,
     tibble,
     stats
