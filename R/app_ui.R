@@ -70,7 +70,7 @@ app_ui <- function(request) {
                                        menuSubItem("Foto campioni", tabName = "fotosub"),
                                        menuSubItem("Grafici", tabName = "graficisub"),
                                        menuSubItem("Mappa", tabName = "mappa2sub"),
-                                       menuSubItem("Assaggi sensoriali", tabName = "assaggsub")),
+                                       menuSubItem("Analisi sensoriali", tabName = "assaggsub")),
                               menuItem("Analisi laboratorio", tabName = "anlab",
                                        menuSubItem("Polifenoli totali", tabName = "totpolsub"),
                                        menuSubItem("Polifenoli individuali", tabName = "inpolsub"),
