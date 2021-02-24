@@ -22,7 +22,8 @@ Imports:
     readr,
     plotly,
     dplyr,
-    sf
+    sf,
+    cachem
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
