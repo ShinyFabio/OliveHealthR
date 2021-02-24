@@ -50,6 +50,5 @@ Depends:
     stats
 VignetteBuilder: knitr
 Remotes: 
-	github::r-lib/cachem,
 	github::jokergoo/ComplexHeatmap,
 	github::jokergoo/InteractiveComplexHeatmap
