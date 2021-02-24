@@ -24,13 +24,18 @@ The goal of OliveHealthR is to analyze and map all the information obtained from
 ## Installation
 
 
-Install devtools if not already installed.
+1. Install devtools if not already installed.
 
 ``` r
 install.packages("devtools")
 ```
 
-You can install OliveHealthR from [GitHub](https://github.com/ShinyFabio/OliveHealthR2) with:
+2. Install Rtools from this link:
+
+    https://cran.r-project.org/bin/windows/Rtools
+
+
+3. Now you can install OliveHealthR from [GitHub](https://github.com/ShinyFabio/OliveHealthR2) with:
 
 ``` r
 devtools::install_github("ShinyFabio/OliveHealthR2")

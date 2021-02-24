@@ -17,14 +17,18 @@ polyphenols) on samples such as leaves, drupes and oil.
 
 ## Installation
 
-Install devtools if not already installed.
+1.  Install devtools if not already installed.
 
 ``` r
 install.packages("devtools")
 ```
 
-You can install OliveHealthR from
-[GitHub](https://github.com/ShinyFabio/OliveHealthR2) with:
+2.  Install Rtools from this link:
+
+    <https://cran.r-project.org/bin/windows/Rtools>
+
+3.  Now you can install OliveHealthR from
+    [GitHub](https://github.com/ShinyFabio/OliveHealthR2) with:
 
 ``` r
 devtools::install_github("ShinyFabio/OliveHealthR2")
@@ -67,14 +71,14 @@ The most important file is “2\_Dati\_monitoraggio.csv”. In order to make
 the app work, this csv file has some columns that have to follow some
 writing rules. The following columns are mandatory:
 
-  - **“Codice\_azienda”** filled with the code of the company (eg
+-   **“Codice\_azienda”** filled with the code of the company (eg
     SA\_01, AV\_12 etc.)
-  - **“Azienda”** filled with the name (eg. Az.Agr.Perretta\_Nicola).
+-   **“Azienda”** filled with the name (eg. Az.Agr.Perretta\_Nicola).
     Don’t use “-” or spaces in the name
-  - **“Provincia”** filled with the province (eg. SA, AV)
-  - **“UTM\_33T\_E”** filled with the UTM 33T East coordinate
-  - **“UTM\_33T\_N”** filled with the UTM 33T North coordinate
-  - **“Cultivar\_principale”** filled with the main cultivar (use "\_"
+-   **“Provincia”** filled with the province (eg. SA, AV)
+-   **“UTM\_33T\_E”** filled with the UTM 33T East coordinate
+-   **“UTM\_33T\_N”** filled with the UTM 33T North coordinate
+-   **“Cultivar\_principale”** filled with the main cultivar (use "\_"
     instead of space)
 
 ### “File descrizione .csv”
@@ -82,38 +86,38 @@ writing rules. The following columns are mandatory:
 This is an optional csv file containing some info about companies. It
 contains:
 
-  - **“Codice\_azienda”** same
-  - **“Descrizione”** filled with the description of the company
-  - **“Contatti”** filled with the phone number, email and others infos
+-   **“Codice\_azienda”** same
+-   **“Descrizione”** filled with the description of the company
+-   **“Contatti”** filled with the phone number, email and others infos
 
 ### “file CSV con dati drupe”
 
 Here you can upload the phenological phase and ripening index extracted
 from the record cards. It follows the following structure:
 
-  - **“Codice\_azienda”** same
-  - **“N\_campionamento”** filled with “R1” or “R2” where R1 refers to
+-   **“Codice\_azienda”** same
+-   **“N\_campionamento”** filled with “R1” or “R2” where R1 refers to
     the first sampling (September/October) and R2 refers to the last
     sampling (end of October/beginning of November i.e. when the olives
     are completely ripe)
-  - **“Data\_campionamento”** filled with the sampling date (in the form
+-   **“Data\_campionamento”** filled with the sampling date (in the form
     of dd/mm/yyyy)
-  - **“Fase\_fenologica”** (filled with a number)
-  - **“Indice\_maturazione”** (filled with a number)
-  - **“Note”** filled with possible notes
+-   **“Fase\_fenologica”** (filled with a number)
+-   **“Indice\_maturazione”** (filled with a number)
+-   **“Note”** filled with possible notes
 
 ### “file CSV con dati polifenoli”
 
 Here you can upload the polyphenols datas. The csv file follows this
 structure:
 
-  - **“Codice\_azienda”** same
-  - **“N\_campionamento”** same
-  - **“Polifenoli\_tot”** filled with the concentration of total
+-   **“Codice\_azienda”** same
+-   **“N\_campionamento”** same
+-   **“Polifenoli\_tot”** filled with the concentration of total
     polyphenols (mg/g drupes)
-  - **“Presenza\_larve”** filled with the larvae presence indicator
+-   **“Presenza\_larve”** filled with the larvae presence indicator
     (from 0 to 2)
-  - Various polyphenols (eg. “Acido\_Gallico”). unit of measure: ug/ml
+-   Various polyphenols (eg. “Acido\_Gallico”). unit of measure: ug/ml
     of oil
 
 ## Other
