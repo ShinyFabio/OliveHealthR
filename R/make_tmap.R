@@ -26,11 +26,13 @@
 make_tmap = function(data, dotlegend, shp = campania){
   
 
-    utmcoord23 = sf::st_as_sf(data, coords = c("UTM_33T_E", "UTM_33T_N" ), crs= 32633)
+  data2 = as.data.frame(data)
+  utmcoord23 = sf::st_as_sf(data2, coords = c("UTM_33T_E", "UTM_33T_N" ), crs= 32633)
     
-    sf::st_crs(shp) = 32633
-    
-    tm_shape(shp)+ tm_polygons(col= "provincia") + tm_shape(utmcoord23) + 
+  
+  sf::st_crs(shp) = 32633
+
+  tm_shape(shp)+ tm_polygons(col= "provincia") + tm_shape(utmcoord23) + 
       tm_dots(col = colnames(dotlegend), scale = 1.5, id= colnames(dotlegend), popup.vars = TRUE)
 
 }

@@ -492,7 +492,6 @@ app_server <- function( input, output, session ) {
     label_with_unit(data = datapolind(), colname = showcoltoty(), unit = "(mg/g drupe)", optional = "Presenza_larve")
   })
   
-
   filllabtot = reactive({
     label_with_unit(data = datapolind(), colname = fillcolumntot(), unit = "(mg/g drupe)", optional = "Presenza_larve")
   })
@@ -739,7 +738,6 @@ app_server <- function( input, output, session ) {
     
     if(input$heatsort == TRUE){
       htdata[do.call(order, htdata[as.character(seletannota[1])]), ]
-      
     } else{
       return(htdata)
     }
