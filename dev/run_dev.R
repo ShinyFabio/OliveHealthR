@@ -8,6 +8,8 @@ golem::detach_all_attached()
 # Document and reload your package
 golem::document_and_reload()
 
+#setwd("C:/Users/fabio/Desktop/OliveHealthR")
+
 # Run the application
 run_OliveHealthR()
 #run_app()

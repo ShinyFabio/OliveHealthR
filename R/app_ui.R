@@ -87,28 +87,41 @@ app_ui <- function(request) {
                               tabItem(tabName = "homesub",
                                       sidebarLayout(
                                         sidebarPanel(width = 2,
-                                                     #carica il file
-                                                     fileInput("file1", "File aziende (.csv)"), 
+                                          #seleziona il separatore
+                                          radioButtons("delim", "Scegli il separatore", choices = c("Virgola" = ",", "Punto e virgola" = ";", "Tab" = "\t"), selected = ";"),
                                                      
-                                                     #seleziona il separatore
-                                                     radioButtons("delim", "Scegli il separatore", choices = c("Virgola" = ",", "Punto e virgola" = ";", "Tab" = "\t"), selected = ";"),
+                                          #scegli se header
+                                          checkboxInput("header", "Header", TRUE),
+                                          hr(), 
                                                      
-                                                     #scegli se header
-                                                     checkboxInput("header", "Header", TRUE),
+                                          #carica il file
+                                          fileInput("file1", "File aziende (.csv)"),
+                                          br(), 
                                                      
-                                                     br(),
-                                                     
-                                                     #file descrizione aziende
-                                                     conditionalPanel(condition = "output.file1_ready",
-                                                                      fileInput("desc1", "File descrizione .csv (opzionale)"),
-                                                                      hr(),
-                                                                      tags$h3("File con dati"),
-                                                                      radioButtons("tipofile", label = "Tipo di file", choices = list("Descrittivo" = 1, "Quantitativo" = 2),
-                                                                                   selected = 1),
-                                                                      fileInput("drupeinput", "File schede campionamento (.csv)"),
-                                                                      fileInput("polifinput", "File dati polifenoli (.csv)")
-                                                     )
+                                          #file descrizione aziende
+                                          conditionalPanel(condition = "output.file1_ready",
+                                            
+                                            fileInput("desc1", "File descrizione .csv (opzionale)"),
+                                            hr(),
+                                            tags$h3("File con dati"), 
+                                            radioButtons("tipofile", label = "Tipo di file", choices = list("Schede campionamento" = 1, "Polifenoli" = 2, "Morfometria" = 3),
+                                                         selected = 1),
+                                            
+                                            conditionalPanel(condition = "input.tipofile == 1",
+                                              fileInput("drupeinput", "File schede campionamento (.csv)")),
+                                                                      
+                                            conditionalPanel(condition = "input.tipofile == 2",
+                                              fileInput("polifinput", "File dati polifenoli (.csv)")),
+                                                                      
+                                            conditionalPanel(condition = "input.tipofile == 3",
+                                              fileInput("morfoleafinput", "File morfometria foglie 2D (.csv)"),
+                                              fileInput("morfodrupeinput", "File morfometria drupe 3D (.csv)"),
+                                              fileInput("morfoendoinput", "File morfometria endocarpo 3D (.csv)"),
+                                              fileInput("morforatioinput", "File rapporti drupe endocarpo (.csv)")
+                                            )
+                                          )
                                         ),
+                                        
                                         mainPanel(width = 10,
                                               tabsetPanel(id = "tab2",
                                                           tabPanel(title = "Tabella",
@@ -218,11 +231,11 @@ app_ui <- function(request) {
                                                  ),
                                                  fluidRow(column(12, box(width=NULL, status = "primary", DT::DTOutput("prov2"))))
                                           ),
-                                          conditionalPanel(condition = ("input.prov2_rows_selected ==0"),
+                                          conditionalPanel(condition = ("input.prov2_rows_selected == 0"),
                                                            p(strong(h4("Per favore seleziona un'azienda dalla tabella", align = "center")))
                                           ),
                                           
-                                          conditionalPanel(condition = ("input.prov2_rows_selected !=0"),
+                                          conditionalPanel(condition = ("input.prov2_rows_selected != 0"),
                                                            column(width = 4, box(width=NULL, status = "primary", title = "Foglie", align= "center", uiOutput("phfoglia"))),
                                                            column(width = 4, box(width=NULL, status = "primary", title = "Drupe",align = "center", uiOutput("phdrupa")))
                                           )
@@ -551,7 +564,69 @@ app_ui <- function(request) {
                               tabItem(tabName = "ancromasub"),
                               
                               
-                              tabItem(tabName = "anmorfosub")
+                              
+                              ##### Tab morfometria #####
+                              tabItem(tabName = "anmorfosub",
+                                sidebarLayout(
+                                  sidebarPanel(width = 2,
+                                    radioGroupButtons("selfilemorfo", "Seleziona la morfometria da analizzare", 
+                                                      choiceValues = list("foglie", "drupe", "endocarpo", "rapporti"),
+                                                      choiceNames = list(
+                                                        paste(shiny::icon("leaf",  style='font-size:16px;'), HTML("<b style=font-size:16px>&nbsp;Foglie</b>")),
+                                                        paste(tags$img(src = "www/olive_icon2.png", height = "22px", width = "22px"), HTML("<b style=font-size:16px>&nbsp;Drupe</b>")),
+                                                        paste(tags$img(src = "www/seed_icon2.png", height = "20px", width = "20px"), HTML("<b style=font-size:16px>&nbsp;Endocarpo</b>")),
+                                                        paste(tags$img(src = "www/ratio_icon2.png", height = "19px", width = "19px"), HTML("<b style=font-size:16px>&nbsp;Rapporti</b>"))
+                                                      ),
+                                                      direction = "vertical", justified = TRUE, status = "primary"),
+                                    hr(),
+                                    conditionalPanel(
+                                      condition = "input.tabsetmorfo == 'tabboxmor' || input.tabsetmorfo == 'tabbarmor'",
+                                    h4(strong("Impostazioni grafici")),
+                                    selectInput("selectxmorfo", "Seleziona la colonna X", choices = "", multiple = FALSE),
+                                    selectInput("selectymorfo", "Seleziona la colonna Y", choices = "", multiple = FALSE),
+                                    selectInput("selectfillmorfo", "Colonna da usare come riempimento", choices = "", multiple = FALSE)
+                                    ),
+                                    conditionalPanel(
+                                      condition = "input.tabsetmorfo == 'tabmapmor'",
+                                      
+                                      actionButton("upmapmorfo", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:120%'),
+                                      conditionalPanel(
+                                        condition = ("input.upmapmorfo != 0"),
+                                        br(),
+                                        selectInput("mapxmorfo2", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
+                                        selectInput("selyearmorfo2", "Seleziona l'anno", choices = "", multiple = FALSE),  
+                                        selectInput("nummorfo2", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)
+                                      )
+                                    )
+                                  ), #end of sidebarpanel
+                                  
+                                  mainPanel(
+                                    width = 10,
+                                    tabsetPanel(id = "tabsetmorfo",
+                                      tabPanel("Tabella", value = "tabdtmor",
+                                               box(width = NULL, status = "primary", style = "overflow-x: scroll;",
+                                                   DT::DTOutput("dtmorfo")   
+                                               )),
+                                      
+                                      tabPanel("Boxplot", value = "tabboxmor",
+                                               plotly::plotlyOutput("boxmorfo")
+                                                   
+                                               ),
+                                      
+                                      tabPanel("Barplot", value = "tabbarmor",
+                                               plotly::plotlyOutput("barmorfo")
+                                               ),
+                                      
+                                      tabPanel("Mappa", value = "tabmapmor",
+                                              conditionalPanel(condition = ("input.upmapmorfo != 0"),
+                                              tmapOutput("mapmorfo1")
+                                              )
+                                               )
+                                    )
+                                  ) #end of mainpanel
+                                ) #end of sidebarlayout
+                                
+                              )#end of tabitem morfo
                               
                             )#end of tabitems
                           )#end of dashboardbody
@@ -559,7 +634,7 @@ app_ui <- function(request) {
                         
                )
     )
-  )
+  ) #end of taglist
 }
 
 #' Add external Resources to the Application

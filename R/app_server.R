@@ -31,7 +31,6 @@ app_server <- function( input, output, session ) {
 
   
   
-  # Your application server logic 
   ############# Upload file ###############
   observeEvent(input$jumpToP2, {
     updateTabsetPanel(session, "navb1",
@@ -93,6 +92,32 @@ app_server <- function( input, output, session ) {
     return(x)
   })
   
+  
+  #carico i file morfometria
+  
+  #file foglie
+  morfoleaf = reactive({
+    req(input$morfoleafinput)
+    readr::read_delim(input$morfoleafinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = ",", encoding = "windows-1252"))
+  })
+  
+  #file morfometria drupe
+  morfodrupe = reactive({
+    req(input$morfodrupeinput)
+    readr::read_delim(input$morfodrupeinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = ",", encoding = "windows-1252"))
+  })
+  
+  #file morfometria endocarpo
+  morfoendo = reactive({
+    req(input$morfoendoinput)
+    readr::read_delim(input$morfoendoinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = ",", encoding = "windows-1252"))
+  })
+  
+  #file rapporti drupe endocarpo
+  morforatio = reactive({
+    req(input$morforatioinput)
+    readr::read_delim(input$morforatioinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = ",", encoding = "windows-1252"))
+  })
   
   
   output$content = DT::renderDT({
@@ -162,11 +187,7 @@ app_server <- function( input, output, session ) {
   datmap1 = reactive({data() %>% dplyr::select(!starts_with("UTM"))
   })
   
-  ###seleziona colonna da mappare (MAPPA 1)
-  showcolumn2 = reactive({
-    Olv_select_col(data = datmap1(), input = input$select3)
-  })
-  
+
   observeEvent(data(), {
     updateSelectInput(session, "select3", choices = colnames(datmap1()))
   })
@@ -174,7 +195,9 @@ app_server <- function( input, output, session ) {
   
   ###stampa mappa
   output$map1 = renderTmap({
-    make_tmap(data = data(), dotlegend = showcolumn2())
+    req(data())
+    colmap = Olv_select_col(data = datmap1(), input = input$select3)
+    make_tmap(data = data(), dotlegend = colmap)
   })
 
   
@@ -195,11 +218,7 @@ app_server <- function( input, output, session ) {
     datadrupemap() %>% dplyr::select(!starts_with("UTM"))
   })
   
-  #seleziona colonna da mappare MAPPA 2
-  showcolumnmap2 = reactive({
-    Olv_select_col(data = drupe(), input = input$select2map)
-  })  
-  
+
   observeEvent(drupe(), {
     updateSelectInput(session, "select2map", choices = colnames(drupe()))
   })
@@ -215,55 +234,38 @@ app_server <- function( input, output, session ) {
   observeEvent(dtdrupanno(), {
     updateSelectInput(session, "selyear", choices = row.names(table(dplyr::select(dtdrupanno(), "Anno"))))
   })
-  #filtra in base all'anno selezionato
-  dtmapyear = reactive({
-    dtdrupanno() %>% dplyr::filter(Anno == input$selyear)
-  })
   
-  
-  #scegliere quale campionamento filtrare
-  dtdrupfilt = reactive({
-    req(dtmapyear())
-    dplyr::filter(dtmapyear(), N_campionamento == input$num)
-  })
-  
-  
+
   #stampo mappa2
   output$map2 = renderTmap({
-    make_tmap(data = dtdrupfilt(), dotlegend = showcolumnmap2())
+    req(dtdrupanno())
+    #filtra in base all'anno selezionato e il campionamento
+    datamap = dtdrupanno() %>% dplyr::filter(Anno == input$selyear) %>% dplyr::filter(N_campionamento == input$num)
+    colmap = Olv_select_col(data = drupe(), input = input$select2map)
+    make_tmap(data = datamap, dotlegend = colmap)
   })
   
   
   #### stampa terza mappa (drupe) ###
   
-  ###seleziona colonna da mappare MAPPA 2
-  showcolumnmap3 = reactive({
-    Olv_select_col(data = drupe(), input = input$select3map)
-  })
-  
+
   observeEvent(drupe(), {
     updateSelectInput(session, "select3map", choices = colnames(drupe()))
   })
-  
   
   #aggiorna il selectinput "selyear" in base agli anni presenti
   observeEvent(dtdrupanno(), {
     updateSelectInput(session, "selyear2", choices = row.names(table(dplyr::select(dtdrupanno(), "Anno"))))
   })
-  #filtra in base all'anno selezionato
-  dtdrupanno2 = reactive({
-    dtdrupanno() %>% dplyr::filter(Anno == input$selyear2)
-  })
   
-  dtdrupfiltmap2 = reactive({
-    req(dtdrupanno2())
-    dplyr::filter(dtdrupanno2(), N_campionamento == input$num2map)
-  })
-  
+
   #stampa mappa2
-  
   output$map3 = renderTmap({
-    make_tmap(data = dtdrupfiltmap2(), dotlegend = showcolumnmap3())
+    req(drupe())
+    req(dtdrupanno())
+    datamap = dtdrupanno() %>% dplyr::filter(Anno == input$selyear2) %>% dplyr::filter(N_campionamento == input$num2map)
+    colmap = Olv_select_col(data = drupe(), input = input$select3map)
+    make_tmap(data = datamap, dotlegend = colmap)
   })
   
   ##########  Grafici datadrupe  #########
@@ -277,27 +279,21 @@ app_server <- function( input, output, session ) {
   
   observeEvent(datadrupe(), {
     updateSelectInput(session, "selectx", choices=colnames(datadrupe()))
+    updateSelectInput(session, "selecty", choices=colnames(datadrupe()))
+    updateSelectInput(session, "selectfill", choices=colnames(datadrupe()))
   })
   
   ###selezionare colonna Y da plottare
   showcolumny = reactive({
     Olv_select_col(data = datadrupe(), input = input$selecty)
   }) 
-  observeEvent(datadrupe(), {
-    updateSelectInput(session, "selecty", choices=colnames(datadrupe()))
-  })
-  
+
   ###selezionare colonna per il riempimento
   fillcolumn = reactive({
     Olv_select_col(data = datadrupe(), input = input$selectfill)
   }) 
   
-  observeEvent(datadrupe(), {
-    updateSelectInput(session, "selectfill", choices=colnames(datadrupe()))
-  })
-  
-  
-  
+
   #aggiorna il selectinput , "selyearscatter" in base agli anni presenti e filtra
   observeEvent(dtdrupanno(), {
     updateSelectInput(session, "selyearscatter", choices = row.names(table(dplyr::select(dtdrupanno(), "Anno"))))
@@ -368,9 +364,7 @@ app_server <- function( input, output, session ) {
   #crea la tabella
   output$prov2 = DT::renderDT(dplyr::select(data(), c("Azienda", "Codice_azienda")), selection = "single", server = FALSE, rownames = FALSE)
   
-  
-  
-  
+
   #aggiorna il selectinput "selyearfoto" in base agli anni presenti e seleziono
   observeEvent(dtdrupanno(), {
     updateSelectInput(session, "selyearfoto", choices = row.names(table(dplyr::select(dtdrupanno(), "Anno"))))
@@ -447,6 +441,9 @@ app_server <- function( input, output, session ) {
   
   observeEvent(datapoltot(), {
     updateSelectInput(session, "selectxtot", choices=colnames(datapoltot()))
+    updateSelectInput(session, "selectfilltot", choices=colnames(datapoltot()))
+    updateSelectInput(session, "selectytot", choices=colnames(datapoltot()))
+    updateSelectInput(session, "selyearscattertot", choices = row.names(table(dplyr::select(datapoltot(), "Anno"))))
   })
   
   ###selezionare colonna Y da plottare
@@ -454,24 +451,15 @@ app_server <- function( input, output, session ) {
   showcoltoty = reactive({
     Olv_select_col(data = datapoltot(), input = input$selectytot)
   })  
-  observeEvent(datapoltot(), {
-    updateSelectInput(session, "selectytot", choices=colnames(datapoltot()))
-  })
-  
+
   
   ###selezionare colonna per il riempimento
   fillcolumntot = reactive({
     Olv_select_col(data = datapoltot(), input = input$selectfilltot)
   }) 
-  observeEvent(datapoltot(), {
-    updateSelectInput(session, "selectfilltot", choices=colnames(datapoltot()))
-  })
-  
+
   
   #aggiorna il selectinput , "selyearscattertot" in base agli anni presenti e filtra
-  observeEvent(datapoltot(), {
-    updateSelectInput(session, "selyearscattertot", choices = row.names(table(dplyr::select(datapoltot(), "Anno"))))
-  })
   dtplotyeartot2 = reactive({
     datapoltot() %>% dplyr::filter(Anno == input$selyearscattertot)
   })
@@ -539,6 +527,7 @@ app_server <- function( input, output, session ) {
   
   ###grafico a barre
   output$barplottot = plotly::renderPlotly({
+    
     temp2=ggplot(data=colorcamptot()) + 
       geom_col(mapping = aes_string(x = colnames(showcoltotx()), y = colnames(showcoltoty()), fill = "N_campionamento"), position = position_dodge2(preserve = "single")) + 
       theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(ylabtot()) + xlab(xlabtot())
@@ -569,40 +558,16 @@ app_server <- function( input, output, session ) {
   
   
   ###################SCATTER PLOT INDIVIDUALI#################
-  
-  #selezionare colonna X da plottare
-  showcolindx = reactive({
-    Olv_select_col(data = datapolind(), input = input$selectxind)
-  })  
-  
+
   observeEvent(datapolind(), {
     updateSelectInput(session, "selectxind", choices=colnames(datapolind()))
-  })
-  
-  ###selezionare colonna Y da plottare
-  showcolindy = reactive({
-    Olv_select_col(data = datapolind(), input = input$selectyind)
-  })
-  
-  observeEvent(datapolind(), {
     updateSelectInput(session, "selectyind", choices=colnames(datapolind()))
-  })
-  
-  ###selezionare colonna per il riempimento
-
-  fillcolumnind = reactive({
-    Olv_select_col(data = datapolind(), input = input$selectfillind)
-  })
-  
-  observeEvent(datapolind(), {
     updateSelectInput(session, "selectfillind", choices=colnames(datapolind()))
-  })
-  
-  
-  #aggiorna il selectinput , "selyearscatterind" in base agli anni presenti e filtra
-  observeEvent(datapolind(), {
     updateSelectInput(session, "selyearscatterind", choices = row.names(table(dplyr::select(datapolind(), "Anno"))))
   })
+  
+
+  #aggiorna il selectinput , "selyearscatterind" in base agli anni presenti e filtra
   dtplotyearind2 = reactive({
     datapolind() %>% dplyr::filter(Anno == input$selyearscatterind)
   })
@@ -614,55 +579,35 @@ app_server <- function( input, output, session ) {
     dplyr::filter(dtplotyearind2(), N_campionamento == input$numind)
   })
   
-  
-  xlabind = reactive({
-    label_with_unit(data = datapoltot(), colname = showcolindx(), unit = "(µg/ml)")
-  })
-  
-  
-  ylabind = reactive({
-    label_with_unit(data = datapoltot(), colname = showcolindy(), unit = "(µg/ml)")
-  })
-  
-
-  filllabind = reactive({
-    label_with_unit(data = datapoltot(), colname = fillcolumnind(), unit = "(µg/ml)")
-  })
-  
+ 
 
   ####grafico classico (scatter plot)   , position = "jitter" , alpha = 0.7
   output$scatterindpol = plotly::renderPlotly({
     
+    x = Olv_select_col(data = datapolind(), input = input$selectxind)
+    y = Olv_select_col(data = datapolind(), input = input$selectyind)
+    fill = Olv_select_col(data = datapolind(), input = input$selectfillind)
+    
+    xlabg = label_with_unit(data = datapoltot(), colname = x, unit = "(µg/ml)")
+    ylabg = label_with_unit(data = datapoltot(), colname = y, unit = "(µg/ml)")
+    filllab = label_with_unit(data = datapoltot(), colname = fill, unit = "(µg/ml)")
+
     temp = ggplot(data = dtdrupfiltind2()) + 
-      geom_count(mapping = aes_string(x = colnames(showcolindx()), y = colnames(showcolindy()), colour = colnames(fillcolumnind()))) + 
-      ylab(ylabind()) + xlab(xlabind()) + labs(colour=filllabind()) +#scale_size_continuous(range = c(3,9)) + 
+      geom_count(mapping = aes_string(x = colnames(x), y = colnames(y), colour = colnames(fill))) + 
+      ylab(ylabg) + xlab(xlabg) + labs(colour=filllab) +#scale_size_continuous(range = c(3,9)) + 
       theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
-    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = filllabind())))
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = filllab)))
   })
   
   
-  ###############BOXPLOT INDIVIDUALI##########
-  
-  #selezionare colonna X da plottare
-  showcolindxbar = reactive({
-    Olv_select_col(data = datapolind(), input = input$selectxindbar)
-  })  
-  
+  ###############BARPLOT INDIVIDUALI##########
   
   observeEvent(datapolind(), {
     updateSelectInput(session, "selectxindbar", choices=colnames(datapolind()))
-  })
-  
-  ###selezionare colonna Y da plottare
-  showcolindybar = reactive({
-    Olv_select_col(data = datapolind(), input = input$selectyindbar)
-  }) 
-  
-  observeEvent(datapolind(), {
     updateSelectInput(session, "selectyindbar", choices=colnames(datapolind()))
   })
   
-  
+
   ###modificare la colonna campionamento con unite (R1_2020)
   datapolindyearunite = reactive({
     req(datapolind())
@@ -688,20 +633,20 @@ app_server <- function( input, output, session ) {
     datapolindyearunite() %>% dplyr::filter(N_campionamento %in% input$checkcampind)
   })
   
-  xlabindbar = reactive({
-    label_with_unit(data = datapoltot(), colname = showcolindxbar(), unit = "(µg/ml)")
-  })
-  
-  ylabindbar = reactive({
-    label_with_unit(data = datapoltot(), colname = showcolindybar(), unit = "(µg/ml)")
-  })
-  
+
 
   ###grafico a barre
   output$barplotind = plotly::renderPlotly({
+    req(datapolind())
+    x = Olv_select_col(data = datapolind(), input = input$selectxindbar)
+    y = Olv_select_col(data = datapolind(), input = input$selectyindbar)
+
+    xlabg = label_with_unit(data = datapoltot(), colname = x, unit = "(µg/ml)")
+    ylabg = label_with_unit(data = datapoltot(), colname = y, unit = "(µg/ml)")
+
     temp2=ggplot(data=colorcampind()) + 
-      geom_col(mapping = aes_string(x = colnames(showcolindxbar()), y = colnames(showcolindybar()), fill = "N_campionamento"), position = position_dodge2(preserve = "single")) + 
-      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(ylabindbar()) + xlab(xlabindbar())
+      geom_col(mapping = aes_string(x = colnames(x), y = colnames(y), fill = "N_campionamento"), position = position_dodge2(preserve = "single")) + 
+      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(ylabg) + xlab(xlabg)
     plotly::ggplotly(temp2) %>% plotly::layout(legend = list(title = list(text = "N_campionamento")))
   })
   
@@ -711,19 +656,16 @@ app_server <- function( input, output, session ) {
   
   
   
-  #aggiorna il selectinput , "selyearheatind" in base agli anni presenti e filtra
+  #aggiorna il selectinput , "selyearheatind" in base agli anni presenti
   observeEvent(datapolind(), {
     updateSelectInput(session, "selyearheatind", choices = row.names(table(dplyr::select(datapolind(), "Anno"))))
   })
-  dtheatyearind = reactive({
-    datapolind() %>% dplyr::filter(Anno == input$selyearheatind)
-  })
-  
-  
-  ###scegliere anche il campionamento (scatter plot)
+
+
+  ###scegliere l'anno e  il campionamento
   dtindfiltheat = reactive({
-    req(dtheatyearind())
-    dplyr::filter(dtheatyearind(), N_campionamento == input$numheat)
+    req(datapolind())
+    datapolind() %>% dplyr::filter(Anno == input$selyearheatind) %>% dplyr::filter(N_campionamento == input$numheat)
   })
   
   
@@ -816,23 +758,15 @@ app_server <- function( input, output, session ) {
   observeEvent(datapolind(), {
     updateSelectInput(session, "selyearcorrind", choices = row.names(table(dplyr::select(datapolind(), "Anno"))))
   })
-  dtcorryearind = reactive({
-    datapolind() %>% dplyr::filter(Anno == input$selyearcorrind)
-  })
-  
-  
-  
-  ###scegliere anche il campionamento (scatter plot)
-  dtindfiltcorr = reactive({
-    req(dtcorryearind())
-    dplyr::filter(dtcorryearind(), N_campionamento == input$numcorr)
-  })
+
   
   ###creo il corrplot
-  
   output$corrplotind = plotly::renderPlotly({
+    req(datapolind())
+    ###scegliere anno e  il campionamento (scatter plot)
+    datatemp = datapolind() %>% dplyr::filter(Anno == input$selyearcorrind) %>% dplyr::filter(N_campionamento == input$numcorr)
     
-    temp = dtindfiltcorr() %>% dplyr::select(-Anno, - N_campionamento, -Azienda, - Codice_azienda)
+    temp = datatemp %>% dplyr::select(-Anno, - N_campionamento, -Azienda, - Codice_azienda)
     temp2 = round(stats::cor(temp),1)
     par(xpd = TRUE)
     
@@ -851,19 +785,13 @@ app_server <- function( input, output, session ) {
   observeEvent(datapolind(), {
     updateSelectInput(session, "selyearpca", choices = row.names(table(dplyr::select(datapolind(), Anno))))
   })
-  dtpcayearind = reactive({
-    datapolind() %>% dplyr::filter(Anno == input$selyearpca)
-  })
-  
-  
-  ###scegliere anche il campionamento (scatter plot)
-  dtindfiltpca = reactive({
-    req(dtpcayearind())
-    dplyr::filter(dtpcayearind(), N_campionamento == input$numpca)
-  })
+
   
   pcadati = reactive({
-    data = dtindfiltpca() %>% dplyr::select(-Anno, -N_campionamento, -Azienda) %>% as.data.frame() %>% tibble::column_to_rownames("Codice_azienda")
+    req(datapolind())
+    #filtro in base agli anni presenti e scelgo anche il num campionamento
+    data = datapolind() %>% dplyr::filter(Anno == input$selyearpca) %>% dplyr::filter(N_campionamento == input$numpca) %>% 
+      dplyr::select(-Anno, -N_campionamento, -Azienda) %>% as.data.frame() %>% tibble::column_to_rownames("Codice_azienda")
     stats::princomp(data, cor = input$selcorpca)
   })
   
@@ -921,66 +849,135 @@ app_server <- function( input, output, session ) {
   
   #################### MAPPA POLIFENOLI ###########################################
   
-  #seleziona colonna
-  showcolumnmappol = reactive({
-    Olv_select_col(data = datapolif(), input = input$mapxpol)
-  }) 
-  
+
   observeEvent(datapolif(), {
     updateSelectInput(session, "mapxpol", choices = colnames(datapolif()))
-  })
-  
-  
-  #aggiorna il selectinput "selyear" in base agli anni presenti
-  observeEvent(datapolif(), {
     updateSelectInput(session, "selyearpol", choices = row.names(table(dplyr::select(datapolif(), "Anno"))))
   })
-  #filtra in base all'anno selezionato
-  datapolif2 = reactive({
-    datapolifmap() %>% dplyr::filter(Anno == input$selyearpol)
-  })
   
-  datapolifmap2 = reactive({
-    req(datapolif2())
-    dplyr::filter(datapolif2(), N_campionamento == input$numpol)
-  })
   
   #stampa mappa
   output$mappol = renderTmap({
-    make_tmap(data = datapolifmap2(), dotlegend = showcolumnmappol())
+    req(datapolif())
+    req(datapolifmap())
+    column = Olv_select_col(data = datapolif(), input = input$mapxpol)
+    datamap = datapolifmap() %>% dplyr::filter(Anno == input$selyearpol) %>% dplyr::filter(N_campionamento == input$numpol)
+    make_tmap(data = datamap, dotlegend = column)
   })
   
   
   
   ############# AGGIUNGERE SECONDA MAPPA POLIFENOLI########
   
-  #seleziona colonna
-  showcolumnmappol2 = reactive({
-    Olv_select_col(data = datapolif(), input = input$mapxpol2)
-  }) 
-  
+
   observeEvent(datapolif(), {
     updateSelectInput(session, "mapxpol2", choices = colnames(datapolif()))
-  })
-  
-  
-  #aggiorna il selectinput "selyearpol2" in base agli anni presenti
-  observeEvent(datapolif(), {
     updateSelectInput(session, "selyearpol2", choices = row.names(table(dplyr::select(datapolif(), "Anno"))))
   })
-  #filtra in base all'anno selezionato
-  datapolif22 = reactive({
-    datapolifmap() %>% dplyr::filter(Anno == input$selyearpol2)
-  })
   
-  datapolifmap22 = reactive({
-    req(datapolif22())
-    dplyr::filter(datapolif22(), N_campionamento == input$numpol2)
-  })
   
   #stampa mappa 2
   output$mappol2 = renderTmap({
-    make_tmap(data =  datapolifmap22() ,dotlegend = showcolumnmappol2())
+    req(datapolif())
+    req(datapolifmap())
+    datamap = datapolifmap() %>% dplyr::filter(Anno == input$selyearpol2) %>% dplyr::filter(N_campionamento == input$numpol2)
+    column = Olv_select_col(data = datapolif(), input = input$mapxpol2)
+    make_tmap(data =  datamap, dotlegend = column)
   })
+  
+  
+  
+  
+  #################### MORFOMETRIA ############################
+  
+ 
+  
+  #scegli i dati in base alla selezione
+  
+  datamorfo = reactive({
+    req(data())
+    if(input$selfilemorfo == "foglie"){
+      tempdata = morfoleaf()
+    } else if(input$selfilemorfo == "drupe"){
+      tempdata = morfodrupe()
+    } else if(input$selfilemorfo == "endocarpo"){
+      tempdata = morfoendo()
+    } else{
+      tempdata = morforatio()
+    }
+    
+    z = data() %>% dplyr::select("Codice_azienda", "Provincia", "Azienda")
+    x = dplyr::inner_join(x = z, y = tempdata, by = "Codice_azienda")
+    return(x)
+  })
+  
+
+  datamorfomap = reactive({
+    req(datamorfo())
+    z = data() %>% dplyr::select("Codice_azienda", "UTM_33T_E", "UTM_33T_N")
+    x = dplyr::inner_join(x = z, y = datamorfo(), by = "Codice_azienda")
+    return(x)
+  })
+  
+  output$dtmorfo = DT::renderDT({
+    req(datamorfo())
+    datamorfo()
+  })
+  
+  
+  ### Grafico a barre
+  observeEvent(datamorfo(), {
+    updateSelectInput(session, "selectxmorfo", choices=colnames(datamorfo()))
+    updateSelectInput(session, "selectymorfo", choices=colnames(datamorfo()))
+    updateSelectInput(session, "selectfillmorfo", choices=colnames(datamorfo()))
+    updateSelectInput(session, "mapxmorfo2", choices=colnames(datamorfo()))
+
+  })
+  
+  output$barmorfo = renderPlotly({
+    req(datamorfo())
+    x = Olv_select_col(data = datamorfo(), input = input$selectxmorfo)
+    y =  Olv_select_col(data = datamorfo(), input = input$selectymorfo)
+    fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfo)
+    temp = ggplot(data = datamorfo(), aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"), 
+                                                      fill = paste0("`",colnames(fill),"`"))) + 
+      ggplot2::stat_summary(fun = mean, geom = "bar") + ggplot2::stat_summary(geom = "errorbar", fun.data = mean_se) +
+      theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
+  })
+  
+  
+  
+  ### Boxplot
+
+  output$boxmorfo = renderPlotly({
+    req(datamorfo())
+    x = Olv_select_col(data = datamorfo(), input = input$selectxmorfo)
+    y =  Olv_select_col(data = datamorfo(), input = input$selectymorfo)
+    fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfo)
+    temp = ggplot(data = datamorfo()) + 
+    geom_boxplot(mapping = aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"), 
+                                      fill = paste0("`",colnames(fill),"`"))) + 
+      theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+  plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
+  })
+  
+  ### Mappa
+  
+  
+  #stampa mappa 2
+  output$mapmorfo1 = renderTmap({
+    req(datamorfomap())
+    
+    datam = datamorfo() %>% dplyr::group_by(Codice_azienda, Anno, N_campionamento) %>% 
+      dplyr::summarise(across(where(is.double), mean , na.rm = TRUE))
+    coord = datamorfomap() %>% dplyr::group_by(Codice_azienda, Anno, N_campionamento) %>% 
+      dplyr::summarise(across(where(is.double), mean , na.rm = TRUE))
+    
+    #datamap = coord %>% dplyr::filter(Anno == input$selyearpol2) %>% dplyr::filter(N_campionamento == input$numpol2)
+    column = Olv_select_col(data = datam, input = input$mapxmorfo2)
+    make_tmap(data =  coord, dotlegend = column)
+  })
+ 
   
 }
