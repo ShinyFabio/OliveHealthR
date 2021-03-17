@@ -898,7 +898,7 @@ app_server <- function( input, output, session ) {
   output$namorfoplot = renderPlot({
     req(nadatamorfo())
     if(sum(is.na(nadatamorfo()) > 0)){
-      VIM::aggr(sodda, cex.axis = .9, numbers = T, oma = c(10,5,3,2))
+      VIM::aggr(nadatamorfo(), cex.axis = .9, numbers = T, oma = c(10,5,3,2))
     }
   })
   
