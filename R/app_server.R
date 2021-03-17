@@ -3,6 +3,7 @@
 #' @param input,output,session Internal parameters for {shiny}. 
 #'     DO NOT REMOVE.
 #' @import shiny
+#' @import shinydashboard
 #' @importFrom plotly renderPlotly ggplotly layout
 #' @rawNamespace import(ggplot2, except = last_plot)
 #' @rawNamespace import(stats, except = filter)
@@ -11,8 +12,8 @@
 #' @import ggfortify
 #' @import htmltools
 #' @import scales
-#' @importFrom dplyr select inner_join mutate filter rename
-#' @importFrom tidyr unite
+#' @importFrom dplyr select inner_join mutate filter rename across group_by summarise left_join ungroup
+#' @importFrom tidyr unite starts_with
 #' @importFrom tibble column_to_rownames rownames_to_column
 #' @importFrom grid gpar
 #' @importFrom sp SpatialPointsDataFrame CRS
@@ -25,6 +26,7 @@
 #' @importFrom grDevices rainbow
 #' @importFrom dendextend color_branches
 #' @importFrom sf st_as_sf st_crs
+#' @importFrom VIM aggr
 #' @noRd
 app_server <- function( input, output, session ) {
   # List the first level callModules here
@@ -662,30 +664,18 @@ app_server <- function( input, output, session ) {
   })
 
 
-  ###scegliere l'anno e  il campionamento
-  dtindfiltheat = reactive({
-    req(datapolind())
-    datapolind() %>% dplyr::filter(Anno == input$selyearheatind) %>% dplyr::filter(N_campionamento == input$numheat)
-  })
   
-  
-  #ordinare
   dtheatsorted = reactive({
-    
-    req(dtindfiltheat())
-    seletannota = input$selectannot
-    dati = dplyr::select(data(), Codice_azienda, input$selectannot)
-    datipolif = dplyr::select(dtindfiltheat(), -Azienda)
-    htdata = dplyr::inner_join(datipolif, dati, by = "Codice_azienda")
-    
-    if(input$heatsort == TRUE){
-      htdata[do.call(order, htdata[as.character(seletannota[1])]), ]
-    } else{
-      return(htdata)
-    }
-    
+    sorder_data(
+      data = data(),
+      data2 = datapolind(), 
+      year = input$selyearheatind, 
+      n_camp = input$numheat, 
+      heat_sort = input$heatsort, 
+      add_annot = input$selectannot)
   })
   
+
   
   #creo slider per colonna
   output$sliderheatcol <- renderUI({
@@ -697,55 +687,20 @@ app_server <- function( input, output, session ) {
   
   #creo l'heatmap
   dataheat = reactive({
-    req(dtheatsorted())
-    #creo la matrice con rownames 
-    temp = dtheatsorted() %>% dplyr::select(-Anno, - N_campionamento, -input$selectannot) %>% as.data.frame() %>% tibble::column_to_rownames("Codice_azienda")
-    
-    #scale none, row, column
-    if(input$selscaleheat == "column"){
-      temp = scale(temp) # scale and center columns
-    } else if(input$selscaleheat == "row"){
-      temp = t(scale(t(temp))) # scale and center rows
-    } 
-    
-    #dendrogram = none', 'row', 'column' or 'both' 
-    if(input$rowdend == TRUE){
-      row_dend = temp %>% stats::dist(method = input$seldistheatrow) %>% stats::hclust(method = input$selhclustheatrow) %>% stats::as.dendrogram()
-      row_dend = dendextend::color_branches(row_dend, k = input$sliderrowheat)
-      row_split = input$sliderrowheat
-    } else {
-      row_dend = FALSE
-      row_split = NULL
-      
-    }
-    
-    if(input$columndend == TRUE){
-      col_dend = temp %>% t() %>% stats::dist(method = input$seldistheatcol) %>% stats::hclust(method = input$selhclustheatcol) %>% stats::as.dendrogram()
-      col_dend = dendextend::color_branches(col_dend, k = input$slidercolheat)
-      col_split = input$slidercolheat
-    } else {
-      col_dend = FALSE
-      col_split = NULL
-    }
-    
-    
-    annotdata = dplyr::select(dtheatsorted(), Codice_azienda, input$selectannot) %>% as.data.frame() %>% tibble::column_to_rownames("Codice_azienda")
-    leng = annotdata %>% dplyr::select(input$selectannot) %>% table() %>% length()
-    colorannot = stats::setNames(grDevices::rainbow(n = leng), c(row.names(table(annotdata))))
-    colorannot = stats::setNames(list(colorannot), paste(input$selectannot))
-    col_ha = ComplexHeatmap::HeatmapAnnotation(df = annotdata, which = "row", col = colorannot)
-    
-    
-    ht = ComplexHeatmap::Heatmap(temp, name = "ug/ml",  rect_gp = grid::gpar(col = "white", lwd = 1), row_title = "Codice azienda", 
-                               column_title = "Polifenoli", row_names_gp = grid::gpar(fontsize = 11),
-                               cluster_rows = row_dend, cluster_columns = col_dend, 
-                               left_annotation = col_ha,
-                               column_split = col_split, row_split = row_split)
-    ht = ComplexHeatmap::draw(ht)
-    return(ht)
-    
+    make_heatmap(
+      datasorted = dtheatsorted(),
+      add_annot = input$selectannot,
+      scale_data = input$selscaleheat,
+      dist_method = input$seldistheatpol,
+      clust_method = input$selhclustheatpol,
+      row_dend = input$rowdend,
+      row_nclust = input$sliderrowheat,
+      col_dend = input$columndend,
+      col_nclust = input$slidercolheat
+    )
   })
   
+
   observeEvent(input$updateheat,{
     dataheat2 = dataheat()
     InteractiveComplexHeatmap::InteractiveComplexHeatmapWidget(input, output, session, dataheat2, output_id = "heatmap_output", layout = "1|23", width1 = 650, height1 = 430)
@@ -906,12 +861,65 @@ app_server <- function( input, output, session ) {
       tempdata = morforatio()
     }
     
-    z = data() %>% dplyr::select("Codice_azienda", "Provincia", "Azienda")
-    x = dplyr::inner_join(x = z, y = tempdata, by = "Codice_azienda")
+    z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale)
+    x = dplyr::left_join(x = z, y = tempdata, by = "Codice_azienda")
     return(x)
   })
   
+  #valutare i missing value
+  
+  #aggiusto i data eliminando tutte le colonne non numeriche
+  nadatamorfo = reactive({
+    req(datamorfo())
+    data = datamorfo() %>% dplyr::select(where(is.double) & -Anno)
+    if(input$selfilemorfo != "foglie"){
+      data = data %>% dplyr::select(-ID_oliva)
+    }
+  })
+  
+  output$namorfobox = shinydashboard::renderValueBox({
+    req(nadatamorfo())
+    natot = sum(is.na(nadatamorfo()))
+    tot= sum(table(is.na(nadatamorfo())))
+    if(natot > 0){
+      shinydashboard::valueBox(value = p(paste0(natot,"/", tot), style = "color:white; font-size:100%;"), h4("Missing data",  style = "color:white"), icon = icon("exclamation-circle"), color = "yellow")
+    } else{
+      shinydashboard::valueBox(value = p(paste0(natot,"/", tot), style = "color:white; font-size:100%;"), h4("Missing data",  style = "color:white"), icon = icon("check"))
+    }
+  })
+  
+  output$namorfobuttui = renderUI({
+    req(nadatamorfo())
+    if (sum(is.na(nadatamorfo())) > 0){
+      actionButton("namorfobutt", label = strong("Mostra"), class = "btn btn-warning btn-lg")
+    }
+  })
+  
+  output$namorfoplot = renderPlot({
+    req(nadatamorfo())
+    if(sum(is.na(nadatamorfo()) > 0)){
+      VIM::aggr(sodda, cex.axis = .9, numbers = T, oma = c(10,5,3,2))
+    }
+  })
+  
+  nfoglieoliveold = reactive({
+    if(input$selfilemorfo == "foglie"){
+      x = "ID_foglia"
+    } else{
+      x = "ID_oliva"
+    }
+    return(x)
+  })
 
+  nfoglieolivenew =  reactive({
+    if(input$selfilemorfo == "foglie"){
+      x = "N_foglie"
+    } else{
+      x = "N_olive"
+    }
+    return(x)
+  })
+  
   datamorfomap = reactive({
     req(datamorfo())
     z = data() %>% dplyr::select("Codice_azienda", "UTM_33T_E", "UTM_33T_N")
@@ -921,27 +929,52 @@ app_server <- function( input, output, session ) {
   
   output$dtmorfo = DT::renderDT({
     req(datamorfo())
-    datamorfo()
+    datadt = datamorfo() %>% dplyr::filter(Anno == input$selyeardtmorfo)
+    if(input$summarizetab == TRUE){
+      x = Olv_select_col(data = datadt, input = input$selectdtmorfo)
+      dt = datadt %>% dplyr::group_by(dplyr::across(colnames(x))) %>% 
+        dplyr::summarise(dplyr::across(where(is.double), ~round(mean(.),input$selroundmorfo) , na.rm = TRUE), n = n()) %>% 
+        dplyr::rename(!! paste(nfoglieolivenew()) := n) %>% dplyr::select(!starts_with("ID"))
+      # "!!paste() := n" permette di rinominare usando un vettore contenente il nome. n è il colnames vecchio.
+
+    } else{
+     dt = datadt %>% dplyr::mutate(dplyr::across(where(is.double), round, digits = input$selroundmorfo))
+    }
+    return(dt)
   })
+  
+
+  
+  
+  observeEvent(datamorfo(), {
+    #boxplot e barplot
+    updateSelectInput(session, "selectymorfobb", choices=colnames(datamorfo()))
+
+    #mappa 1
+    updateSelectInput(session, "mapxmorfomap1", choices=c(colnames(select(datamorfo(), -paste(nfoglieoliveold()))),paste(nfoglieolivenew())))
+    updateSelectInput(session, "selyearmorfomap1", choices = row.names(table(dplyr::select(datamorfo(), "Anno"))))
+    updateSelectInput(session, "nummorfomap1", choices = row.names(table(dplyr::select(datamorfo(), "N_campionamento"))))
+    #mappa 1
+    updateSelectInput(session, "mapxmorfomap2", choices=c(colnames(select(datamorfo(), -paste(nfoglieoliveold()))),paste(nfoglieolivenew())))
+    updateSelectInput(session, "selyearmorfomap2", choices = row.names(table(dplyr::select(datamorfo(), "Anno"))))
+    updateSelectInput(session, "nummorfomap2", choices = row.names(table(dplyr::select(datamorfo(), "N_campionamento"))))
+    #tabella
+    updateSelectInput(session, "selyeardtmorfo", choices = row.names(table(dplyr::select(datamorfo(), "Anno"))))
+  })
+  
   
   
   ### Grafico a barre
-  observeEvent(datamorfo(), {
-    updateSelectInput(session, "selectxmorfo", choices=colnames(datamorfo()))
-    updateSelectInput(session, "selectymorfo", choices=colnames(datamorfo()))
-    updateSelectInput(session, "selectfillmorfo", choices=colnames(datamorfo()))
-    updateSelectInput(session, "mapxmorfo2", choices=colnames(datamorfo()))
-
-  })
-  
   output$barmorfo = renderPlotly({
     req(datamorfo())
-    x = Olv_select_col(data = datamorfo(), input = input$selectxmorfo)
-    y =  Olv_select_col(data = datamorfo(), input = input$selectymorfo)
-    fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfo)
-    temp = ggplot(data = datamorfo(), aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"), 
-                                                      fill = paste0("`",colnames(fill),"`"))) + 
-      ggplot2::stat_summary(fun = mean, geom = "bar") + ggplot2::stat_summary(geom = "errorbar", fun.data = mean_se) +
+    x = Olv_select_col(data = datamorfo(), input = input$selectxmorfobb)
+    y =  Olv_select_col(data = datamorfo(), input = input$selectymorfobb)
+    fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfobb)
+    summ = datamorfo() %>% dplyr::group_by(Codice_azienda, Provincia, Azienda, Cultivar_principale, Anno, N_campionamento) %>% dplyr::summarise(across(where(is.double), mean , na.rm = TRUE), ID_oliva = n()) %>%
+      dplyr::rename(N_olive = ID_oliva)
+    temp = ggplot(data = summ, mapping = aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"), 
+                                                   fill = paste0("`",colnames(fill),"`"))) + geom_col() + 
+      ggplot2::stat_summary(data = datamorfo(), geom = "errorbar", fun.data = mean_se) +
       theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
     plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
   })
@@ -952,32 +985,147 @@ app_server <- function( input, output, session ) {
 
   output$boxmorfo = renderPlotly({
     req(datamorfo())
-    x = Olv_select_col(data = datamorfo(), input = input$selectxmorfo)
-    y =  Olv_select_col(data = datamorfo(), input = input$selectymorfo)
-    fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfo)
-    temp = ggplot(data = datamorfo()) + 
-    geom_boxplot(mapping = aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"), 
-                                      fill = paste0("`",colnames(fill),"`"))) + 
-      theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
-  plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
+    x = Olv_select_col(data = datamorfo(), input = input$selectxmorfobb)
+    y =  Olv_select_col(data = datamorfo(), input = input$selectymorfobb)
+    fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfobb)
+    temp = ggplot(data = datamorfo(), 
+                  mapping = aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"), fill = paste0("`",colnames(fill),"`"))) + 
+    geom_boxplot() + geom_jitter() + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
   })
   
+  
+  ### Scatter plot
+  
+  datamorfoscatt = reactive({
+    req(datamorfo())
+    if(input$summarizescatt == TRUE){
+      x = Olv_select_col(data = datamorfo(), input = input$selectsummscatt)
+      dt = datamorfo() %>% dplyr::group_by(dplyr::across(colnames(x))) %>% 
+        dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE), n = n()) %>% 
+        dplyr::rename(!! paste(nfoglieolivenew()) := n) %>% select(!starts_with("ID"))
+
+    } else{
+      dt = datamorfo()
+    }
+  })
+  
+  observeEvent(datamorfoscatt(),{
+    updateSelectInput(session, "selectxmorfoscatt", choices=colnames(datamorfoscatt()))
+    updateSelectInput(session, "selectymorfoscatt", choices=colnames(datamorfoscatt()))
+    updateSelectInput(session, "selectfillmorfoscatt", choices=colnames(datamorfoscatt()))
+  })
+  
+  output$scattmorfo = renderPlotly({
+    req(datamorfoscatt())
+    dt = datamorfoscatt()
+    x = Olv_select_col(data = dt, input = input$selectxmorfoscatt)
+    y =  Olv_select_col(data = dt, input = input$selectymorfoscatt)
+    fill = Olv_select_col(data = dt, input = input$selectfillmorfoscatt)
+    temp = ggplot(data = dt, 
+                  mapping = aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"), color = paste0("`",colnames(fill),"`"))) + 
+      geom_count(size = 2)  + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+    
+    #in jitter se voglio colorare i punti aggiungo aes_string(color = paste0("`",colnames(fill),"`"))
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
+  })
+  
+  
+  ### HEATMAP 
+  
+  #aggiorna il selectinput , "selyearheatind" in base agli anni presenti
+  observeEvent(datamorfo(), {
+    updateSelectInput(session, "selyearheatmorfo", choices = row.names(table(dplyr::select(datamorfo(), "Anno"))))
+    updateSelectInput(session, "numheatmorfo", choices = row.names(table(dplyr::select(datamorfo(), "N_campionamento"))))
+  })
+  
+  
+  #per poter far funzionare il tutto devo avere un file identico a datapolind (ovvero con cod_azienda, provincia e 
+  #il resto (n_camp. anno...). Datamorfo ha Provincia e Cultivar in più quindi li elimino). Inoltre summarizzo anche
+  datamorfoheat = reactive({
+    datamorfo() %>% dplyr::select(-c(Provincia,Cultivar_principale)) %>% dplyr::group_by(Codice_azienda, Anno, N_campionamento, Azienda) %>% 
+      dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE)) %>% dplyr::ungroup()
+    #aggiungo ungroup() o mi da problemi l'heatmap. Tolgo il gruppo.
+  })
+  
+
+  
+  dtheatsortedmorfo = reactive({
+    sorder_data(
+      data = data(),
+      data2 = datamorfoheat(),
+      year = input$selyearheatmorfo,
+      n_camp = input$numheatmorfo,
+      heat_sort = input$heatsortmorfo,
+      add_annot = input$selectannotmorfo)
+  })
+
+  
+  
+  #creo slider per colonna
+  output$sliderheatcolmorfo <- renderUI({
+    req(dtheatsortedmorfo())
+    len = dtheatsortedmorfo() %>% dplyr::select(-Anno, - N_campionamento,  -Codice_azienda, -input$selectannotmorfo)
+    sliderInput("slidercolheatmorfo", "Numero cluster:", min=2, max=length(len), value=2, step = 1)
+  })
+  
+  
+  #creo l'heatmap
+  dataheatmorfo = reactive({
+    make_heatmap(
+      datasorted = dtheatsortedmorfo(),
+      add_annot = input$selectannotmorfo,
+      scale_data = input$selscaleheatmorfo,
+      dist_method = input$seldistheatmorfo,
+      clust_method = input$selhclustheatmorfo,
+      row_dend = input$rowdendmorfo,
+      row_nclust = input$sliderrowheatmorfo,
+      col_dend = input$columndendmorfo,
+      col_nclust = input$slidercolheatmorfo
+    )
+  })
+  
+  
+  observeEvent(input$updateheatmorfo,{
+    dataheat2 = dataheatmorfo()
+    InteractiveComplexHeatmap::InteractiveComplexHeatmapWidget(input, output, session, dataheat2, output_id = "heatmap_outputmorfo", layout = "1|23", width1 = 650, height1 = 430)
+  })
+  
+  
+  
   ### Mappa
-  
-  
-  #stampa mappa 2
+
+  #stampa mappa 1
   output$mapmorfo1 = renderTmap({
     req(datamorfomap())
     
-    datam = datamorfo() %>% dplyr::group_by(Codice_azienda, Anno, N_campionamento) %>% 
-      dplyr::summarise(across(where(is.double), mean , na.rm = TRUE))
-    coord = datamorfomap() %>% dplyr::group_by(Codice_azienda, Anno, N_campionamento) %>% 
-      dplyr::summarise(across(where(is.double), mean , na.rm = TRUE))
+    datamap = datamorfomap() %>% dplyr::filter(Anno == input$selyearmorfomap1) %>% dplyr::filter(N_campionamento == input$nummorfomap1)
     
-    #datamap = coord %>% dplyr::filter(Anno == input$selyearpol2) %>% dplyr::filter(N_campionamento == input$numpol2)
-    column = Olv_select_col(data = datam, input = input$mapxmorfo2)
-    make_tmap(data =  coord, dotlegend = column)
+    datam = datamap %>% dplyr::group_by(Codice_azienda, Provincia, Azienda, Cultivar_principale, N_campionamento) %>%
+      dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE), n= n()) %>% 
+      dplyr::rename(!! paste(nfoglieolivenew()) := n) %>% select(!starts_with("ID"))
+    #qui devo mettere per forza provincia, azienda etc perchè summarizzando per valori "double" tutto il resto
+    #non presente nei gruppi viene perso.
+    datasel = dplyr::select(datam, !starts_with("UTM"))
+    column = Olv_select_col(data = datasel, input = input$mapxmorfomap1)
+    make_tmap(data =  datam, dotlegend = column)
   })
  
   
+  #stampa mappa 2
+  output$mapmorfo2 = renderTmap({
+    req(datamorfomap())
+    
+    datamap = datamorfomap() %>% dplyr::filter(Anno == input$selyearmorfomap2) %>% dplyr::filter(N_campionamento == input$nummorfomap2)
+    
+    datam = datamap %>% dplyr::group_by(Codice_azienda, Provincia, Azienda, Cultivar_principale) %>% 
+      dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE), n = n()) %>% 
+      dplyr::rename(!! paste(nfoglieolivenew()) := n) %>% select(!starts_with("ID"))
+    datasel = dplyr::select(datam, !starts_with("UTM"))
+    column = Olv_select_col(data = datasel, input = input$mapxmorfomap2)
+    make_tmap(data =  datam, dotlegend = column)
+  })
+  
+  
+ 
 }
