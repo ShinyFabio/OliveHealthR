@@ -12,7 +12,7 @@
 #' @import ggfortify
 #' @import htmltools
 #' @import scales
-#' @importFrom dplyr select inner_join mutate filter rename across group_by summarise left_join ungroup
+#' @importFrom dplyr select inner_join mutate filter rename across group_by summarise left_join ungroup n
 #' @importFrom tidyr unite starts_with
 #' @importFrom tibble column_to_rownames rownames_to_column
 #' @importFrom grid gpar
@@ -425,6 +425,16 @@ app_server <- function( input, output, session ) {
     dplyr::select(datapolif(), c("Codice_azienda", "Azienda", "Anno", "N_campionamento", "Polifenoli_tot", "Presenza_larve"))
   })
   
+  #aggiusto i data eliminando tutte le colonne non numeriche
+  nadatapoltot = reactive({
+    req(datapoltot())
+    data = datapoltot() %>% dplyr::select(where(is.double) & -Anno)
+    return(data)
+  })
+  
+  #creo il modulo per i NA
+  mod_render_NAbox_server("naboxpoltot", data = nadatapoltot)
+  
   #crea tabella polifenoli totali
   output$tablepoltot = DT::renderDT({
     req(datapoltot())
@@ -546,6 +556,17 @@ app_server <- function( input, output, session ) {
   datapolind= reactive({
     dplyr::select(datapolif(), !c("Polifenoli_tot", "Presenza_larve"))
   })
+  
+  #aggiusto i data eliminando tutte le colonne non numeriche
+  nadatapolind = reactive({
+    req(datapolind())
+    data = datapolind() %>% dplyr::select(where(is.double) & -Anno)
+    return(data)
+  })
+  
+  #creo il modulo per i NA
+  mod_render_NAbox_server("naboxpolind", data = nadatapolind)
+  
   
   #crea tabella polifenoli individuali con l'unità di misura
   output$tablepolind = DT::renderDT({ 
@@ -872,35 +893,16 @@ app_server <- function( input, output, session ) {
   nadatamorfo = reactive({
     req(datamorfo())
     data = datamorfo() %>% dplyr::select(where(is.double) & -Anno)
-    if(input$selfilemorfo != "foglie"){
-      data = data %>% dplyr::select(-ID_oliva)
-    }
+    #if(input$selfilemorfo != "foglie"){
+      data = data %>% dplyr::select(!starts_with("ID"))
+    #}
+    return(data)
   })
   
-  output$namorfobox = shinydashboard::renderValueBox({
-    req(nadatamorfo())
-    natot = sum(is.na(nadatamorfo()))
-    tot= sum(table(is.na(nadatamorfo())))
-    if(natot > 0){
-      shinydashboard::valueBox(value = p(paste0(natot,"/", tot), style = "color:white; font-size:100%;"), h4("Missing data",  style = "color:white"), icon = icon("exclamation-circle"), color = "yellow")
-    } else{
-      shinydashboard::valueBox(value = p(paste0(natot,"/", tot), style = "color:white; font-size:100%;"), h4("Missing data",  style = "color:white"), icon = icon("check"))
-    }
-  })
+  #creo il modulo per i NA
+  mod_render_NAbox_server("naboxmorfo", data = nadatamorfo)
   
-  output$namorfobuttui = renderUI({
-    req(nadatamorfo())
-    if (sum(is.na(nadatamorfo())) > 0){
-      actionButton("namorfobutt", label = strong("Mostra"), class = "btn btn-warning btn-lg")
-    }
-  })
-  
-  output$namorfoplot = renderPlot({
-    req(nadatamorfo())
-    if(sum(is.na(nadatamorfo()) > 0)){
-      VIM::aggr(nadatamorfo(), cex.axis = .9, numbers = T, oma = c(10,5,3,2))
-    }
-  })
+
   
   nfoglieoliveold = reactive({
     if(input$selfilemorfo == "foglie"){
@@ -933,7 +935,7 @@ app_server <- function( input, output, session ) {
     if(input$summarizetab == TRUE){
       x = Olv_select_col(data = datadt, input = input$selectdtmorfo)
       dt = datadt %>% dplyr::group_by(dplyr::across(colnames(x))) %>% 
-        dplyr::summarise(dplyr::across(where(is.double), ~round(mean(.),input$selroundmorfo) , na.rm = TRUE), n = n()) %>% 
+        dplyr::summarise(dplyr::across(where(is.double), ~round(mean(., na.rm = TRUE),input$selroundmorfo)), n = dplyr::n()) %>% 
         dplyr::rename(!! paste(nfoglieolivenew()) := n) %>% dplyr::select(!starts_with("ID"))
       # "!!paste() := n" permette di rinominare usando un vettore contenente il nome. n è il colnames vecchio.
 
@@ -948,14 +950,14 @@ app_server <- function( input, output, session ) {
   
   observeEvent(datamorfo(), {
     #boxplot e barplot
-    updateSelectInput(session, "selectymorfobb", choices=colnames(datamorfo()))
+    updateSelectInput(session, "selectymorfobb", choices=colnames(dplyr::select(datamorfo(), where(is.double) & -dplyr::any_of(c("Anno", "ID_oliva")))))
 
     #mappa 1
-    updateSelectInput(session, "mapxmorfomap1", choices=c(colnames(select(datamorfo(), -paste(nfoglieoliveold()))),paste(nfoglieolivenew())))
+    updateSelectInput(session, "mapxmorfomap1", choices=c(colnames(dplyr::select(datamorfo(), -paste(nfoglieoliveold()))),paste(nfoglieolivenew())))
     updateSelectInput(session, "selyearmorfomap1", choices = row.names(table(dplyr::select(datamorfo(), "Anno"))))
     updateSelectInput(session, "nummorfomap1", choices = row.names(table(dplyr::select(datamorfo(), "N_campionamento"))))
     #mappa 1
-    updateSelectInput(session, "mapxmorfomap2", choices=c(colnames(select(datamorfo(), -paste(nfoglieoliveold()))),paste(nfoglieolivenew())))
+    updateSelectInput(session, "mapxmorfomap2", choices=c(colnames(dplyr::select(datamorfo(), -paste(nfoglieoliveold()))),paste(nfoglieolivenew())))
     updateSelectInput(session, "selyearmorfomap2", choices = row.names(table(dplyr::select(datamorfo(), "Anno"))))
     updateSelectInput(session, "nummorfomap2", choices = row.names(table(dplyr::select(datamorfo(), "N_campionamento"))))
     #tabella
@@ -970,8 +972,9 @@ app_server <- function( input, output, session ) {
     x = Olv_select_col(data = datamorfo(), input = input$selectxmorfobb)
     y =  Olv_select_col(data = datamorfo(), input = input$selectymorfobb)
     fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfobb)
-    summ = datamorfo() %>% dplyr::group_by(Codice_azienda, Provincia, Azienda, Cultivar_principale, Anno, N_campionamento) %>% dplyr::summarise(across(where(is.double), mean , na.rm = TRUE), ID_oliva = n()) %>%
-      dplyr::rename(N_olive = ID_oliva)
+    summ = datamorfo() %>% dplyr::group_by(Codice_azienda, Provincia, Azienda, Cultivar_principale, Anno, N_campionamento) %>% 
+      dplyr::summarise(across(where(is.double), mean , na.rm = TRUE), n = dplyr::n()) %>%
+      dplyr::rename(!! paste(nfoglieolivenew()) := n) %>% dplyr::select(!starts_with("ID"))
     temp = ggplot(data = summ, mapping = aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"), 
                                                    fill = paste0("`",colnames(fill),"`"))) + geom_col() + 
       ggplot2::stat_summary(data = datamorfo(), geom = "errorbar", fun.data = mean_se) +
@@ -1002,7 +1005,7 @@ app_server <- function( input, output, session ) {
     if(input$summarizescatt == TRUE){
       x = Olv_select_col(data = datamorfo(), input = input$selectsummscatt)
       dt = datamorfo() %>% dplyr::group_by(dplyr::across(colnames(x))) %>% 
-        dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE), n = n()) %>% 
+        dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE), n = dplyr::n()) %>% 
         dplyr::rename(!! paste(nfoglieolivenew()) := n) %>% select(!starts_with("ID"))
 
     } else{
@@ -1041,9 +1044,10 @@ app_server <- function( input, output, session ) {
   
   
   #per poter far funzionare il tutto devo avere un file identico a datapolind (ovvero con cod_azienda, provincia e 
-  #il resto (n_camp. anno...). Datamorfo ha Provincia e Cultivar in più quindi li elimino). Inoltre summarizzo anche
+  #il resto (n_camp. anno...). Datamorfo ha Provincia e Cultivar in più quindi li elimino. Elimino anche gli ID o mi 
+  #da problemi quando scalo per colonne). Inoltre summarizzo anche.
   datamorfoheat = reactive({
-    datamorfo() %>% dplyr::select(-c(Provincia,Cultivar_principale)) %>% dplyr::group_by(Codice_azienda, Anno, N_campionamento, Azienda) %>% 
+    datamorfo() %>% dplyr::select(!starts_with("ID") & -c(Provincia,Cultivar_principale)) %>% dplyr::group_by(Codice_azienda, Anno, N_campionamento, Azienda) %>% 
       dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE)) %>% dplyr::ungroup()
     #aggiungo ungroup() o mi da problemi l'heatmap. Tolgo il gruppo.
   })
@@ -1088,7 +1092,7 @@ app_server <- function( input, output, session ) {
   
   observeEvent(input$updateheatmorfo,{
     dataheat2 = dataheatmorfo()
-    InteractiveComplexHeatmap::InteractiveComplexHeatmapWidget(input, output, session, dataheat2, output_id = "heatmap_outputmorfo", layout = "1|23", width1 = 650, height1 = 430)
+    InteractiveComplexHeatmap::InteractiveComplexHeatmapWidget(input, output, session, dataheat2, output_id = "heatmap_outputmorfo", layout = "1|23", width1 = 750, height1 = 550)
   })
   
   
@@ -1102,7 +1106,7 @@ app_server <- function( input, output, session ) {
     datamap = datamorfomap() %>% dplyr::filter(Anno == input$selyearmorfomap1) %>% dplyr::filter(N_campionamento == input$nummorfomap1)
     
     datam = datamap %>% dplyr::group_by(Codice_azienda, Provincia, Azienda, Cultivar_principale, N_campionamento) %>%
-      dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE), n= n()) %>% 
+      dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE), n= dplyr::n()) %>% 
       dplyr::rename(!! paste(nfoglieolivenew()) := n) %>% select(!starts_with("ID"))
     #qui devo mettere per forza provincia, azienda etc perchè summarizzando per valori "double" tutto il resto
     #non presente nei gruppi viene perso.
@@ -1119,7 +1123,7 @@ app_server <- function( input, output, session ) {
     datamap = datamorfomap() %>% dplyr::filter(Anno == input$selyearmorfomap2) %>% dplyr::filter(N_campionamento == input$nummorfomap2)
     
     datam = datamap %>% dplyr::group_by(Codice_azienda, Provincia, Azienda, Cultivar_principale) %>% 
-      dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE), n = n()) %>% 
+      dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE), n = dplyr::n()) %>% 
       dplyr::rename(!! paste(nfoglieolivenew()) := n) %>% select(!starts_with("ID"))
     datasel = dplyr::select(datam, !starts_with("UTM"))
     column = Olv_select_col(data = datasel, input = input$mapxmorfomap2)

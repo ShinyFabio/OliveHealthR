@@ -287,7 +287,11 @@ app_ui <- function(request) {
                                       tabBox(width=NULL,
                                              
                                              tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")),
-                                                      DT::DTOutput("tablepoltot")
+                                                      fluidPage(
+                                                        box(width = NULL, status = "primary", style = "overflow-x: scroll;",
+                                                        DT::DTOutput("tablepoltot")),
+                                                        mod_render_NAbox_ui("naboxpoltot")
+                                                                )
                                              ),
                                              
                                              tabPanel(tagList(shiny::icon("chart-bar"), HTML("&nbsp;Grafici")),
@@ -333,9 +337,12 @@ app_ui <- function(request) {
                               tabItem(tabName = "inpolsub",
                                 tabBox(width=NULL,
                                   tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")), 
-                                    box(width = NULL, status = "primary", style = "overflow-x: scroll;",
-                                        DT::DTOutput("tablepolind")
-                                    )),
+                                    fluidPage(
+                                      box(width = NULL, status = "primary", style = "overflow-x: scroll;",
+                                        DT::DTOutput("tablepolind")),
+                                      mod_render_NAbox_ui("naboxpolind")
+                                    )
+                                    ),
                                              
                                              
                                   
@@ -573,13 +580,13 @@ app_ui <- function(request) {
                                     
                                     # Tabella
                                     conditionalPanel(condition = "input.tabboxmorfo == 'tabdtmor'",
-                                      h4(strong("Impostazioni tabella")),
+                                      h4(strong("Parametri sintesi")),
                                       selectInput("selyeardtmorfo", "Seleziona l'anno", choices = "", multiple = FALSE),
                                       numericInput("selroundmorfo", "Numero di digits", value = 3),
                                       hr(),
                                       materialSwitch(inputId = "summarizetab", label = "Sintetizza i dati", status = "primary"),
                                       conditionalPanel(condition = "input.summarizetab == true",
-                                        selectInput("selectdtmorfo", "Seleziona la colonna da usare per la sintesi", choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale"), multiple = FALSE)
+                                        awesomeCheckboxGroup("selectdtmorfo", "Seleziona la colonna da usare per la sintesi", choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale", "N_campionamento"), selected = "Codice_azienda")
                                       )
                                     ),
                                     
@@ -687,14 +694,12 @@ app_ui <- function(request) {
                                   mainPanel(width = 10,
                                     tabBox(id = "tabboxmorfo", width=NULL,
                                       tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")), value = "tabdtmor",
-                                               fluidRow(box(width = NULL, status = "primary", style = "overflow-x: scroll;",
+                                               fluidPage(
+                                                 fluidRow(box(width = NULL, status = "primary", style = "overflow-x: scroll;",
                                                    DT::DTOutput("dtmorfo"))),
-                                               fluidRow(
-                                                 column(width = 3, shinydashboard::valueBoxOutput("namorfobox", width = 12)),
-                                                 column(width = 3, br(), uiOutput("namorfobuttui"))),
-                                               conditionalPanel(condition = "input.namorfobutt != 0", 
-                                                 fluidRow(plotOutput("namorfoplot")))
-                                               
+                   
+                                               mod_render_NAbox_ui("naboxmorfo")
+                                               )
                                                ),
 
                                       tabPanel(tagList(shiny::icon("chart-bar"), HTML("&nbsp;Grafici")), value = "tabpanmorfograph",

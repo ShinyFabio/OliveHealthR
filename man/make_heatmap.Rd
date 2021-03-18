@@ -17,7 +17,7 @@ make_heatmap(
 )
 }
 \arguments{
-\item{datasorted}{A dataframe}
+\item{datasorted}{A dataframe done with sorder_data() function. See in ?sorder_data() the "data2" parameter for help.}
 
 \item{add_annot}{A column used for the annotation (e.g. "Provincia")}
 

@@ -2,7 +2,7 @@
 #' 
 #' @description This function render a Heatmap using ComplexHeatmap package.
 #' 
-#' @param datasorted A dataframe 
+#' @param datasorted A dataframe done with sorder_data() function. See in ?sorder_data() the "data2" parameter for help.
 #' @param add_annot A column used for the annotation (e.g. "Provincia")
 #' @param scale_data Scaling data option. Data can be scaled by row ("row"), by column ("column") or not scaled ("none").  
 #' @param row_dend Option for dendogram by row (TRUE or FALSE).
