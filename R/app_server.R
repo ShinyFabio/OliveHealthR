@@ -12,8 +12,8 @@
 #' @import ggfortify
 #' @import htmltools
 #' @import scales
-#' @importFrom dplyr select inner_join mutate filter rename across group_by summarise left_join ungroup n
-#' @importFrom tidyr unite starts_with
+#' @importFrom dplyr select inner_join mutate filter rename across group_by summarise left_join ungroup n semi_join
+#' @importFrom tidyr unite starts_with separate
 #' @importFrom tibble column_to_rownames rownames_to_column
 #' @importFrom grid gpar
 #' @importFrom sp SpatialPointsDataFrame CRS
@@ -743,7 +743,7 @@ app_server <- function( input, output, session ) {
     datatemp = datapolind() %>% dplyr::filter(Anno == input$selyearcorrind) %>% dplyr::filter(N_campionamento == input$numcorr)
     
     temp = datatemp %>% dplyr::select(-Anno, - N_campionamento, -Azienda, - Codice_azienda)
-    temp2 = round(stats::cor(temp),1)
+    temp2 = round(stats::cor(temp, use = "na.or.complete"),1)
     par(xpd = TRUE)
     
     plot = ggcorrplot::ggcorrplot(temp2, hc.order = TRUE, type = "lower", outline.col = "white", show.diag = TRUE)
@@ -762,12 +762,16 @@ app_server <- function( input, output, session ) {
     updateSelectInput(session, "selyearpca", choices = row.names(table(dplyr::select(datapolind(), Anno))))
   })
 
-  
-  pcadati = reactive({
+  #rimuovo le righe di NA se ci sono. pcadatina mi servirà dopo per il semi_join con data().
+  pcadatina = reactive({
     req(datapolind())
     #filtro in base agli anni presenti e scelgo anche il num campionamento
-    data = datapolind() %>% dplyr::filter(Anno == input$selyearpca) %>% dplyr::filter(N_campionamento == input$numpca) %>% 
-      dplyr::select(-Anno, -N_campionamento, -Azienda) %>% as.data.frame() %>% tibble::column_to_rownames("Codice_azienda")
+    datapolind() %>% dplyr::filter(Anno == input$selyearpca) %>% dplyr::filter(N_campionamento == input$numpca) %>% 
+      dplyr::select(-Anno, -N_campionamento, -Azienda) %>% stats::na.exclude()
+  })
+  
+  pcadati = reactive({
+    data = pcadatina() %>% as.data.frame() %>% tibble::column_to_rownames("Codice_azienda")
     stats::princomp(data, cor = input$selcorpca)
   })
   
@@ -814,12 +818,24 @@ app_server <- function( input, output, session ) {
   ###biplot
   output$biplot = plotly::renderPlotly({
     req(pcadati())
-    temp = autoplot(pcadati(), data = data(), colour = input$colbiplot, loadings = TRUE, loadings.colour = 'blue', 
+    #qui con semi_join mi prendo solo le righe di data() presenti anche in pcadatina().
+    temp = autoplot(pcadati(), data = dplyr::semi_join(data(), pcadatina()), colour = input$colbiplot, loadings = TRUE, loadings.colour = 'blue', 
                     loadings.label = TRUE, loadings.label.size = 4, title = "Screeplot")
     plotly::ggplotly(temp)
   })
   
   
+  ### plot 3D
+  output$pca3dpolind = plotly::renderPlotly({
+    req(pcadati())
+    pc = pcadati()
+    scoreind = pc$scores
+    scoreindtb = scoreind %>% as.data.frame() %>% tibble::rownames_to_column("Codice_azienda") %>% tibble::as_tibble()
+    scoreindjoin = dplyr::left_join(x = scoreindtb, y = dplyr::select(data(), Codice_azienda, Provincia, Cultivar_principale, Areale), by = "Codice_azienda")
+
+    scoreindjoin %>% plotly::plot_ly(x = ~Comp.1, y = ~Comp.2, z= ~Comp.3, type = "scatter3d", mode = "markers", color = ~base::get(input$col3dind))
+    
+  })
   
 
   
@@ -893,9 +909,7 @@ app_server <- function( input, output, session ) {
   nadatamorfo = reactive({
     req(datamorfo())
     data = datamorfo() %>% dplyr::select(where(is.double) & -Anno)
-    #if(input$selfilemorfo != "foglie"){
       data = data %>% dplyr::select(!starts_with("ID"))
-    #}
     return(data)
   })
   
@@ -998,7 +1012,7 @@ app_server <- function( input, output, session ) {
   })
   
   
-  ### Scatter plot
+  ##### Scatter plot
   
   datamorfoscatt = reactive({
     req(datamorfo())
@@ -1034,7 +1048,7 @@ app_server <- function( input, output, session ) {
   })
   
   
-  ### HEATMAP 
+  #### HEATMAP MORFO ####
   
   #aggiorna il selectinput , "selyearheatind" in base agli anni presenti
   observeEvent(datamorfo(), {
@@ -1053,7 +1067,6 @@ app_server <- function( input, output, session ) {
   })
   
 
-  
   dtheatsortedmorfo = reactive({
     sorder_data(
       data = data(),
@@ -1064,7 +1077,6 @@ app_server <- function( input, output, session ) {
       add_annot = input$selectannotmorfo)
   })
 
-  
   
   #creo slider per colonna
   output$sliderheatcolmorfo <- renderUI({
@@ -1095,7 +1107,121 @@ app_server <- function( input, output, session ) {
     InteractiveComplexHeatmap::InteractiveComplexHeatmapWidget(input, output, session, dataheat2, output_id = "heatmap_outputmorfo", layout = "1|23", width1 = 750, height1 = 550)
   })
   
+
   
+  
+  ###### PCA morfo ####
+  
+  #aggiorna il selectinput , "selyearheatind" in base agli anni presenti e filtra
+  observeEvent(datamorfo(), {
+    updateSelectInput(session, "selyearpcamorfo", choices = row.names(table(dplyr::select(datamorfo(), Anno))))
+    updateSelectInput(session, "numpcamorfo", choices = row.names(table(dplyr::select(datamorfo(), "N_campionamento"))))
+  })
+
+  #rimuovo le righe di NA se ci sono. pcadatinamorfo mi servirà dopo per il semi_join con data().
+  pcadatinamorfo = reactive({
+    req(datamorfo())
+    #filtro in base agli anni presenti e scelgo anche il num campionamento
+    datapre = datamorfo() %>% dplyr::filter(Anno == input$selyearpcamorfo) %>% dplyr::filter(N_campionamento == input$numpcamorfo)
+    
+    #se scelgo di summarizzare tolgo tutto tranne codice_azienda e i double, summarizzo e trasformo codice_azienda 
+    #in rownames
+    if(input$summarizepcamorfo == TRUE){
+      datapre %>% dplyr::select(Codice_azienda, where(is.double), -dplyr::any_of(c("Anno", colnames(dplyr::select(datapre, starts_with("ID")))))) %>% 
+        dplyr::group_by(Codice_azienda) %>% dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% stats::na.exclude()
+    } else{
+      #se non voglio summarizzare tolgo tutto tranne cod_azienda, l'ID e i double. Poi unisco cod_azienda e ID (SA_01_1 etc.)
+      #e trasformo in rownames
+      data = datapre %>% dplyr::select(Codice_azienda, where(is.double), -dplyr::any_of(c("Anno"))) 
+      data %>% tidyr::unite("Codice_azienda", c("Codice_azienda", colnames(dplyr::select(datapre, starts_with("ID"))))) %>% stats::na.exclude()
+    }
+
+  })
+
+
+  #pca
+  pcadatimorfo = reactive({
+    req(pcadatinamorfo())
+    data = pcadatinamorfo() %>% as.data.frame() %>% tibble::column_to_rownames("Codice_azienda")
+    stats::princomp(data, cor = input$selcorpcamorfo)
+  })
+
+  
+  
+  #dataframe da usare per il colore riempimento e il plot 3D. Dagli scores estraggo i rownames per poi fare il join con data.
+  #Se non ho summarizzato divido Codice_azienda eliminando l'ID (da cod.az. = SA_01_3 a cod.az. = SA_01 | ID = _3)
+  datacolorpcamorfo = reactive({
+    req(pcadatimorfo())
+    statna = pcadatimorfo()
+    scores = statna$scores
+    scoretb = scores %>% as.data.frame() %>% tibble::rownames_to_column("Codice_azienda") %>% tibble::as_tibble()
+    if(input$summarizepcamorfo == FALSE){
+      scoretb = scoretb %>% tidyr:::separate(Codice_azienda, into = c("Codice_azienda", "ID"), sep = -2) #sep -2 ultime 2 cifre
+    }
+    dplyr::left_join(x = scoretb, y = dplyr::select(data(), Codice_azienda, Provincia, Cultivar_principale, Areale), by = "Codice_azienda")
+    
+    
+  })
+  
+  
+  #slider dinamico per la scelta delle pcs
+  output$sliderpcmorfo <- renderUI({
+    req(pcadatimorfo())
+    pca = pcadatimorfo()
+    sliderInput("selpcsmorfo", "Numero di Componenti Principali (PC)", min=1, max=length(pca$sdev), value=2, step = 1)
+  })
+
+
+
+  ###plot loadings
+  output$loadingsmorfo = plotly::renderPlotly({
+    req(pcadatimorfo())
+    pca = pcadatimorfo()
+    loadpca = as.data.frame(pca$loadings[, input$selpcsmorfo])
+    loadpca = tibble::rownames_to_column(loadpca)
+
+    pcasdev = as.data.frame(round(pca$sdev^2/sum(pca$sdev^2)*100, 2))
+
+    colnames(loadpca) = c("Misure", paste0("PC", input$selpcsmorfo)) #c("Polifenoli", pste0(...))
+    loadplot = ggplot(loadpca) + geom_col(aes(x = Misure, y = loadpca[,2], fill = Misure)) +
+      labs(y = paste0("PC2", " ", "(", pcasdev[as.numeric(2), ], "%", ")"), title = "Loadings")
+    plotly::ggplotly(loadplot)
+  })
+
+  ###screeplot
+  output$screeplotmorfo <- plotly::renderPlotly({
+    pca = pcadatimorfo()
+    var = cumsum(pca$sdev^2/sum(pca$sdev^2))
+    var = as.data.frame(cbind(var)) %>% tibble::rownames_to_column()
+    colnames(var) = c("Componenti_principali", "Varianza_spiegata")
+
+    screegg = ggplot(var, aes(Componenti_principali, Varianza_spiegata)) +
+      geom_line(colour = "red", group = 1, linetype = "dashed", size = 1) + geom_point(size = 4, colour = "red") +
+      labs(x = "Componenti principali", y = "Varianza spiegata (%)", title = "Screeplot") +
+      scale_y_continuous(limits = c(0, 1), breaks = c(seq(0, 1, by = 0.1)))
+    plotly::ggplotly(screegg)
+
+  })
+
+
+  ###biplot
+  output$biplotmorfo = plotly::renderPlotly({
+    req(pcadatimorfo())
+
+    temp = autoplot(pcadatimorfo(), data = datacolorpcamorfo(), colour = input$colbiplotmorfo, loadings = TRUE, loadings.colour = 'blue',
+                    loadings.label = TRUE, loadings.label.size = 4, title = "Biplot")
+    plotly::ggplotly(temp)  
+ 
+  })
+
+  #### Plot 3D
+
+  output$pca3dmorfo = plotly::renderPlotly({
+    req(datacolorpcamorfo())
+
+    datacolorpcamorfo() %>% plotly::plot_ly(x = ~Comp.1, y = ~Comp.2, z= ~Comp.3, type = "scatter3d", mode = "markers", color = ~base::get(input$col3dmorfo))
+    
+  })
   
   ### Mappa
 

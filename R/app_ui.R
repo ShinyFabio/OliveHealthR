@@ -485,8 +485,7 @@ app_ui <- function(request) {
                                           individual = TRUE, checkIcon = list(yes = tags$i(class = "fa fa-circle", style = "color: steelblue"),no = tags$i(class = "fa fa-circle-o", style = "color: steelblue")))
                                       ),
                                                         
-                                                        
-                                      
+
                                       mainPanel(width = 10,
                                         tabsetPanel(
                                           tabPanel("Screeplot",
@@ -508,12 +507,19 @@ app_ui <- function(request) {
                                                 selectInput("colbiplot", "Seleziona colonna riempimento", choices = c("Provincia", "Cultivar_principale", "Areale"))))
                                             ),
                                             fluidRow(plotly::plotlyOutput("biplot", height = "500px"))
-                                          )
+                                          ),
+                                          
+                                          tabPanel("Plot 3D",
+                                            br(),
+                                            fluidRow(
+                                              column(4, box(width = NULL, status = "primary", 
+                                                            selectInput("col3dind", "Seleziona colonna riempimento", choices = c("Provincia", "Cultivar_principale", "Areale"))))
+                                            ),
+                                            fluidRow(plotly::plotlyOutput("pca3dpolind", height = "500px"))
+                                            )
                                                             
                                         )
                                       ) #end of mainpanel
-                                      
-                                      
                                     ) #end of sidebarLayout
                                     #) #end of tabsetpanel
                                   ) #end of tabpanel PCA
@@ -659,12 +665,22 @@ app_ui <- function(request) {
                                                        h4(strong("Dendrogramma su colonna")),
                                                        uiOutput("sliderheatcolmorfo"),
                                       )
-                                      
-                                      
                                      )
-                                    
-                                    
+
                                     ), #end of conditionapanel dei grafici
+                                    
+                                    
+                                    # PCA
+                                    conditionalPanel(
+                                    condition = "input.tabboxmorfo == 'tabpcamor'",
+                                    selectInput("selyearpcamorfo", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                    selectInput("numpcamorfo", "Scegli il numero di campionamento", choices = "", multiple = FALSE),
+                                    materialSwitch(inputId = "summarizepcamorfo", label = "Sintetizza i dati", status = "primary"),
+                                    radioGroupButtons(inputId = "selcorpcamorfo", label = "Matrice:", choices = c("Correlazione" = TRUE, "Covarianza" = FALSE),
+                                                      individual = TRUE, checkIcon = list(yes = tags$i(class = "fa fa-circle", style = "color: steelblue"),no = tags$i(class = "fa fa-circle-o", style = "color: steelblue")))
+
+                                    ),
+
                                     
                                     # Mappa
                                     conditionalPanel(
@@ -691,6 +707,7 @@ app_ui <- function(request) {
                                   ), #end of sidebarpanel
                                   
                                   
+                                  #### mainpanel ####
                                   mainPanel(width = 10,
                                     tabBox(id = "tabboxmorfo", width=NULL,
                                       tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")), value = "tabdtmor",
@@ -724,13 +741,47 @@ app_ui <- function(request) {
                                         )
                                       ),
                                       
-                                      tabPanel(tagList(shiny::icon("chart-line"), HTML("&nbsp;PCA")),
-                                        #qui la pca
+                                      #pca
+                                      tabPanel(tagList(shiny::icon("chart-line"), HTML("&nbsp;PCA")), value = "tabpcamor",
+                                            tabsetPanel(
 
-                                      ),
+                                              tabPanel("Screeplot",
+                                                br(),
+                                                plotly::plotlyOutput("screeplotmorfo", width = "75%")
+                                              ),
+
+                                              tabPanel("Loadings",
+                                                br(),
+                                                fluidPage(
+                                                fluidRow(column(4, box(width = NULL, status = "primary",
+                                                                       uiOutput("sliderpcmorfo")))),
+                                                fluidRow(plotly::plotlyOutput("loadingsmorfo")))),
+
+                                              tabPanel("Biplot",
+                                                br(),
+                                                fluidPage(
+                                                fluidRow(
+                                                  column(4, box(width = NULL, status = "primary",
+                                                                selectInput("colbiplotmorfo", "Seleziona colonna riempimento", choices = c("Provincia", "Cultivar_principale", "Areale"))))
+                                                ),
+                                                fluidRow(plotly::plotlyOutput("biplotmorfo", height = "500px")))
+                                              ),
+
+                                              tabPanel("Plot 3D",
+                                                       br(),
+                                                       fluidPage(
+                                                       fluidRow(
+                                                         column(4, box(width = NULL, status = "primary",
+                                                                       selectInput("col3dmorfo", "Seleziona colonna riempimento", choices = c("Provincia", "Cultivar_principale", "Areale"))))
+                                                       ),
+                                                       fluidRow(plotly::plotlyOutput("pca3dmorfo", height = "500px")))
+                                              )
+                                            )
+
+                                      ), #end of tabpanel PCA
 
                                       tabPanel(tagList(tags$img(src = "www/clustering_icon.png", height = "16px", width = "16px"), HTML("&nbsp;Clustering")),
-                                               #qui la pca
+                                               #qui il clustering
 
                                       ),
 
