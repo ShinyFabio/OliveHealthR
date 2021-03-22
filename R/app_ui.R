@@ -632,7 +632,6 @@ app_ui <- function(request) {
                                       selectInput("selyearheatmorfo", "Seleziona l'anno", choices = "", multiple = FALSE),
                                       hr(),
                                       h4(strong("Preprocessing")),
-                                      selectInput("selscaleheatmorfo", "Scala i dati:", choices = c("No" = "none", "Per riga" = "row", "Per colonna" = "column"), selected = "none"),
                                       hr(),
                                       h4(strong("Opzioni dendrogramma")),
                                       
@@ -762,7 +761,7 @@ app_ui <- function(request) {
                                                 fluidPage(
                                                 fluidRow(
                                                   column(4, box(width = NULL, status = "primary",
-                                                                selectInput("colbiplotmorfo", "Seleziona colonna riempimento", choices = c("Provincia", "Cultivar_principale", "Areale"))))
+                                                                selectInput("colbiplotmorfo", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Provincia", "Cultivar_principale", "Areale"))))
                                                 ),
                                                 fluidRow(plotly::plotlyOutput("biplotmorfo", height = "500px")))
                                               ),

@@ -27,6 +27,7 @@
 #' @importFrom dendextend color_branches
 #' @importFrom sf st_as_sf st_crs
 #' @importFrom VIM aggr
+#' @importFrom stringr str_replace_all
 #' @noRd
 app_server <- function( input, output, session ) {
   # List the first level callModules here
@@ -717,7 +718,9 @@ app_server <- function( input, output, session ) {
       row_dend = input$rowdend,
       row_nclust = input$sliderrowheat,
       col_dend = input$columndend,
-      col_nclust = input$slidercolheat
+      col_nclust = input$slidercolheat,
+      col_lab = "Polifenoli",
+      unit_legend = "ug/ml"
     )
   })
   
@@ -795,21 +798,21 @@ app_server <- function( input, output, session ) {
     
     colnames(loadpca) = c("Polifenoli", paste0("PC", input$selpcs))
     loadplot = ggplot(loadpca) + geom_col(aes(x = Polifenoli, y = loadpca[,2], fill = Polifenoli)) +
-      labs(y = paste0("PC2", " ", "(", pcasdev[as.numeric(2), ], "%", ")"), title = "Loadings")
+      labs(y = paste0("PC", input$selpcs, " ", "(", pcasdev[as.numeric(input$selpcs), ], "%", ")"), title = "Loadings")
     plotly::ggplotly(loadplot)
   })
   
   ###screeplot
   output$screeplot <- plotly::renderPlotly({
     pca = pcadati()
-    var = cumsum(pca$sdev^2/sum(pca$sdev^2)) 
+    var = cumsum(100*pca$sdev^2/sum(pca$sdev^2)) 
     var = as.data.frame(cbind(var)) %>% tibble::rownames_to_column()
     colnames(var) = c("Componenti_principali", "Varianza_spiegata")
     
     screegg = ggplot(var, aes(Componenti_principali,Varianza_spiegata)) +
       geom_line(colour = "red", group = 1, linetype = "dashed", size = 1) + geom_point(size = 4, colour = "red") + 
       labs(x = "Componenti principali", y = "Varianza spiegata (%)", title = "Screeplot") +
-      scale_y_continuous(limits = c(0, 1), breaks = c(seq(0, 1, by = 0.1)))
+      scale_y_continuous(limits = c(0, 100), breaks = c(seq(0, 100, by = 10)))
     plotly::ggplotly(screegg)
     
   })
@@ -1061,9 +1064,15 @@ app_server <- function( input, output, session ) {
   #il resto (n_camp. anno...). Datamorfo ha Provincia e Cultivar in più quindi li elimino. Elimino anche gli ID o mi 
   #da problemi quando scalo per colonne). Inoltre summarizzo anche.
   datamorfoheat = reactive({
-    datamorfo() %>% dplyr::select(!starts_with("ID") & -c(Provincia,Cultivar_principale)) %>% dplyr::group_by(Codice_azienda, Anno, N_campionamento, Azienda) %>% 
+    temp = datamorfo() %>% dplyr::select(!starts_with("ID") & -c(Provincia,Cultivar_principale)) %>% dplyr::group_by(Codice_azienda, Anno, N_campionamento, Azienda) %>% 
       dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE)) %>% dplyr::ungroup()
-    #aggiungo ungroup() o mi da problemi l'heatmap. Tolgo il gruppo.
+    #aggiungo ungroup() o l'heatmap mi da problemi (tolgo il gruppo).
+    
+    #dato che in questo caso scalo i dati direttamente per colonna (quindi avrò lo z-score senza unità di misura),
+    #elimino dalle columnames le unità di misura.
+    colnames(temp) = stringr::str_replace_all(colnames(temp),"[()]","!")  #sostituisco parentesi con !
+    colnames(temp) = gsub(pattern = "_!.*", replacement = "", x = colnames(temp)) #elimino da _! in poi
+    return(temp)
   })
   
 
@@ -1091,13 +1100,14 @@ app_server <- function( input, output, session ) {
     make_heatmap(
       datasorted = dtheatsortedmorfo(),
       add_annot = input$selectannotmorfo,
-      scale_data = input$selscaleheatmorfo,
+      scale_data = "column",
       dist_method = input$seldistheatmorfo,
       clust_method = input$selhclustheatmorfo,
       row_dend = input$rowdendmorfo,
       row_nclust = input$sliderrowheatmorfo,
       col_dend = input$columndendmorfo,
-      col_nclust = input$slidercolheatmorfo
+      col_nclust = input$slidercolheatmorfo,
+      col_lab = "Misure"
     )
   })
   
@@ -1184,21 +1194,21 @@ app_server <- function( input, output, session ) {
 
     colnames(loadpca) = c("Misure", paste0("PC", input$selpcsmorfo)) #c("Polifenoli", pste0(...))
     loadplot = ggplot(loadpca) + geom_col(aes(x = Misure, y = loadpca[,2], fill = Misure)) +
-      labs(y = paste0("PC2", " ", "(", pcasdev[as.numeric(2), ], "%", ")"), title = "Loadings")
+      labs(y = paste0("PC", input$selpcsmorfo, " ", "(", pcasdev[as.numeric(input$selpcsmorfo), ], "%", ")"), title = "Loadings")
     plotly::ggplotly(loadplot)
   })
 
   ###screeplot
   output$screeplotmorfo <- plotly::renderPlotly({
     pca = pcadatimorfo()
-    var = cumsum(pca$sdev^2/sum(pca$sdev^2))
+    var = cumsum(100*pca$sdev^2/sum(pca$sdev^2))
     var = as.data.frame(cbind(var)) %>% tibble::rownames_to_column()
     colnames(var) = c("Componenti_principali", "Varianza_spiegata")
 
     screegg = ggplot(var, aes(Componenti_principali, Varianza_spiegata)) +
       geom_line(colour = "red", group = 1, linetype = "dashed", size = 1) + geom_point(size = 4, colour = "red") +
       labs(x = "Componenti principali", y = "Varianza spiegata (%)", title = "Screeplot") +
-      scale_y_continuous(limits = c(0, 1), breaks = c(seq(0, 1, by = 0.1)))
+      scale_y_continuous(limits = c(0, 100), breaks = c(seq(0, 100, by = 10)))
     plotly::ggplotly(screegg)
 
   })

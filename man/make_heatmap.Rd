@@ -13,7 +13,9 @@ make_heatmap(
   col_dend,
   col_nclust,
   dist_method,
-  clust_method
+  clust_method,
+  col_lab,
+  unit_legend
 )
 }
 \arguments{
@@ -21,7 +23,7 @@ make_heatmap(
 
 \item{add_annot}{A column used for the annotation (e.g. "Provincia")}
 
-\item{scale_data}{Scaling data option. Data can be scaled by row ("row"), by column ("column") or not scaled ("none").}
+\item{scale_data}{Scaling data option. Data can be scaled (using scale()) by row ("row"), by column ("column") or not scaled ("none"). The result is the z-score.}
 
 \item{row_dend}{Option for dendogram by row (TRUE or FALSE).}
 
@@ -34,6 +36,10 @@ make_heatmap(
 \item{dist_method}{Choose a distance method (e.g "euclidean"). See stats::dist() help.}
 
 \item{clust_method}{Choose a clustering method (e.g "ward.D"). See stats::hclust() help.}
+
+\item{col_lab}{A label for the column (i.e. "Polifenoli" or "Misure").}
+
+\item{unit_legend}{An unit label for the legend. If data are scaled will be "Z-score" otherwise will be the input.}
 }
 \description{
 This function render a Heatmap using ComplexHeatmap package.

@@ -4,13 +4,16 @@
 #' 
 #' @param datasorted A dataframe done with sorder_data() function. See in ?sorder_data() the "data2" parameter for help.
 #' @param add_annot A column used for the annotation (e.g. "Provincia")
-#' @param scale_data Scaling data option. Data can be scaled by row ("row"), by column ("column") or not scaled ("none").  
+#' @param scale_data Scaling data option. Data can be scaled (using scale()) by row ("row"), by column ("column") or not scaled ("none"). The result is the z-score.
 #' @param row_dend Option for dendogram by row (TRUE or FALSE).
 #' @param col_dend Option for dendogram by column (TRUE or FALSE).
 #' @param row_nclust Number of cluster in the row dendrogram (a number).
 #' @param col_nclust Number of cluster in the column dendrogram (a number).
 #' @param dist_method Choose a distance method (e.g "euclidean"). See stats::dist() help.
 #' @param clust_method Choose a clustering method (e.g "ward.D"). See stats::hclust() help.
+#' @param col_lab A label for the column (i.e. "Polifenoli" or "Misure").
+#' @param unit_legend An unit label for the legend. If data are scaled will be "Z-score" otherwise will be the input.
+#' 
 #'
 #' @importFrom tibble column_to_rownames
 #' @importFrom dplyr select
@@ -50,7 +53,7 @@
 #input$columndend         -col_dend
 #input$slidercolheat      -col_nclust
 
-make_heatmap = function(datasorted, add_annot, scale_data, row_dend, row_nclust, col_dend, col_nclust, dist_method, clust_method){
+make_heatmap = function(datasorted, add_annot, scale_data, row_dend, row_nclust, col_dend, col_nclust, dist_method, clust_method, col_lab, unit_legend){
   
     #creo la matrice con rownames 
     temp = datasorted %>% dplyr::select(-Anno, - N_campionamento, -add_annot) %>% as.data.frame() %>% tibble::column_to_rownames("Codice_azienda")
@@ -58,8 +61,10 @@ make_heatmap = function(datasorted, add_annot, scale_data, row_dend, row_nclust,
     #scale none, row, column
     if(scale_data == "column"){
       temp = scale(temp) # scale and center columns
+      unit_legend = "Z-score"
     } else if(scale_data == "row"){
       temp = t(scale(t(temp))) # scale and center rows
+      unit_legend = "Z-score"
     } 
     
     #dendrogram = none', 'row', 'column' or 'both' 
@@ -90,8 +95,8 @@ make_heatmap = function(datasorted, add_annot, scale_data, row_dend, row_nclust,
     col_ha = ComplexHeatmap::HeatmapAnnotation(df = annotdata, which = "row", col = colorannot)
     
     
-    ht = ComplexHeatmap::Heatmap(temp, name = "ug/ml",  rect_gp = grid::gpar(col = "white", lwd = 1), row_title = "Codice azienda", 
-                                 column_title = "Polifenoli", row_names_gp = grid::gpar(fontsize = 11),
+    ht = ComplexHeatmap::Heatmap(temp, name = unit_legend,  rect_gp = grid::gpar(col = "white", lwd = 1), row_title = "Codice azienda", 
+                                 column_title = col_lab, row_names_gp = grid::gpar(fontsize = 11),
                                  cluster_rows = row_dend, cluster_columns = col_dend, 
                                  left_annotation = col_ha,
                                  column_split = col_split, row_split = row_split)
