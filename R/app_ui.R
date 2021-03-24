@@ -166,7 +166,7 @@ app_ui <- function(request) {
                                                      selectInput("select3", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE)
                                         ),
                                         mainPanel(width = 9,
-                                          conditionalPanel(condition = ("input.update != 0"),
+                                          conditionalPanel(condition = "input.update != 0",
                                                            tmapOutput("map1")
                                           )
                                         )
@@ -231,11 +231,11 @@ app_ui <- function(request) {
                                                  ),
                                                  fluidRow(column(12, box(width=NULL, status = "primary", DT::DTOutput("prov2"))))
                                           ),
-                                          conditionalPanel(condition = ("input.prov2_rows_selected == 0"),
+                                          conditionalPanel(condition = "input.prov2_rows_selected == 0",
                                                            p(strong(h4("Per favore seleziona un'azienda dalla tabella", align = "center")))
                                           ),
                                           
-                                          conditionalPanel(condition = ("input.prov2_rows_selected != 0"),
+                                          conditionalPanel(condition = "input.prov2_rows_selected != 0",
                                                            column(width = 4, box(width=NULL, status = "primary", title = "Foglie", align= "center", uiOutput("phfoglia"))),
                                                            column(width = 4, box(width=NULL, status = "primary", title = "Drupe",align = "center", uiOutput("phdrupa")))
                                           )
@@ -542,7 +542,7 @@ app_ui <- function(request) {
                                     hr(),
                                     br(),
                                     actionButton("addmappol2", label = "Aggiungi seconda mappa"),
-                                    conditionalPanel(condition = ("input.addmappol2 != 0"),
+                                    conditionalPanel(condition = "input.addmappol2 != 0",
                                       br(), 
                                       selectInput("mapxpol2", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
                                       selectInput("selyearpol2", "Seleziona l'anno", choices = "", multiple = FALSE),  
@@ -613,7 +613,7 @@ app_ui <- function(request) {
                                       condition = "input.boxmorfograph == 'tabpanscattmorfo'",
                                       materialSwitch(inputId = "summarizescatt", label = "Sintetizza i dati", status = "primary"),
                                       conditionalPanel(condition = "input.summarizescatt == true",
-                                                       selectInput("selectsummscatt", "Seleziona la colonna da usare per la sintesi", choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale"), multiple = FALSE),
+                                                       selectInput("selectsummscatt", "Seleziona la colonna da usare per la sintesi", choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale"), multiple = TRUE),
                                                        hr(),
                                       ),
                                       selectInput("selectxmorfoscatt", "Seleziona la colonna X", choices = "", multiple = FALSE),
@@ -630,8 +630,6 @@ app_ui <- function(request) {
                                       h4(strong("Dati")),
                                       selectInput("numheatmorfo", "Scegli il numero di campionamento", choices = "", multiple = FALSE),
                                       selectInput("selyearheatmorfo", "Seleziona l'anno", choices = "", multiple = FALSE),
-                                      hr(),
-                                      h4(strong("Preprocessing")),
                                       hr(),
                                       h4(strong("Opzioni dendrogramma")),
                                       
@@ -680,7 +678,19 @@ app_ui <- function(request) {
 
                                     ),
 
-                                    
+                                    #  Clustering
+                                    conditionalPanel(
+                                      condition = "input.tabboxmorfo == 'tabclustmor'",
+                                      selectInput("selyearclustmorfo", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                      selectInput("numclustmorfo", "Scegli il numero di campionamento", choices = "", multiple = FALSE),
+                                      materialSwitch(inputId = "summarizeclustmorfo", label = "Sintetizza i dati", status = "primary", value = TRUE),
+                                      radioGroupButtons("selclustmethod", "Tipo di clustering", choices = c("Gerarchico", "Partizionale"), justified = TRUE, status = "primary"),
+                                      conditionalPanel(
+                                        condition = "input.selclustmethod == 'Partizionale'",
+                                        selectInput("selclusthmorfo", "Seleziona l'algoritmo di clustering", choices = c("K-means", "PAM", "Clara"), selected = "K-means", multiple = FALSE),
+                                      ) 
+                                    ),
+
                                     # Mappa
                                     conditionalPanel(
                                       condition = "input.tabboxmorfo == 'tabmapmor'",
@@ -779,10 +789,34 @@ app_ui <- function(request) {
 
                                       ), #end of tabpanel PCA
 
-                                      tabPanel(tagList(tags$img(src = "www/clustering_icon.png", height = "16px", width = "16px"), HTML("&nbsp;Clustering")),
-                                               #qui il clustering
-
-                                      ),
+                                      
+                                      # Clustering
+                                      tabPanel(tagList(tags$img(src = "www/clustering_icon.png", height = "16px", width = "16px"), HTML("&nbsp;Clustering")), value = "tabclustmor",
+                                                tabsetPanel(
+                                                  tabPanel("Numero cluster",
+                                                    br(),
+                                                    plotOutput("numclustergraph", height = "800px")
+                                                  ),
+                                                  
+                                                  tabPanel("Cluster plot",
+                                                    br(),
+                                                    fluidPage(
+                                                      fluidRow(
+                                                        column(4, 
+                                                               box(width = NULL, status = "primary",
+                                                                      sliderInput("selnumclustmorfo", "Numero cluster:", min = 1, max = 10, value = 2))),
+                                                        column(4, 
+                                                               conditionalPanel(condition = "input.selclustmethod == 'Gerarchico'",
+                                                                 selectInput("selhclustmeth", "Seleziona metodo agglomerazione", choices = c("single", "complete", "ward.D", "ward.D2"), selected = "ward.D2")
+                                                                 )
+                                                               )
+                                                        ),
+                                                      fluidRow(plotOutput("plotclustermorfo", height = "600px"))
+                                                      )
+                                                  )
+                                                  
+                                                )
+                                      ), #end of tabpanel clustering
 
                                       tabPanel(tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")), value = "tabmapmor",
                                               conditionalPanel(condition = ("input.upmapmorfo != 0"),

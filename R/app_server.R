@@ -28,6 +28,9 @@
 #' @importFrom sf st_as_sf st_crs
 #' @importFrom VIM aggr
 #' @importFrom stringr str_replace_all
+#' @importFrom factoextra fviz_nbclust fviz_cluster fviz_dend fviz_silhouette eclust
+#' @importFrom cluster pam clara
+#' @importFrom gridExtra grid.arrange
 #' @noRd
 app_server <- function( input, output, session ) {
   # List the first level callModules here
@@ -1142,7 +1145,7 @@ app_server <- function( input, output, session ) {
     } else{
       #se non voglio summarizzare tolgo tutto tranne cod_azienda, l'ID e i double. Poi unisco cod_azienda e ID (SA_01_1 etc.)
       #e trasformo in rownames
-      data = datapre %>% dplyr::select(Codice_azienda, where(is.double), -dplyr::any_of(c("Anno"))) 
+      data = datapre %>% dplyr::select(Codice_azienda, starts_with("ID"), where(is.double), -Anno)
       data %>% tidyr::unite("Codice_azienda", c("Codice_azienda", colnames(dplyr::select(datapre, starts_with("ID"))))) %>% stats::na.exclude()
     }
 
@@ -1166,7 +1169,7 @@ app_server <- function( input, output, session ) {
     scores = statna$scores
     scoretb = scores %>% as.data.frame() %>% tibble::rownames_to_column("Codice_azienda") %>% tibble::as_tibble()
     if(input$summarizepcamorfo == FALSE){
-      scoretb = scoretb %>% tidyr:::separate(Codice_azienda, into = c("Codice_azienda", "ID"), sep = -2) #sep -2 ultime 2 cifre
+      scoretb = scoretb %>% tidyr:::separate(Codice_azienda, into = c("Codice_azienda", "ID"), sep = 5) #sep -2 ultime 2 cifre
     }
     dplyr::left_join(x = scoretb, y = dplyr::select(data(), Codice_azienda, Provincia, Cultivar_principale, Areale), by = "Codice_azienda")
     
@@ -1233,6 +1236,83 @@ app_server <- function( input, output, session ) {
     
   })
   
+  
+  ###### Clustering morfo ######
+  
+  
+  #aggiorna il selectinput , "selyearheatind" in base agli anni presenti e filtra
+  observeEvent(datamorfo(), {
+    updateSelectInput(session, "selyearclustmorfo", choices = row.names(table(dplyr::select(datamorfo(), Anno))))
+    updateSelectInput(session, "numclustmorfo", choices = row.names(table(dplyr::select(datamorfo(), "N_campionamento"))))
+  })
+
+  dataclustmorfo = reactive({
+    req(datamorfo())
+    #filtro in base agli anni presenti e scelgo anche il num campionamento
+    datapre = datamorfo() %>% dplyr::filter(Anno == input$selyearclustmorfo) %>% dplyr::filter(N_campionamento == input$numclustmorfo)
+
+    #se scelgo di summarizzare tolgo tutto tranne codice_azienda e i double, summarizzo e trasformo codice_azienda
+    #in rownames
+    datapre = datapre %>% dplyr::select(Codice_azienda, where(is.double), -dplyr::any_of(c("Anno", colnames(dplyr::select(datapre, starts_with("ID")))))) %>%
+        dplyr::group_by(Codice_azienda) %>% dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% stats::na.exclude()
+    datapre %>% as.data.frame() %>% tibble::column_to_rownames("Codice_azienda") %>% scale()
+
+  })
+
+  #grafici per la scelta del numero di cluster
+  output$numclustergraph = renderPlot({
+    req(dataclustmorfo())
+    
+    if(input$selclusthmorfo == "K-means"){
+      p1 = factoextra::fviz_nbclust(dataclustmorfo(), stats::kmeans, method = "gap_stat")
+      p2 = factoextra::fviz_nbclust(dataclustmorfo(), stats::kmeans, method = "wss")
+      p3 = factoextra::fviz_nbclust(dataclustmorfo(), stats::kmeans, method = "silhouette")
+    } else if(input$selclusthmorfo == "PAM"){
+      p1 = factoextra::fviz_nbclust(dataclustmorfo(), cluster::pam, method = "gap_stat")
+      p2 = factoextra::fviz_nbclust(dataclustmorfo(), cluster::pam, method = "wss")
+      p3 = factoextra::fviz_nbclust(dataclustmorfo(), cluster::pam, method = "silhouette")
+    } else{
+      p1 = factoextra::fviz_nbclust(dataclustmorfo(), cluster::clara, method = "gap_stat")
+      p2 = factoextra::fviz_nbclust(dataclustmorfo(), cluster::clara, method = "wss")
+      p3 = factoextra::fviz_nbclust(dataclustmorfo(), cluster::clara, method = "silhouette")
+    }
+    
+    if(input$selclustmethod == "Partizionale"){
+      gridExtra::grid.arrange(p1, p2, p3, ncol = 2)
+    } else{
+      meth = c("single","complete","ward.D","ward.D2")
+      d = stats::dist(dataclustmorfo())
+      par(mfrow=c(2,2))
+      for(i in seq(1,4)){
+        hs = stats::hclust(d, method = meth[i])
+        plot(hs$height, pch=16, main = meth[i], ylab = "Height")
+      }
+    }
+  })
+  
+  #data cluster
+  output$plotclustermorfo = renderPlot({
+    req(dataclustmorfo())
+    if(input$selclustmethod == "Partizionale"){
+    if(input$selclusthmorfo == "K-means"){
+      clust = stats::kmeans(dataclustmorfo(), centers = input$selnumclustmorfo, nstart = 25)
+      
+    } else if (input$selclusthmorfo == "PAM"){
+      clust = cluster::pam(dataclustmorfo(), k = input$selnumclustmorfo)
+    } else {
+      clust = cluster::clara(dataclustmorfo(), k = input$selnumclustmorfo)
+    }
+    factoextra::fviz_cluster(clust, data = dataclustmorfo(), ellipse.type = "convex", palette = "jco", ggtheme = theme_minimal())
+    } else {
+      hcluster = factoextra::eclust(dataclustmorfo(), "hclust", hc_method = input$selhclustmeth, k = input$selnumclustmorfo)
+      p1 = factoextra::fviz_dend(hcluster, palette = "jco", rect = TRUE, show_labels = FALSE)
+      p2 = factoextra::fviz_silhouette(hcluster)
+      gridExtra::grid.arrange(p1, p2, ncol = 2)
+    }
+  })
+  
+  
+
   ### Mappa
 
   #stampa mappa 1
