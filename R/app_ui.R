@@ -683,7 +683,7 @@ app_ui <- function(request) {
                                       condition = "input.tabboxmorfo == 'tabclustmor'",
                                       selectInput("selyearclustmorfo", "Seleziona l'anno", choices = "", multiple = FALSE),
                                       selectInput("numclustmorfo", "Scegli il numero di campionamento", choices = "", multiple = FALSE),
-                                      materialSwitch(inputId = "summarizeclustmorfo", label = "Sintetizza i dati", status = "primary", value = TRUE),
+                                      #materialSwitch(inputId = "summarizeclustmorfo", label = "Sintetizza i dati", status = "primary", value = TRUE),
                                       radioGroupButtons("selclustmethod", "Tipo di clustering", choices = c("Gerarchico", "Partizionale"), justified = TRUE, status = "primary"),
                                       conditionalPanel(
                                         condition = "input.selclustmethod == 'Partizionale'",
