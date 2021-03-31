@@ -284,81 +284,209 @@ app_ui <- function(request) {
                               
                               # Tab polifenoli totali ----------------------------------------------------------------
                               tabItem(tabName = "totpolsub",
-                                      tabBox(width=NULL,
-                                             
-                                             tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")),
-                                                      fluidPage(
-                                                        box(width = NULL, status = "primary", style = "overflow-x: scroll;",
-                                                        DT::DTOutput("tablepoltot")),
-                                                        mod_render_NAbox_ui("naboxpoltot")
-                                                                )
-                                             ),
-                                             
-                                             tabPanel(tagList(shiny::icon("chart-bar"), HTML("&nbsp;Grafici")),
-                                                      
-                                                      sidebarLayout(
-                                                        sidebarPanel(width=2,
-                                                                     selectInput("selectxtot", "Seleziona la colonna X", choices = "", multiple = FALSE),
-                                                                     selectInput("selectytot", "Seleziona la colonna Y", choices = "", multiple = FALSE)
-                                                        ),
-                                                        
-                                                        mainPanel(width = 10,
-                                                              tabsetPanel(
-                                                                tabPanel("Scatter plot",
-                                                                         br(),
-                                                                         box(width=NULL, status = "primary",
-                                                                             fluidRow(
-                                                                               column(3, selectInput("selyearscattertot", "Seleziona l'anno", choices = "", multiple = FALSE)),
-                                                                               column(3, selectInput("numtot", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)),
-                                                                               column(3, selectInput("selectfilltot", "Colonna da usare come riempimento", choices = "", multiple = FALSE))
-                                                                             )),
-                                                                         plotly::plotlyOutput("totscatplot")
-                                                                ),
-                                                                
-                                                                tabPanel("Barplot",
-                                                                         fluidRow(
-                                                                           column(width = 2, 
-                                                                                  br(),
-                                                                                  box(width = NULL, status = "primary", checkboxGroupInput("checkcamptot", "Seleziona campionamento", choices = ""))
-                                                                           ),
-                                                                           column(width = 10, br(), box(width=NULL, status = "primary", plotly::plotlyOutput("barplottot")))
-                                                                         )#end of fluidRow
-                                                                )
-                                                              )#end of tabsetpanel
-                                                        )
-                                                      )
-                                                      
-                                             )
-                                      ) #end of tabsetpanel
+                                sidebarLayout(
+                                  sidebarPanel(width = 2,
+                                    radioGroupButtons("selfilepoltot", "Seleziona i polifenoli da analizzare", 
+                                                      choiceValues = list("foglie", "drupe", "olio", "posa", "sansa"),
+                                                      choiceNames = list(
+                                                        paste(shiny::icon("leaf",  style='font-size:16px;'), HTML("<b style=font-size:16px>&nbsp;Foglie</b>")),
+                                                        paste(tags$img(src = "www/olive_icon2.png", height = "22px", width = "22px"), HTML("<b style=font-size:16px>&nbsp;Drupe</b>")),
+                                                        paste(tags$img(src = "www/olive_oil.png", height = "22px", width = "22px"), HTML("<b style=font-size:16px>&nbsp;Olio</b>")),
+                                                        paste(tags$img(src = "www/posa.png", height = "22px", width = "22px"), HTML("<b style=font-size:16px>&nbsp;Posa</b>")),
+                                                        paste(tags$img(src = "www/sansa3.png", height = "23px", width = "23px"), HTML("<b style=font-size:16px>&nbsp;Sansa</b>"))),
+                                                      direction = "vertical", justified = TRUE, status = "primary"
+                                    ),
+                                    hr(),
+                                    conditionalPanel(
+                                      condition = "input.tabboxpoltot  == 'tabpoltotgraph'",
+                                      h4(strong("Impostazioni grafici")),
+                                      #scatterplot
+                                      conditionalPanel(condition = "input.boxpoltotgraph == 'boxscattpoltot'",
+                                        selectInput("selectxtot", "Seleziona la colonna X", choices = "", multiple = FALSE),
+                                        selectInput("selectytot", "Seleziona la colonna Y", choices = "", multiple = FALSE)
+                                      ),
+                                      #barplot
+                                      conditionalPanel(condition = "input.boxpoltotgraph == 'boxbarpoltot'",
+                                        selectInput("selectxtotbar", "Seleziona la colonna X", choices = "", multiple = FALSE),
+                                        selectInput("selectytotbar", "Seleziona la colonna Y", choices = "", multiple = FALSE),
+                                        selectInput("selectfilltotbar", "Colonna da usare come riempimento", choices = c("N_campionamento", "Cultivar_principale"), selected = "N_campionamento"),
+                                        hr(),
+                                        checkboxGroupInput("checkcamptot", "Seleziona campionamento", choices = "")
+                                      )
+                                    )
+                                  ),
+                                  
+                                  mainPanel(width = 10,
+                                    tabBox(id = "tabboxpoltot", width = NULL,
+                                           
+                                      tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")), value = "tabdtpoltot",
+                                               fluidPage(
+                                                 box(width = NULL, status = "primary", style = "overflow-x: scroll;",
+                                                     DT::DTOutput("tablepoltot")),
+                                                 mod_render_NAbox_ui("naboxpoltot")
+                                               )
+                                      ), #end of tabpanel tabella
                                       
+                                      
+                                      tabPanel(tagList(shiny::icon("chart-bar"), HTML("&nbsp;Grafici")), value = "tabpoltotgraph",
+                                               tabsetPanel(id = "boxpoltotgraph",
+                                                 
+                                                           
+                                                 tabPanel("Scatter plot", value = "boxscattpoltot",
+                                                   box(width=NULL, status = "primary",
+                                                     fluidRow(
+                                                       column(3, selectInput("selyearscattertot", "Seleziona l'anno", choices = "", multiple = FALSE)),
+                                                       column(3, selectInput("numtot", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)),
+                                                       column(3, selectInput("selectfilltot", "Colonna da usare come riempimento", choices = "", multiple = FALSE))
+                                                     )),
+                                                   plotly::plotlyOutput("totscatplot")
+                                                 ), #end of tabpanel scatter plot
+                                                 
+                                                 
+                                                 
+                                                 tabPanel("Barplot", value = "boxbarpoltot",
+                                                   plotly::plotlyOutput("barplottot")
+                                                 ) #end of tabpanel barplot
+                                                 
+                                               ) #end of tabsetpanel grafici
+                                      ) #end of tabpanel grafici
+                                      
+                                      
+                                      
+                                      ) #end of tabbox poltot
+                                    ) #end of mainpanel
+                                )#end of sidebarlayout
+                                      
+      
                               ), #end of tabitem "totpolsub"
                               
                               # Tab polifenoli individuali ----------------------------------------------------------------------------
                               tabItem(tabName = "inpolsub",
-                                tabBox(width=NULL,
-                                  tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")), 
-                                    fluidPage(
-                                      box(width = NULL, status = "primary", style = "overflow-x: scroll;",
-                                        DT::DTOutput("tablepolind")),
-                                      mod_render_NAbox_ui("naboxpolind")
-                                    )
+                                sidebarLayout(
+                                  sidebarPanel(width = 2,
+                                    radioGroupButtons("selfilepolind", "Seleziona i polifenoli da analizzare", 
+                                                      choiceValues = list("foglie", "drupe", "olio", "posa", "sansa"),
+                                                      choiceNames = list(
+                                                        paste(shiny::icon("leaf",  style='font-size:16px;'), HTML("<b style=font-size:16px>&nbsp;Foglie</b>")),
+                                                        paste(tags$img(src = "www/olive_icon2.png", height = "22px", width = "22px"), HTML("<b style=font-size:16px>&nbsp;Drupe</b>")),
+                                                        paste(tags$img(src = "www/olive_oil.png", height = "22px", width = "22px"), HTML("<b style=font-size:16px>&nbsp;Olio</b>")),
+                                                        paste(tags$img(src = "www/posa.png", height = "22px", width = "22px"), HTML("<b style=font-size:16px>&nbsp;Posa</b>")),
+                                                        paste(tags$img(src = "www/sansa3.png", height = "23px", width = "23px"), HTML("<b style=font-size:16px>&nbsp;Sansa</b>"))),
+                                                      direction = "vertical", justified = TRUE, status = "primary"
                                     ),
-                                             
-                                             
+                                    hr(),
+                                    
+                                    conditionalPanel(
+                                      condition = "input.tabboxpolind  == 'tabpolindgraph'",
+                                      h4(strong("Impostazioni grafici")),
+                                      
+                                      # Scatterplot ______________________________________________________
+                                      conditionalPanel(condition = "input.boxpolindgraph == 'boxscattpolind'",
+                                                       selectInput("selectxind", "Seleziona la colonna X", choices = "", multiple = FALSE),
+                                                       selectInput("selectyind", "Seleziona la colonna Y", choices = "", multiple = FALSE)
+                                      ),
+                                      
+                                      # Barplot ____________________________________________________________
+                                      conditionalPanel(condition = "input.boxpolindgraph == 'boxbarpolind'",
+                                        selectInput("selectxindbar", "Seleziona la colonna X", choices = "", multiple = FALSE),
+                                        selectInput("selectyindbar", "Seleziona la colonna Y", choices = "", multiple = FALSE),
+                                        selectInput("selectfillindbar", "Colonna da usare come riempimento", choices = c("N_campionamento", "Cultivar_principale"), selected = "N_campionamento"),
+                                        hr(),
+                                        checkboxGroupInput("checkcampind", "Seleziona campionamento", choices = "")
+                                      ),
+                                    
+                                    # Heatmap _______________________________________________________
+                                    conditionalPanel(
+                                      condition = "input.boxpolindgraph == 'boxheatpolind'",
+                                      div(actionButton("updateheat", label = "Carica!", class = "btn btn-primary btn-lg", width = "160px", style='padding:5px; font-size:200%; font-weight: bold;'), align= "center"),
+                                      br(),
+                                      h4(strong("Dati")),
+                                      fluidRow(
+                                        column(6, selectInput("numheat", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)),
+                                        column(6, br(), selectInput("selyearheatind", "Seleziona l'anno", choices = "", multiple = FALSE))
+                                      ),
+                                      hr(),
+                                      h4(strong("Preprocessing")),
+                                      selectInput("selscaleheat", "Scala i dati:", choices = c("No" = "none", "Per riga" = "row", "Per colonna" = "column"), selected = "none"),
+                                      hr(),
+                                      h4(strong("Opzioni dendrogramma")),
+                                      
+                                      ###voglio il dendrograma su riga o colonna o entrambi?
+                                      h5(strong("Scegli dove mostrare il dendrogramma")),
+                                      fluidRow(
+                                        column(6, materialSwitch(inputId = "rowdend", label = "Riga",  value = TRUE, status = "primary")),
+                                        column(6, materialSwitch(inputId = "columndend", label = "Colonna",  value = TRUE, status = "primary"))
+                                      ),
+                                      hr(),
+                                      selectInput("selectannot", "Aggiungi annotazione:", choices = c("Provincia", "Cultivar_principale", "Areale")),
+                                      conditionalPanel(condition = "input.rowdend == 1 || input.columndend == 1",
+                                                       fluidRow(
+                                                         column(6, selectInput("seldistheatpol", "Funzione di distanza:", choices = c("euclidean", "maximum", "manhattan", "canberra", "minkowski"), selected = "euclidean")),
+                                                         column(6,selectInput("selhclustheatpol", "Metodo clustering:", choices = c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty", "median", "centroid"), selected = "complete"))
+                                                       )
+                                      ),
+                                      
+                                      conditionalPanel(condition = "input.rowdend == 0",
+                                                       h5(strong("Ordinare i dati per annotazione?")),
+                                                       awesomeCheckbox("heatsort", label = "Ordina", value = TRUE)
+                                      ),
+                                      
+                                      conditionalPanel(condition = "input.rowdend == 1",
+                                                       hr(),
+                                                       h4(strong("Dendrogramma su riga")),
+                                                       sliderInput("sliderrowheat", "Numero cluster:", min = 2, max = 10, value = 2),
+                                      ),
+                                      
+                                      conditionalPanel(condition = "input.columndend == 1",
+                                                       hr(),
+                                                       h4(strong("Dendrogramma su colonna")),
+                                                       uiOutput("sliderheatcol"),
+                                      )
+                                        
+                                    ), #end of conditional heatmap
+                                      
+                                      
+                                    # Correlation _________________________________________________________________
+                                    conditionalPanel(
+                                      condition = "input.boxpolindgraph == 'boxcorrpolind'",
+                                      selectInput("selyearcorrind", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                      selectInput("numcorr", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)
+                                    ),
+                                    ), #end of conditional panel dei grafici
+                                    
+                                    
+                                      
+                                    # PCA ____________________________________________________________________
+                                    conditionalPanel(
+                                      condition = "input.tabboxpolind == 'tabpolindpca'",
+                                      selectInput("selyearpca", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                      selectInput("numpca", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE),
+                                      radioGroupButtons(inputId = "selcorpca", label = "Matrice:", choices = c("Correlazione" = TRUE, "Covarianza" = FALSE), 
+                                                        individual = TRUE, checkIcon = list(yes = tags$i(class = "fa fa-circle", style = "color: steelblue"),no = tags$i(class = "fa fa-circle-o", style = "color: steelblue")))
+                                    ),
+                                      
+                                  ), #end of sidebarpanel
                                   
-                                  tabPanel(tagList(shiny::icon("chart-bar"), HTML("&nbsp;Grafici")),
-                                    tabsetPanel(
-                                      tabPanel("Scatter plot",
-                                        sidebarLayout(
-                                          
-                                          sidebarPanel(width = 2,
-                                            selectInput("selectxind", "Seleziona la colonna X", choices = "", multiple = FALSE),
-                                            selectInput("selectyind", "Seleziona la colonna Y", choices = "", multiple = FALSE)
-                                          ),
-                                                                   
-                                          
-                                          mainPanel(width = 10,
-                                            br(),
+                                  
+                                  
+                                  mainPanel(width = 10,
+                                    tabBox(id = "tabboxpolind", width = NULL,
+                                           
+                                      tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")), value = "tabdtpolind", 
+                                        fluidPage(
+                                          box(width = NULL, status = "primary", style = "overflow-x: scroll;",
+                                              DT::DTOutput("tablepolind")),
+                                          mod_render_NAbox_ui("naboxpolind")
+                                        )
+                                      ), #end of tabpanel tabella
+                                      
+                                      
+                                      
+                                      tabPanel(tagList(shiny::icon("chart-bar"), HTML("&nbsp;Grafici")), value = "tabpolindgraph",
+                                        tabsetPanel(id = "boxpolindgraph",
+                                                    
+                                                    
+                                          tabPanel("Scatter plot", value = "boxscattpolind",
                                             box(width=NULL, status = "primary",
                                               fluidRow(
                                                 column(3, selectInput("selyearscatterind", "Seleziona l'anno", choices = "", multiple = FALSE)),
@@ -366,148 +494,59 @@ app_ui <- function(request) {
                                                 column(3, selectInput("selectfillind", "Colonna da usare come riempimento", choices = "", multiple = FALSE))
                                               )),
                                             plotly::plotlyOutput("scatterindpol")
-                                          )
-                                        ) #end of sidebarlayout
-                                      ), #end of tabpanel scatterplot
-                                                        
-                                                        
-                                      
-                                      tabPanel("Barplot",
-                                        sidebarLayout(
+                                          ), #end of tabpanel scatterplot
+
                                           
-                                          sidebarPanel(width = 2,
-                                            selectInput("selectxindbar", "Seleziona la colonna X", choices = "", multiple = FALSE),
-                                            selectInput("selectyindbar", "Seleziona la colonna Y", choices = "", multiple = FALSE),
-                                            hr(),
-                                            checkboxGroupInput("checkcampind", "Seleziona campionamento", choices = "")
-                                          ),
-                                                                   
-                                          mainPanel(width = 10,
-                                            br(),
-                                            box(width=12, status = "primary", plotly::plotlyOutput("barplotind"))
-                                          )
-                                        ) #end of sidebarlayout
-                                      ), #end of tabpanel barplot
-                                                        
-                                                        
-                                      
-                                      tabPanel("Heatmap",
-                                        sidebarLayout(
-                                          sidebarPanel(width = 3,
-                                            div(actionButton("updateheat", label = "Carica!", class = "btn btn-primary btn-lg", width = "160px", style='padding:5px; font-size:200%; font-weight: bold;'), align= "center"),
-                                            br(),
-                                            h4(strong("Dati")),
-                                            fluidRow(
-                                              column(6, selectInput("numheat", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)),
-                                              column(6, br(), selectInput("selyearheatind", "Seleziona l'anno", choices = "", multiple = FALSE))
-                                            ),
-                                            hr(),
-                                            h4(strong("Preprocessing")),
-                                            selectInput("selscaleheat", "Scala i dati:", choices = c("No" = "none", "Per riga" = "row", "Per colonna" = "column"), selected = "none"),
-                                            hr(),
-                                            h4(strong("Opzioni dendrogramma")),
-
-                                            
-                                            ###voglio il dendrograma su riga o colonna o entrambi?
-                                            h5(strong("Scegli dove mostrare il dendrogramma")),
-                                            fluidRow(
-                                              column(6, materialSwitch(inputId = "rowdend", label = "Riga",  value = TRUE, status = "primary")),
-                                              column(6, materialSwitch(inputId = "columndend", label = "Colonna",  value = TRUE, status = "primary"))
-                                            ),
-                                            hr(),
-                                            selectInput("selectannot", "Aggiungi annotazione:", choices = c("Provincia", "Cultivar_principale", "Areale")),
-                                            conditionalPanel(condition = "input.rowdend == 1 || input.columndend == 1",
-                                              fluidRow(
-                                                column(6, selectInput("seldistheatpol", "Funzione di distanza:", choices = c("euclidean", "maximum", "manhattan", "canberra", "minkowski"), selected = "euclidean")),
-                                                column(6,selectInput("selhclustheatpol", "Metodo clustering:", choices = c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty", "median", "centroid"), selected = "complete"))
-                                              )
-                                            ),
-
-                                                              
-                                            
-                                            conditionalPanel(condition = "input.rowdend == 0",
-                                              h5(strong("Ordinare i dati per annotazione?")),
-                                              awesomeCheckbox("heatsort", label = "Ordina", value = TRUE)
-                                            ),
-
-                                            conditionalPanel(condition = "input.rowdend == 1",
-                                              hr(),
-                                              h4(strong("Dendrogramma su riga")),
-                                              sliderInput("sliderrowheat", "Numero cluster:", min = 2, max = 10, value = 2),
-                                            ),
-                                                                                
-                                            conditionalPanel(condition = "input.columndend == 1",
-                                              hr(),
-                                              h4(strong("Dendrogramma su colonna")),
-                                              uiOutput("sliderheatcol"),
-                                            )
-                                          ), #end of sidebarpanel
-                                                                   
-                                                            
                                           
-                                          mainPanel(width = 9,
-                                            br(),
+                                          tabPanel("Barplot", value = "boxbarpolind",
+                                            plotly::plotlyOutput("barplotind")
+                                          ), #end of tabpanel barplot
+                                                 
+                                                 
+                                                 
+                                          tabPanel("Heatmap", value = "boxheatpolind",
                                             htmlOutput("heatmap_output")
-                                          )
-                                        ) #end of sidebarlayout
-                                      ),
-                                                        
-                                                        
-                                      
-                                      tabPanel("Correlation Plot",
-                                        sidebarLayout(
-                                          sidebarPanel(width = 2,
-                                            selectInput("selyearcorrind", "Seleziona l'anno", choices = "", multiple = FALSE),
-                                            selectInput("numcorr", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)
                                           ),
-
-                                          mainPanel(width = 10,
-                                                    br(),
-                                                    box(width=7, status = "primary", plotly::plotlyOutput("corrplotind"))
-                                          ) #end of mainpanel
-                                        ) #end of sidebarlayout
-                                                                 
-                                      ) #end of tabpanel correlation
-                                                        
-                                    )#end of tabsetpanel
-                                  ), #end of tabPanel Grafici
-                                             
-                                             
-                                             
-                                             
-                                  
-                                  tabPanel(tagList(shiny::icon("chart-line"), HTML("&nbsp;PCA")), 
-                                    sidebarLayout(
-                                      sidebarPanel(width = 2,
-                                        selectInput("selyearpca", "Seleziona l'anno", choices = "", multiple = FALSE),
-                                        selectInput("numpca", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE),
-                                        radioGroupButtons(inputId = "selcorpca", label = "Matrice:", choices = c("Correlazione" = TRUE, "Covarianza" = FALSE), 
-                                          individual = TRUE, checkIcon = list(yes = tags$i(class = "fa fa-circle", style = "color: steelblue"),no = tags$i(class = "fa fa-circle-o", style = "color: steelblue")))
-                                      ),
-                                                        
-
-                                      mainPanel(width = 10,
+                                                 
+                                                 
+                                                 
+                                          tabPanel("Correlation Plot", value = "boxcorrpolind",
+                                            plotly::plotlyOutput("corrplotind")
+                                          ) #end of tabpanel correlation
+                                                 
+                                        ) #end of tabsetpanel
+                                      ), #end of tabPanel Grafici
+                                      
+                                      
+                                      
+                                      tabPanel(tagList(shiny::icon("chart-line"), HTML("&nbsp;PCA")), value = "tabpolindpca",
                                         tabsetPanel(
+                                          
                                           tabPanel("Screeplot",
                                             br(),
                                             plotly::plotlyOutput("screeplot", width = "75%")         
                                           ),
-                                                            
-                                          
+                                                             
+
                                           tabPanel("Loadings",
                                             br(),
                                             fluidRow(column(4, box(width = NULL, status = "primary", uiOutput("sliderpc")))),
-                                            fluidRow(plotly::plotlyOutput("loadings"))),
-                                                            
-                                          
+                                            fluidRow(plotly::plotlyOutput("loadings"))
+                                            ),
+                                                             
+
                                           tabPanel("Biplot",
                                             br(),
                                             fluidRow(
                                               column(4, box(width = NULL, status = "primary", 
-                                                selectInput("colbiplot", "Seleziona colonna riempimento", choices = c("Provincia", "Cultivar_principale", "Areale"))))
+                                                            selectInput("colbiplot", "Seleziona colonna riempimento", choices = c("Cultivar_principale", "Areale", "Provincia")))),
+                                              column(4, box(width = NULL, status = "primary",
+                                                            awesomeCheckboxGroup("shpbiplot", "Aggiungi geometria", choices = "Provincia", inline = TRUE)
+                                              ))
                                             ),
                                             fluidRow(plotly::plotlyOutput("biplot", height = "500px"))
                                           ),
+                                                             
                                           
                                           tabPanel("Plot 3D",
                                             br(),
@@ -516,16 +555,17 @@ app_ui <- function(request) {
                                                             selectInput("col3dind", "Seleziona colonna riempimento", choices = c("Provincia", "Cultivar_principale", "Areale"))))
                                             ),
                                             fluidRow(plotly::plotlyOutput("pca3dpolind", height = "500px"))
-                                            )
-                                                            
-                                        )
-                                      ) #end of mainpanel
-                                    ) #end of sidebarLayout
-                                    #) #end of tabsetpanel
-                                  ) #end of tabpanel PCA
-                                             
-                                             
-                                ) #end of tabBox
+                                          )
+
+                                        ) #end of tabsetpanel
+                                      ) #end of tabpanel PCA
+                                      
+                                      
+                                      
+                                    )
+                                  )
+                                )
+
                               ), #end of tabitem "inpolsub"
                               
                               
@@ -771,7 +811,11 @@ app_ui <- function(request) {
                                                 fluidPage(
                                                 fluidRow(
                                                   column(4, box(width = NULL, status = "primary",
-                                                                selectInput("colbiplotmorfo", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Provincia", "Cultivar_principale", "Areale"))))
+                                                                selectInput("colbiplotmorfo", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Provincia", "Cultivar_principale", "Areale")))),
+                                                  column(3, box(width = NULL, status = "primary",
+                                                                awesomeCheckboxGroup(inputId = "shpbiplotmorfo", label = "Aggiungi geometria", choices = "Provincia", inline = TRUE)
+                                                                ))
+                                                  
                                                 ),
                                                 fluidRow(plotly::plotlyOutput("biplotmorfo", height = "500px")))
                                               ),
@@ -807,7 +851,9 @@ app_ui <- function(request) {
                                                                       sliderInput("selnumclustmorfo", "Numero cluster:", min = 1, max = 10, value = 2))),
                                                         column(4, 
                                                                conditionalPanel(condition = "input.selclustmethod == 'Gerarchico'",
-                                                                 selectInput("selhclustmeth", "Seleziona metodo agglomerazione", choices = c("single", "complete", "ward.D", "ward.D2"), selected = "ward.D2")
+                                                                 box(width=NULL, status = "primary",
+                                                                  selectInput("selhclustmeth", "Seleziona metodo agglomerazione", choices = c("single", "complete", "ward.D", "ward.D2"), selected = "ward.D2")
+                                                                     )
                                                                  )
                                                                )
                                                         ),

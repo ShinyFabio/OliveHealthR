@@ -409,7 +409,7 @@ app_server <- function( input, output, session ) {
   #fare il join di data con i polifenoli
   datapolifmap = reactive({
     req(polif())
-    z = data() %>% dplyr::select("Codice_azienda", "Azienda", "UTM_33T_E", "UTM_33T_N")
+    z = data() %>% dplyr::select("Codice_azienda", "Cultivar_principale", "Azienda", "UTM_33T_E", "UTM_33T_N")
     x = dplyr::inner_join(x = z, y = polif(), by = "Codice_azienda")
     u1 = within(x, levels(Presenza_larve)[levels(Presenza_larve) == "0"] <- "Non individuabili") 
     u2 = within(u1, levels(Presenza_larve)[levels(Presenza_larve) == "1"] <- "Poche larve")
@@ -426,7 +426,7 @@ app_server <- function( input, output, session ) {
   
   #data polifenoli totali
   datapoltot= reactive({
-    dplyr::select(datapolif(), c("Codice_azienda", "Azienda", "Anno", "N_campionamento", "Polifenoli_tot", "Presenza_larve"))
+    dplyr::select(datapolif(), c("Codice_azienda", "Azienda", "Anno", "N_campionamento", "Cultivar_principale", "Polifenoli_tot", "Presenza_larve"))
   })
   
   #aggiusto i data eliminando tutte le colonne non numeriche
@@ -460,6 +460,8 @@ app_server <- function( input, output, session ) {
     updateSelectInput(session, "selectfilltot", choices=colnames(datapoltot()))
     updateSelectInput(session, "selectytot", choices=colnames(datapoltot()))
     updateSelectInput(session, "selyearscattertot", choices = row.names(table(dplyr::select(datapoltot(), "Anno"))))
+    updateSelectInput(session, "selectxtotbar", choices=colnames(datapoltot()))
+    updateSelectInput(session, "selectytotbar", choices=colnames(datapoltot()))
   })
   
   ###selezionare colonna Y da plottare
@@ -544,8 +546,15 @@ app_server <- function( input, output, session ) {
   ###grafico a barre
   output$barplottot = plotly::renderPlotly({
     
+    x = Olv_select_col(data = datapoltot(), input = input$selectxtotbar)
+    y = Olv_select_col(data = datapoltot(), input = input$selectytotbar)
+    
+    xlabg = label_with_unit(data = datapoltot(), colname = x, unit = "(µg/g)")
+    ylabg = label_with_unit(data = datapoltot(), colname = y, unit = "(µg/g)")
+    
+    
     temp2=ggplot(data=colorcamptot()) + 
-      geom_col(mapping = aes_string(x = colnames(showcoltotx()), y = colnames(showcoltoty()), fill = "N_campionamento"), position = position_dodge2(preserve = "single")) + 
+      geom_col(mapping = aes_string(x = colnames(x), y = colnames(y), fill = input$selectfilltotbar), position = position_dodge2(preserve = "single")) + 
       theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(ylabtot()) + xlab(xlabtot())
     plotly::ggplotly(temp2) %>% plotly::layout(legend = list(title = list(text = "N_campionamento")))
   })
@@ -557,7 +566,7 @@ app_server <- function( input, output, session ) {
   
   
   #data polifenoli individuali
-  datapolind= reactive({
+  datapolind = reactive({
     dplyr::select(datapolif(), !c("Polifenoli_tot", "Presenza_larve"))
   })
   
@@ -577,7 +586,7 @@ app_server <- function( input, output, session ) {
     req(datapolind())
     temp = datapolind()
     for(i in seq(6,length(temp))){
-      names(temp)[i] = paste0(names(temp)[i], "_(ug/ml)")
+      names(temp)[i] = paste0(names(temp)[i], "_(ug/g)")
     }
     return(temp)
     
@@ -615,9 +624,9 @@ app_server <- function( input, output, session ) {
     y = Olv_select_col(data = datapolind(), input = input$selectyind)
     fill = Olv_select_col(data = datapolind(), input = input$selectfillind)
     
-    xlabg = label_with_unit(data = datapoltot(), colname = x, unit = "(µg/ml)")
-    ylabg = label_with_unit(data = datapoltot(), colname = y, unit = "(µg/ml)")
-    filllab = label_with_unit(data = datapoltot(), colname = fill, unit = "(µg/ml)")
+    xlabg = label_with_unit(data = datapoltot(), colname = x, unit = "(µg/g)")
+    ylabg = label_with_unit(data = datapoltot(), colname = y, unit = "(µg/g)")
+    filllab = label_with_unit(data = datapoltot(), colname = fill, unit = "(µg/g)")
 
     temp = ggplot(data = dtdrupfiltind2()) + 
       geom_count(mapping = aes_string(x = colnames(x), y = colnames(y), colour = colnames(fill))) + 
@@ -668,11 +677,11 @@ app_server <- function( input, output, session ) {
     x = Olv_select_col(data = datapolind(), input = input$selectxindbar)
     y = Olv_select_col(data = datapolind(), input = input$selectyindbar)
 
-    xlabg = label_with_unit(data = datapoltot(), colname = x, unit = "(µg/ml)")
-    ylabg = label_with_unit(data = datapoltot(), colname = y, unit = "(µg/ml)")
+    xlabg = label_with_unit(data = datapoltot(), colname = x, unit = "(µg/g)")
+    ylabg = label_with_unit(data = datapoltot(), colname = y, unit = "(µg/g)")
 
     temp2=ggplot(data=colorcampind()) + 
-      geom_col(mapping = aes_string(x = colnames(x), y = colnames(y), fill = "N_campionamento"), position = position_dodge2(preserve = "single")) + 
+      geom_col(mapping = aes_string(x = colnames(x), y = colnames(y), fill = input$selectfillindbar), position = position_dodge2(preserve = "single")) + 
       theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(ylabg) + xlab(xlabg)
     plotly::ggplotly(temp2) %>% plotly::layout(legend = list(title = list(text = "N_campionamento")))
   })
@@ -693,7 +702,7 @@ app_server <- function( input, output, session ) {
   dtheatsorted = reactive({
     sorder_data(
       data = data(),
-      data2 = datapolind(), 
+      data2 = dplyr::select(datapolind(), -Cultivar_principale), #devo toglierlo perchè l'ho aggiunto prima
       year = input$selyearheatind, 
       n_camp = input$numheat, 
       heat_sort = input$heatsort, 
@@ -705,7 +714,7 @@ app_server <- function( input, output, session ) {
   #creo slider per colonna
   output$sliderheatcol <- renderUI({
     req(dtheatsorted())
-    len = dtheatsorted() %>% dplyr::select(-Anno, - N_campionamento,  -Codice_azienda, -input$selectannot)
+    len = dtheatsorted() %>% dplyr::select(-Anno, - N_campionamento,  -Codice_azienda, -Cultivar_principale, -input$selectannot)
     sliderInput("slidercolheat", "Numero cluster:", min=2, max=length(len), value=2, step = 1)
   })
   
@@ -723,7 +732,7 @@ app_server <- function( input, output, session ) {
       col_dend = input$columndend,
       col_nclust = input$slidercolheat,
       col_lab = "Polifenoli",
-      unit_legend = "ug/ml"
+      unit_legend = "ug/g"
     )
   })
   
@@ -748,7 +757,7 @@ app_server <- function( input, output, session ) {
     ###scegliere anno e  il campionamento (scatter plot)
     datatemp = datapolind() %>% dplyr::filter(Anno == input$selyearcorrind) %>% dplyr::filter(N_campionamento == input$numcorr)
     
-    temp = datatemp %>% dplyr::select(-Anno, - N_campionamento, -Azienda, - Codice_azienda)
+    temp = datatemp %>% dplyr::select(-Anno, - N_campionamento, -Azienda, -Codice_azienda, -Cultivar_principale)
     temp2 = round(stats::cor(temp, use = "na.or.complete"),1)
     par(xpd = TRUE)
     
@@ -773,7 +782,7 @@ app_server <- function( input, output, session ) {
     req(datapolind())
     #filtro in base agli anni presenti e scelgo anche il num campionamento
     datapolind() %>% dplyr::filter(Anno == input$selyearpca) %>% dplyr::filter(N_campionamento == input$numpca) %>% 
-      dplyr::select(-Anno, -N_campionamento, -Azienda) %>% stats::na.exclude()
+      dplyr::select(-Anno, -N_campionamento, -Azienda, -Cultivar_principale) %>% stats::na.exclude()
   })
   
   pcadati = reactive({
@@ -825,7 +834,7 @@ app_server <- function( input, output, session ) {
   output$biplot = plotly::renderPlotly({
     req(pcadati())
     #qui con semi_join mi prendo solo le righe di data() presenti anche in pcadatina().
-    temp = autoplot(pcadati(), data = dplyr::semi_join(data(), pcadatina()), colour = input$colbiplot, loadings = TRUE, loadings.colour = 'blue', 
+    temp = autoplot(pcadati(), data = dplyr::semi_join(data(), pcadatina()), shape = input$shpbiplot, colour = input$colbiplot, loadings = TRUE, loadings.colour = 'blue', 
                     loadings.label = TRUE, loadings.label.size = 4, title = "Screeplot")
     plotly::ggplotly(temp)
   })
@@ -1221,7 +1230,7 @@ app_server <- function( input, output, session ) {
   output$biplotmorfo = plotly::renderPlotly({
     req(pcadatimorfo())
 
-    temp = autoplot(pcadatimorfo(), data = datacolorpcamorfo(), colour = input$colbiplotmorfo, loadings = TRUE, loadings.colour = 'blue',
+    temp = autoplot(pcadatimorfo(), data = datacolorpcamorfo(), shape = input$shpbiplotmorfo, colour = input$colbiplotmorfo, loadings = TRUE, loadings.colour = 'blue',
                     loadings.label = TRUE, loadings.label.size = 4, title = "Biplot")
     plotly::ggplotly(temp)  
  
