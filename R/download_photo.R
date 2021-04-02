@@ -26,5 +26,5 @@
 # }
 
 download_photo = function(){
-  getwd()
+  base::system.file(package = "OliveHealthR")
 }
