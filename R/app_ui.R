@@ -398,13 +398,12 @@ app_ui <- function(request) {
                                     # Heatmap _______________________________________________________
                                     conditionalPanel(
                                       condition = "input.boxpolindgraph == 'boxheatpolind'",
-                                      div(actionButton("updateheat", label = "Carica!", class = "btn btn-primary btn-lg", width = "160px", style='padding:5px; font-size:200%; font-weight: bold;'), align= "center"),
+                                      div(actionButton("updateheat", label = "Carica!", class = "btn btn-primary btn-lg", width = "140px", style='padding:5px; font-size:150%; font-weight: bold;'), align= "center"),
                                       br(),
                                       h4(strong("Dati")),
-                                      fluidRow(
-                                        column(6, selectInput("numheat", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)),
-                                        column(6, br(), selectInput("selyearheatind", "Seleziona l'anno", choices = "", multiple = FALSE))
-                                      ),
+                                      selectInput("numheat", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE),
+                                      selectInput("selyearheatind", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                      
                                       hr(),
                                       h4(strong("Preprocessing")),
                                       selectInput("selscaleheat", "Scala i dati:", choices = c("No" = "none", "Per riga" = "row", "Per colonna" = "column"), selected = "none"),
@@ -414,16 +413,14 @@ app_ui <- function(request) {
                                       ###voglio il dendrograma su riga o colonna o entrambi?
                                       h5(strong("Scegli dove mostrare il dendrogramma")),
                                       fluidRow(
-                                        column(6, materialSwitch(inputId = "rowdend", label = "Riga",  value = TRUE, status = "primary")),
-                                        column(6, materialSwitch(inputId = "columndend", label = "Colonna",  value = TRUE, status = "primary"))
+                                        column(6, materialSwitch(inputId = "rowdend", label = "Riga",  value = TRUE, status = "primary", width = "90%")),
+                                        column(6, materialSwitch(inputId = "columndend", label = "Colonna",  value = TRUE, status = "primary", width = "90%"))
                                       ),
-                                      hr(),
-                                      selectInput("selectannot", "Aggiungi annotazione:", choices = c("Provincia", "Cultivar_principale", "Areale")),
+                                      selectInput("selectannot", "Colonna annotazione:", choices = c("Provincia", "Cultivar_principale", "Areale")),
+                                      
                                       conditionalPanel(condition = "input.rowdend == 1 || input.columndend == 1",
-                                                       fluidRow(
-                                                         column(6, selectInput("seldistheatpol", "Funzione di distanza:", choices = c("euclidean", "maximum", "manhattan", "canberra", "minkowski"), selected = "euclidean")),
-                                                         column(6,selectInput("selhclustheatpol", "Metodo clustering:", choices = c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty", "median", "centroid"), selected = "complete"))
-                                                       )
+                                        selectInput("seldistheatpol", "Funzione di distanza:", choices = c("euclidean", "maximum", "manhattan", "canberra", "minkowski"), selected = "euclidean"),
+                                        selectInput("selhclustheatpol", "Metodo clustering:", choices = c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty", "median", "centroid"), selected = "complete"),
                                       ),
                                       
                                       conditionalPanel(condition = "input.rowdend == 0",
@@ -636,6 +633,7 @@ app_ui <- function(request) {
                                       )
                                     ),
                                     
+
                                     # Grafici
                                     conditionalPanel(
                                       condition = "input.tabboxmorfo  == 'tabpanmorfograph'",
@@ -679,8 +677,7 @@ app_ui <- function(request) {
                                         column(6, materialSwitch(inputId = "rowdendmorfo", label = "Riga",  value = TRUE, status = "primary", width = "90%")),
                                         column(6, materialSwitch(inputId = "columndendmorfo", label = "Colonna",  value = TRUE, status = "primary", width = "90%"))
                                       ),
-                                      hr(),
-                                      selectInput("selectannotmorfo", "Aggiungi annotazione:", choices = c("Provincia", "Cultivar_principale")),
+                                      selectInput("selectannotmorfo", "Colonna annotazione:", choices = c("Provincia", "Cultivar_principale")),
                                       conditionalPanel(condition = "input.rowdendmorfo == 1 || input.columndendmorfo == 1",
                                         selectInput("seldistheatmorfo", "Funzione di distanza:", choices = c("euclidean", "maximum", "manhattan", "canberra", "minkowski"), selected = "euclidean"),
                                         selectInput("selhclustheatmorfo", "Metodo clustering:", choices = c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty", "median", "centroid"), selected = "complete"),
@@ -767,7 +764,50 @@ app_ui <- function(request) {
                                                mod_render_NAbox_ui("naboxmorfo")
                                                )
                                                ),
+                                      
+                                      tabPanel(tagList(shiny::icon("images"), HTML("&nbsp;Foto")), value = "tabmorfomor",
+                                        fluidPage(
+                                          fluidRow(
+                                            column(width=4, 
+                                              fluidRow(
+                                                column(6, box(width = NULL, status = "primary",
+                                                  radioGroupButtons( 
+                                                    inputId = "campfotomorfo", label = "Numero campionamento", 
+                                                    choices = c("1" = "1_campionamento", "2" = "2_campionamento"), individual = TRUE, 
+                                                    checkIcon = list(yes = tags$i(class = "fa fa-circle", style = "color: steelblue"), 
+                                                                     no = tags$i(class = "fa fa-circle-o", style = "color: steelblue"))
+                                                  ))
+                                                ),
+                                                column(6, box(width=NULL, status = "primary", 
+                                                  selectInput("selyearfotomorfo", "Seleziona l'anno", choices = "", multiple = FALSE))
+                                                )
+                                              ),
+                                              
+                                              fluidRow(column(12, box(width=NULL, status = "primary", DT::DTOutput("dtfotomorfo"))))
+                                            ),
+                                            
+                                            column(width = 8,
+                                                   
+                                              column(width = 6, offset = 3,
+                                                conditionalPanel(condition = "input.dtfotomorfo_rows_selected == 0",
+                                                  box(width = NULL, background = "yellow", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 27px"), h4(strong("Seleziona un'azienda dalla tabella"), style = "color: white"), style = "text-align: justify;  text-align: center;"),
+                                                ),
+                                                
+                                                conditionalPanel(condition = "input.dtfotomorfo_rows_selected != 0 && input.campfotomorfo == '1_campionamento'",
+                                                  box(width = NULL, background = "yellow", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 27px"), h4(strong("Nessuna foto in archivio. I dati sulla morfometria riguardano solamente il secondo campionamento."), style = "color: white"), style = "text-align: justify;  text-align: center;"),
+                                                )
+                                              ),
+                                              
+                                              conditionalPanel(
+                                                condition = "input.dtfotomorfo_rows_selected != 0 && input.campfotomorfo == '2_campionamento'",
+                                                uiOutput("phmorfo")
+                                              )
+                                            )
+                                          ) #end of fluidRow
+                                        )
+                                      ), #end of tabpanel Foto
 
+                                      
                                       tabPanel(tagList(shiny::icon("chart-bar"), HTML("&nbsp;Grafici")), value = "tabpanmorfograph",
                                                
                                         tabsetPanel(id = "boxmorfograph",

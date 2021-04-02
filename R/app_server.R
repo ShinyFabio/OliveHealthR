@@ -974,9 +974,83 @@ app_server <- function( input, output, session ) {
     return(dt)
   })
   
+  
+  ################# FOTO CAMPIONI ############
+  
+  #crea la tabella
+  output$dtfotomorfo = DT::renderDT(dplyr::select(data(), c("Azienda", "Codice_azienda")), selection = "single", server = FALSE, rownames = FALSE)
+  
+  
+  #aggiorna il selectinput "selyearfotomorfo" in base agli anni presenti e seleziono
+  observeEvent(datamorfo(), {
+    updateSelectInput(session, "selyearfotomorfo", choices = row.names(table(dplyr::select(datamorfo(), "Anno"))))
+  })
+  
+  
+  #####selezionare la riga dell'azienda    
+  selprovmorfo = reactive({
+    req(input$dtfotomorfo_rows_selected)
+    nroww=input$dtfotomorfo_rows_selected
+    x= dplyr::select(data(), "Codice_azienda")
+    paste("www/morfometria", input$selyearfotomorfo, input$selfilemorfo, x[nroww,], sep = "/")
+    #qui ho eliminato la parte del campionamento perchè la morfometria c'è solo su R2
+  })
+  
+  
+  #foto 
+  output$phmorfo = renderUI({
+    req(input$dtfotomorfo_rows_selected)
+    nroww=input$dtfotomorfo_rows_selected
+    cod = dplyr::select(data(), "Codice_azienda")
+    path = paste("www/morfometria", input$selyearfotomorfo, input$selfilemorfo, sep = "/")
+    #qui ho eliminato la parte del campionamento perchè la morfometria c'è solo su R2
 
+    if(input$selfilemorfo == "foglie"){
+      fotopath = paste(path, cod[nroww,], sep = "/")
+      fotopath2 = paste0(fotopath, ".jpg")
+      box(width=NULL, status = "primary", title = "Foto",align = "center", 
+         tags$img(src = fotopath2, width = "75%", height = "75%")
+      ) 
+    } else if(input$selfilemorfo == "drupe"){
+      pathfoto = paste(path, "foto", cod[nroww,], sep = "/")
+      pathfoto2 = paste0(pathfoto, ".jpg")
+      path3d = paste(path, "3D", cod[nroww,], sep = "/")
+      path3d1 = paste0(path3d, "_ol1.jpg")
+      path3d2 = paste0(path3d, "_ol2.jpg")
+      path3d3 = paste0(path3d, "_ol3.jpg")
+      
+      fluidPage(
+        fluidRow(
+          column(6, 
+            box(width=NULL, status = "primary", title = "Foto",align = "center", 
+                tags$img(src = pathfoto2, width = "100%", height = "100%"))
+          ),
+          column(6,
+            box(width=NULL, status = "primary", title = "Modelli 3D", align = "center",
+                fluidRow(
+                  h5("Drupa 1"),
+                  tags$img(src = path3d1, width = "65%", height = "65%")
+                ),
+                fluidRow(
+                  h5("Drupa 2"),
+                  tags$img(src = path3d2, width = "65%", height = "65%")
+                ),
+                fluidRow(
+                  h5("Drupa 3"),
+                  tags$img(src = path3d3, width = "65%", height = "65%")
+                )
+                ))
+            )
+          )
+      
+ 
+    } else {
+      strong(h3("NO DATA", align = "center"))
+    }
+    
+  })
   
-  
+
   observeEvent(datamorfo(), {
     #boxplot e barplot
     updateSelectInput(session, "selectymorfobb", choices=colnames(dplyr::select(datamorfo(), where(is.double) & -dplyr::any_of(c("Anno", "ID_oliva")))))
