@@ -67,9 +67,9 @@ app_ui <- function(request) {
                                        menuSubItem("Mappa", tabName = "mappa1sub")
                               ),
                               menuItem("Campionamento azienda", tabName = "campazienda",
-                                       menuSubItem("Foto campioni", tabName = "fotosub"),
-                                       menuSubItem("Grafici", tabName = "graficisub"),
-                                       menuSubItem("Mappa", tabName = "mappa2sub"),
+                                       menuSubItem("Drupe e foglie", tabName = "drupleafsub"),
+                                       menuSubItem("Olio", tabName = "oliosub"),
+                                       menuSubItem("Calendario campionamenti", tabName = "calendar"),
                                        menuSubItem("Analisi sensoriali", tabName = "assaggsub")),
                               menuItem("Analisi laboratorio", tabName = "anlab",
                                        menuSubItem("Polifenoli totali", tabName = "totpolsub"),
@@ -108,7 +108,8 @@ app_ui <- function(request) {
                                                          selected = 1),
                                             
                                             conditionalPanel(condition = "input.tipofile == 1",
-                                              fileInput("drupeinput", "File schede campionamento (.csv)")),
+                                              fileInput("drupeinput", "Campionamento drupe e foglie (.csv)"),
+                                              fileInput("olioinput", "Campionamento olio (.csv)")),
                                                                       
                                             conditionalPanel(condition = "input.tipofile == 2",
                                               fileInput("polifinput", "File dati polifenoli (.csv)")),
@@ -177,104 +178,142 @@ app_ui <- function(request) {
                               
                               ##### TabItem Campionamento Azienda ####
                               
-                              tabItem(tabName = "graficisub",
-                                      sidebarLayout(
-                                        sidebarPanel(width = 2,
-                                                     selectInput("selectx", "Seleziona la colonna X", choices = "", multiple = FALSE),
-                                                     selectInput("selecty", "Seleziona la colonna Y", choices = "", multiple = FALSE)
-                                        ),
-                                        
-                                        mainPanel(width = 10,
-                                              tabsetPanel(
-                                                tabPanel("Scatter plot",
-                                                         br(),
-                                                         box(width=NULL, status = "primary",
-                                                             fluidRow(
-                                                               column(3, selectInput("selyearscatter", "Seleziona l'anno", choices = "", multiple = FALSE)),
-                                                               column(3, selectInput("num2", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)),
-                                                               column(3, selectInput("selectfill", "Colonna da usare come riempimento", choices = "", multiple = FALSE))
-                                                             )),
-                                                         plotly::plotlyOutput("plotxy")
-                                                ),
-                                                tabPanel("Barplot",
-                                                         fluidRow(column(width = 2,
-                                                                         br(),
-                                                                         box(width = NULL, status = "primary", checkboxGroupInput("checkcamp", "Seleziona campionamento", choices = ""))
-                                                         ),
-                                                         column(width = 10, br(), box(width=NULL, status = "primary", plotly::plotlyOutput("barplot1")))
-                                                         )
-                                                )#end of tabpanel
-                                              )#end of tabset
-                                        )#end of mainpanel
-                                        
-                                      )#end of sidebarlayout
-                              ),#end of tabitem "grafici"
-                              
-                              
-                              
-                              tabItem(tabName = "fotosub",
-                                      fluidPage(
-                                        fluidRow(
-                                          column(width=4, 
-                                                 fluidRow(
-                                                   column(6,
-                                                          box(width = NULL, status = "primary",
-                                                              radioGroupButtons(inputId = "campfoto", label = "Numero campionamento", 
-                                                                                choices = c("1" = "1_campionamento", "2" = "2_campionamento"),
-                                                                                individual = TRUE, checkIcon = list(yes = tags$i(class = "fa fa-circle", style = "color: steelblue"),
-                                                                                                                    no = tags$i(class = "fa fa-circle-o", style = "color: steelblue")))
-                                                          )
-                                                   ),
-                                                   column(6, 
-                                                          box(width=NULL, status = "primary", selectInput("selyearfoto", "Seleziona l'anno", choices = "", multiple = FALSE))
-                                                   )
-                                                 ),
-                                                 fluidRow(column(12, box(width=NULL, status = "primary", DT::DTOutput("prov2"))))
-                                          ),
-                                          conditionalPanel(condition = "input.prov2_rows_selected == 0",
-                                                           p(strong(h4("Per favore seleziona un'azienda dalla tabella", align = "center")))
+                              ##### campionamento foglie e drupe #########################################
+                              tabItem(tabName = "drupleafsub",
+                                tabBox(width = 12,
+                                  tabPanel(
+                                    tagList(shiny::icon("table"), HTML("&nbsp;Tabella")),
+                                    #qui aggiungere la tabella drupe foglie
+                                    fluidPage(
+                                      box(width = NULL, status = "primary", style = "overflow-x: scroll;",
+                                          DT::DTOutput("tabledrupscheda")),
+                                      #mod_render_NAbox_ui("naboxpoltot")
+                                    )
+                                    
+                                  ),
+                                  
+                                  tabPanel(tagList(shiny::icon("chart-bar"), HTML("&nbsp;Grafici")),
+                                    #qui i grafici drupe foglie
+                                    sidebarLayout(
+                                      sidebarPanel(width = 2,
+                                        selectInput("selectx", "Seleziona la colonna X", choices = "", multiple = FALSE),
+                                        selectInput("selecty", "Seleziona la colonna Y", choices = "", multiple = FALSE)
+                                      ),
+                                      
+                                      mainPanel(width = 10,
+                                        tabsetPanel(
+                                          tabPanel("Scatter plot",
+                                            br(),
+                                            box(width=NULL, status = "primary",
+                                              fluidRow(
+                                                column(3, selectInput("selyearscatter", "Seleziona l'anno", choices = "", multiple = FALSE)),
+                                                column(3, selectInput("num2", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)),
+                                                column(3, selectInput("selectfill", "Colonna da usare come riempimento", choices = "", multiple = FALSE))
+                                              )),
+                                            
+                                            plotly::plotlyOutput("plotxy")
                                           ),
                                           
-                                          conditionalPanel(condition = "input.prov2_rows_selected != 0",
-                                                           column(width = 4, box(width=NULL, status = "primary", title = "Foglie", align= "center", uiOutput("phfoglia"))),
-                                                           column(width = 4, box(width=NULL, status = "primary", title = "Drupe",align = "center", uiOutput("phdrupa")))
-                                          )
-                                        ) #end of fluidRow
-                                      )
-                              ),#end of tabItem
-                              
-                              tabItem(tabName = "mappa2sub",
-                                      sidebarLayout(
-                                        sidebarPanel(width = 3,
-                                                     actionButton("update2map", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:120%'),
-                                                     hr(),
-                                                     selectInput("select2map", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
-                                                     selectInput("selyear", "Seleziona l'anno", choices = "", multiple = FALSE),
-                                                     selectInput("num", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE),
-                                                     br(),
-                                                     hr(),
-                                                     br(),
-                                                     actionButton("addmap2", label = "Aggiungi seconda mappa"),
-                                                     conditionalPanel(
-                                                       condition = ("input.addmap2 != 0"),
-                                                       br(),
-                                                       selectInput("select3map", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
-                                                       selectInput("selyear2", "Seleziona l'anno", choices = "", multiple = FALSE),  
-                                                       selectInput("num2map", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)
-                                                     )
+                                          tabPanel("Barplot",
+                                            fluidRow(column(width = 2, br(),
+                                                            box(width = NULL, status = "primary", checkboxGroupInput("checkcamp", "Seleziona campionamento", choices = ""))
+                                                           ),
+                                                     column(width = 10, br(), box(width=NULL, status = "primary", plotly::plotlyOutput("barplot1")))
+                                            )
+                                            
+                                          )#end of tabpanel
+                                        )#end of tabset
+                                      )#end of mainpanel
+                                    )#end of sidebarlayout
+                                  ), #end of tabpanel grafici
+                                  
+                                  
+                                  tabPanel(tagList(shiny::icon("images"), HTML("&nbsp;Foto")),
+                                    #qui le foto drupe foglie
+                                    fluidPage(
+                                      fluidRow(
+                                        column(width=4, 
+                                          fluidRow(
+                                            column(6,
+                                              box(width = NULL, status = "primary",
+                                                radioGroupButtons(inputId = "campfoto", label = "Numero campionamento",  choices = c("1" = "1_campionamento", "2" = "2_campionamento"),
+                                                                  individual = TRUE, checkIcon = list(yes = tags$i(class = "fa fa-circle", style = "color: steelblue"), no = tags$i(class = "fa fa-circle-o", style = "color: steelblue")))
+                                              )
+                                            ),
+                                            
+                                            column(6, box(width=NULL, status = "primary", 
+                                                          selectInput("selyearfoto", "Seleziona l'anno", choices = "", multiple = FALSE)
+                                            ))
+                                          ),
+                                          
+                                          fluidRow(column(12, box(width=NULL, status = "primary", DT::DTOutput("prov2"))))
+                                        ),
+                                        conditionalPanel(condition = "input.prov2_rows_selected == 0",
+                                                         p(strong(h4("Per favore seleziona un'azienda dalla tabella", align = "center")))
                                         ),
                                         
-                                        mainPanel(
-                                          conditionalPanel(condition = ("input.update2map != 0"),
-                                                           tmapOutput("map2"),
-                                          ),
-                                          conditionalPanel(condition = ("input.addmap2 != 0"),
-                                                           hr(),
-                                                           tmapOutput("map3")
-                                          )
+                                        conditionalPanel(condition = "input.prov2_rows_selected != 0",
+                                                         column(width = 4, box(width=NULL, status = "primary", title = "Foglie", align= "center", uiOutput("phfoglia"))),
+                                                         column(width = 4, box(width=NULL, status = "primary", title = "Drupe",align = "center", uiOutput("phdrupa")))
                                         )
+                                      ) #end of fluidRow
+                                    )
+                                  ), #end of tabpanel foto
+                                  
+                                  
+                                  tabPanel(tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")),
+                                    #qui la mappa
+                                    sidebarLayout(
+                                      sidebarPanel(width = 3,
+                                        actionButton("update2map", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:120%'),
+                                        hr(),
+                                        selectInput("select2map", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
+                                        selectInput("selyear", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                        selectInput("num", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE),
+                                        br(),
+                                        hr(),
+                                        br(), 
+                                        actionButton("addmap2", label = "Aggiungi seconda mappa"),
+                                        conditionalPanel(condition = ("input.addmap2 != 0"),
+                                          br(),
+                                          selectInput("select3map", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
+                                          selectInput("selyear2", "Seleziona l'anno", choices = "", multiple = FALSE),  
+                                          selectInput("num2map", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)
+                                        )
+                                      ),
+                                      
+                                      mainPanel(
+                                        conditionalPanel(condition = ("input.update2map != 0"),
+                                          tmapOutput("map2")),
+                                        conditionalPanel(condition = ("input.addmap2 != 0"),
+                                          hr(),
+                                          tmapOutput("map3"))
                                       )
+                                    ) #end of sidebarlayout
+                                  ) #end of tabpanel mappa drupe foglie
+                                  
+                                ) #end of tabBox
+                                
+                              ), #end of tabitem drupe foglie
+                              
+                              
+                              ##### campionamento olio #########################################
+                              tabItem(tabName = "oliosub",
+                                tabBox(width = 12,
+                                  tabPanel(
+                                    tagList(shiny::icon("table"), HTML("&nbsp;Tabella")),
+                                    #qui aggiungere la tabella drupe foglie
+                                    fluidPage(
+                                      box(width = NULL, status = "primary", style = "overflow-x: scroll;",
+                                          DT::DTOutput("tableolioscheda")),
+                                      #mod_render_NAbox_ui("naboxpoltot")
+                                    )
+                                  )
+                                )
                               ),
+                              
+                              
+                              tabItem(tabName = "calendar"),
                               
                               tabItem(tabName = "assaggsub"),
                               

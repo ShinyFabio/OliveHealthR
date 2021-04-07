@@ -80,12 +80,18 @@ app_server <- function( input, output, session ) {
   
   
   #carica il file drupe come .csv
-  drupe= reactive({
+  drupe = reactive({
     req(input$drupeinput)
     x = readr::read_delim(input$drupeinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(date_format = "%d/%m/%Y", encoding = "windows-1252"))
     x$Indice_maturazione = factor(x$Indice_maturazione, levels = c(0:8), ordered = TRUE)
     x$Fase_fenologica = factor(x$Fase_fenologica, levels = c(51, 55, 59, 61, 65, 69, 71, 75, 79, 81, 85, 89), ordered = TRUE)
     return(x)
+  })
+  
+  oliocamp = reactive({
+    req(input$olioinput)
+    readr::read_delim(input$olioinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(date_format = "%d/%m/%Y", encoding = "windows-1252"))
+    
   })
   
   
@@ -207,11 +213,15 @@ app_server <- function( input, output, session ) {
   })
 
   
-  ##### MAPPE DATADRUPE #####
-  ####
-  ####seconda mappa (datadrupe)##
+  ############ SCHEDE CAMPIONAMENTO FOGLIE E DRUPE ###############
   
-
+  output$tabledrupscheda = renderDT({
+    req(drupe())
+    drupe()
+  })
+  
+  
+  
   #fare il join di data con le drupe
   datadrupemap = reactive({
     req(drupe())
@@ -225,59 +235,9 @@ app_server <- function( input, output, session ) {
   })
   
 
-  observeEvent(drupe(), {
-    updateSelectInput(session, "select2map", choices = colnames(drupe()))
-  })
-  
-  #crea la colonna anno 
-  dtdrupanno = reactive({
-    req(datadrupemap())
-    datadrupemap() %>% dplyr::mutate(Anno = lubridate::year(Data_campionamento)) #cambiato datadrupe
-  })
-  
-  
-  #aggiorna il selectinput "selyear" in base agli anni presenti
-  observeEvent(dtdrupanno(), {
-    updateSelectInput(session, "selyear", choices = row.names(table(dplyr::select(dtdrupanno(), "Anno"))))
-  })
-  
-
-  #stampo mappa2
-  output$map2 = renderTmap({
-    req(dtdrupanno())
-    #filtra in base all'anno selezionato e il campionamento
-    datamap = dtdrupanno() %>% dplyr::filter(Anno == input$selyear) %>% dplyr::filter(N_campionamento == input$num)
-    colmap = Olv_select_col(data = drupe(), input = input$select2map)
-    make_tmap(data = datamap, dotlegend = colmap)
-  })
-  
-  
-  #### stampa terza mappa (drupe) ###
-  
-
-  observeEvent(drupe(), {
-    updateSelectInput(session, "select3map", choices = colnames(drupe()))
-  })
-  
-  #aggiorna il selectinput "selyear" in base agli anni presenti
-  observeEvent(dtdrupanno(), {
-    updateSelectInput(session, "selyear2", choices = row.names(table(dplyr::select(dtdrupanno(), "Anno"))))
-  })
-  
-
-  #stampa mappa2
-  output$map3 = renderTmap({
-    req(drupe())
-    req(dtdrupanno())
-    datamap = dtdrupanno() %>% dplyr::filter(Anno == input$selyear2) %>% dplyr::filter(N_campionamento == input$num2map)
-    colmap = Olv_select_col(data = drupe(), input = input$select3map)
-    make_tmap(data = datamap, dotlegend = colmap)
-  })
-  
   ##########  Grafici datadrupe  #########
   
-  
-  
+
   #selezionare colonna X da plottare
   showcolumnx = reactive({
     Olv_select_col(data = datadrupe(), input = input$selectx)
@@ -293,13 +253,13 @@ app_server <- function( input, output, session ) {
   showcolumny = reactive({
     Olv_select_col(data = datadrupe(), input = input$selecty)
   }) 
-
+  
   ###selezionare colonna per il riempimento
   fillcolumn = reactive({
     Olv_select_col(data = datadrupe(), input = input$selectfill)
   }) 
   
-
+  
   #aggiorna il selectinput , "selyearscatter" in base agli anni presenti e filtra
   observeEvent(dtdrupanno(), {
     updateSelectInput(session, "selyearscatter", choices = row.names(table(dplyr::select(dtdrupanno(), "Anno"))))
@@ -325,7 +285,7 @@ app_server <- function( input, output, session ) {
   
   
   
-  ######### BARPLOT ###
+  ## Barplot 
   ###modificare la colonna campionamento con unite (R1_2020)
   dtnumyunite = reactive({
     req(datadrupe())
@@ -364,7 +324,61 @@ app_server <- function( input, output, session ) {
   
   
   
-  ################# FOTO CAMPIONI ############
+  
+  #### mappa (datadrupe)##
+  
+  observeEvent(drupe(), {
+    updateSelectInput(session, "select2map", choices = colnames(drupe()))
+  })
+  
+  #crea la colonna anno 
+  dtdrupanno = reactive({
+    req(datadrupemap())
+    datadrupemap() %>% dplyr::mutate(Anno = lubridate::year(Data_campionamento)) #cambiato datadrupe
+  })
+  
+  
+  #aggiorna il selectinput "selyear" in base agli anni presenti
+  observeEvent(dtdrupanno(), {
+    updateSelectInput(session, "selyear", choices = row.names(table(dplyr::select(dtdrupanno(), "Anno"))))
+  })
+  
+
+  #stampo mappa2
+  output$map2 = renderTmap({
+    req(dtdrupanno())
+    #filtra in base all'anno selezionato e il campionamento
+    datamap = dtdrupanno() %>% dplyr::filter(Anno == input$selyear) %>% dplyr::filter(N_campionamento == input$num)
+    colmap = Olv_select_col(data = drupe(), input = input$select2map)
+    make_tmap(data = datamap, dotlegend = colmap)
+  })
+  
+  
+  #### seconda mappa
+  
+
+  observeEvent(drupe(), {
+    updateSelectInput(session, "select3map", choices = colnames(drupe()))
+  })
+  
+  #aggiorna il selectinput "selyear" in base agli anni presenti
+  observeEvent(dtdrupanno(), {
+    updateSelectInput(session, "selyear2", choices = row.names(table(dplyr::select(dtdrupanno(), "Anno"))))
+  })
+  
+
+  output$map3 = renderTmap({
+    req(drupe())
+    req(dtdrupanno())
+    datamap = dtdrupanno() %>% dplyr::filter(Anno == input$selyear2) %>% dplyr::filter(N_campionamento == input$num2map)
+    colmap = Olv_select_col(data = drupe(), input = input$select3map)
+    make_tmap(data = datamap, dotlegend = colmap)
+  })
+  
+
+  
+  
+  ################# Foto campioni ############
   
   
   #crea la tabella
@@ -400,6 +414,14 @@ app_server <- function( input, output, session ) {
     x = paste(selprov(), "drupe", sep="_")
     drupa = paste0(x, ".jpg")
     tags$img(src = drupa, width = "75%", height = "75%")
+  })
+  
+  
+  ############# SCHEDE CAMPIONAMENTO OLIO ##############
+  
+  output$tableolioscheda = renderDT({
+    req(oliocamp())
+    oliocamp()
   })
   
   

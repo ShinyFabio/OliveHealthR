@@ -25,12 +25,13 @@ Sort and/or order a dataframe to be used for the heatmap (will be the "datasorte
 \examples{
 \dontrun {
 
-    sorder_data(
-    data2 = datapolind(), 
-    year = input$selyearheatind, 
-    n_camp = input$numheat, 
-    heat_sort = input$heatsort, 
-    add_annot = input$selectannot)
+sorder_data(
+data2 = datapolind(), 
+year = input$selyearheatind, 
+n_camp = input$numheat, 
+heat_sort = input$heatsort, 
+add_annot = input$selectannot)
 }
+
 
 }
