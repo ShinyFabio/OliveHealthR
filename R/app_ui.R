@@ -162,7 +162,7 @@ app_ui <- function(request) {
                               tabItem(tabName = "mappa1sub", 
                                       sidebarLayout(
                                         sidebarPanel(width = 3,
-                                                     actionButton("update", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:120%'),
+                                                     div(actionButton("update", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:160%'), align = "center"),
                                                      hr(), 
                                                      selectInput("select3", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE)
                                         ),
@@ -228,7 +228,7 @@ app_ui <- function(request) {
                                   ), #end of tabpanel grafici
                                   
                                   
-                                  tabPanel(tagList(shiny::icon("images"), HTML("&nbsp;Foto")),
+                                  tabPanel(tagList(shiny::icon("images"), HTML("&nbsp;Galleria")),
                                     #qui le foto drupe foglie
                                     fluidPage(
                                       fluidRow(
@@ -265,15 +265,17 @@ app_ui <- function(request) {
                                     #qui la mappa
                                     sidebarLayout(
                                       sidebarPanel(width = 3,
-                                        actionButton("update2map", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:120%'),
-                                        hr(),
-                                        selectInput("select2map", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
-                                        selectInput("selyear", "Seleziona l'anno", choices = "", multiple = FALSE),
-                                        selectInput("num", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE),
-                                        br(),
-                                        hr(),
-                                        br(), 
-                                        actionButton("addmap2", label = "Aggiungi seconda mappa"),
+                                        div(actionButton("update2map", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:160%'), align = "center"),
+                                        conditionalPanel(condition = "input.update2map != 0",
+                                          hr(),
+                                          selectInput("select2map", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
+                                          selectInput("selyear", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                          selectInput("num", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE),
+                                          br(),
+                                          hr(),
+                                          br(),
+                                          div(actionButton("addmap2", label = "Aggiungi seconda mappa"), align = "center"),
+                                        ),
                                         conditionalPanel(condition = ("input.addmap2 != 0"),
                                           br(),
                                           selectInput("select3map", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
@@ -300,20 +302,46 @@ app_ui <- function(request) {
                               ##### campionamento olio #########################################
                               tabItem(tabName = "oliosub",
                                 tabBox(width = 12,
-                                  tabPanel(
-                                    tagList(shiny::icon("table"), HTML("&nbsp;Tabella")),
+                                  tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")),
                                     #qui aggiungere la tabella drupe foglie
                                     fluidPage(
                                       box(width = NULL, status = "primary", style = "overflow-x: scroll;",
                                           DT::DTOutput("tableolioscheda")),
                                       #mod_render_NAbox_ui("naboxpoltot")
                                     )
-                                  )
+                                  ),
+                                  
+                                  tabPanel(
+                                    tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")),
+                                    sidebarLayout(
+                                      sidebarPanel(
+                                        width = 3,
+                                        div(actionButton("updateoilmap", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:160%'), align = "center"),
+                                        hr(),
+                                        selectInput("selcoloilmap", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
+                                        selectInput("selyearoilmap", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                        
+                                      ),
+                                      mainPanel(width = 9,
+                                        tmapOutput("mapolio")
+                                      )
+                                    )
+                                    
+                                    )
                                 )
                               ),
                               
-                              
-                              tabItem(tabName = "calendar"),
+                              ##### Calendario #########
+                              tabItem(tabName = "calendar",
+                                sidebarLayout(
+                                  sidebarPanel(width = 2,
+                                    selectInput("selyearcalend", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                  ),
+                                  mainPanel(width = 10,
+                                    plotOutput("yearcalendar", height = "700px")
+                                  )
+                                )
+                              ),
                               
                               tabItem(tabName = "assaggsub"),
                               
@@ -609,15 +637,17 @@ app_ui <- function(request) {
                               tabItem(tabName = "mappapoli",
                                 sidebarLayout(
                                   sidebarPanel(width = 3,
-                                    actionButton("upmappol", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:120%'),
-                                    hr(), 
-                                    selectInput("mapxpol", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
-                                    selectInput("selyearpol", "Seleziona l'anno", choices = "", multiple = FALSE),
-                                    selectInput("numpol", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE),
-                                    br(),
-                                    hr(),
-                                    br(),
-                                    actionButton("addmappol2", label = "Aggiungi seconda mappa"),
+                                    div(actionButton("upmappol", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:160%'), align = "center"),
+                                    conditionalPanel(condition = "input.upmappol != 0",
+                                      hr(),
+                                      selectInput("mapxpol", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
+                                      selectInput("selyearpol", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                      selectInput("numpol", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE),
+                                      br(),
+                                      hr(),
+                                      br(), 
+                                      div(actionButton("addmappol2", label = "Aggiungi seconda mappa"), align = "center"),
+                                    ),
                                     conditionalPanel(condition = "input.addmappol2 != 0",
                                       br(), 
                                       selectInput("mapxpol2", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
@@ -770,7 +800,7 @@ app_ui <- function(request) {
                                     # Mappa
                                     conditionalPanel(
                                       condition = "input.tabboxmorfo == 'tabmapmor'",
-                                      actionButton("upmapmorfo", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:120%'),
+                                      div(actionButton("upmapmorfo", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:160%'), align = "center"),
                                       conditionalPanel(
                                         condition = ("input.upmapmorfo != 0"),
                                         br(),
@@ -778,7 +808,7 @@ app_ui <- function(request) {
                                         selectInput("selyearmorfomap1", "Seleziona l'anno", choices = "", multiple = FALSE),  
                                         selectInput("nummorfomap1", "Scegli il numero di campionamento", choices = "", multiple = FALSE), 
                                         
-                                        actionButton("addmapmorfo2", label = "Aggiungi seconda mappa"),
+                                        div(actionButton("addmapmorfo2", label = "Aggiungi seconda mappa"), align = "center"),
                                         conditionalPanel(
                                           condition = ("input.addmapmorfo2 != 0"),
                                           br(),
@@ -804,7 +834,7 @@ app_ui <- function(request) {
                                                )
                                                ),
                                       
-                                      tabPanel(tagList(shiny::icon("images"), HTML("&nbsp;Foto")), value = "tabmorfomor",
+                                      tabPanel(tagList(shiny::icon("images"), HTML("&nbsp;Galleria")), value = "tabmorfomor",
                                         fluidPage(
                                           fluidRow(
                                             column(width=4, 

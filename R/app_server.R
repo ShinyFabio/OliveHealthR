@@ -12,18 +12,18 @@
 #' @import ggfortify
 #' @import htmltools
 #' @import scales
-#' @importFrom dplyr select inner_join mutate filter rename across group_by summarise left_join ungroup n semi_join
+#' @importFrom dplyr select inner_join mutate filter rename across group_by summarise left_join ungroup n semi_join distinct
 #' @importFrom tidyr unite starts_with separate
 #' @importFrom tibble column_to_rownames rownames_to_column
 #' @importFrom grid gpar
 #' @importFrom sp SpatialPointsDataFrame CRS
-#' @importFrom lubridate year
+#' @importFrom lubridate year yday leap_year
 #' @importFrom InteractiveComplexHeatmap InteractiveComplexHeatmapWidget
 #' @importFrom readr read_delim locale parse_factor
 #' @importFrom ComplexHeatmap Heatmap HeatmapAnnotation draw
 #' @importFrom ggcorrplot ggcorrplot
 #' @importFrom DT renderDT datatable formatRound
-#' @importFrom grDevices rainbow
+#' @importFrom grDevices rainbow hcl.colors
 #' @importFrom dendextend color_branches
 #' @importFrom sf st_as_sf st_crs
 #' @importFrom VIM aggr
@@ -31,6 +31,7 @@
 #' @importFrom factoextra fviz_nbclust fviz_cluster fviz_dend fviz_silhouette eclust
 #' @importFrom cluster pam clara
 #' @importFrom gridExtra grid.arrange
+#' @importFrom calendR calendR
 #' @noRd
 app_server <- function( input, output, session ) {
   # List the first level callModules here
@@ -88,10 +89,13 @@ app_server <- function( input, output, session ) {
     return(x)
   })
   
+  #file olio
   oliocamp = reactive({
     req(input$olioinput)
-    readr::read_delim(input$olioinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(date_format = "%d/%m/%Y", encoding = "windows-1252"))
-    
+    x = readr::read_delim(input$olioinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(date_format = "%d/%m/%Y", encoding = "windows-1252"))
+    x$Olio = factor(x$Olio, levels = c("SI", "NO"), ordered = FALSE)
+    x$Sansa  = factor(x$Sansa, levels = c("SI", "NO"), ordered = FALSE)
+    return(x)
   })
   
   
@@ -423,6 +427,100 @@ app_server <- function( input, output, session ) {
     req(oliocamp())
     oliocamp()
   })
+  
+  
+  
+  ##### Mappa Olio
+  observeEvent(oliocamp(), {
+    updateSelectInput(session, "selcoloilmap", choices = colnames(oliocamp()))
+    updateSelectInput(session, "selyearoilmap", choices = row.names(table(lubridate::year(oliocamp()$Data_campionamento))))
+  })
+  
+
+  #stampo mappa
+  output$mapolio = renderTmap({
+    req(oliocamp())    
+    #filtra in base all'anno selezionato 
+    datayear = oliocamp() %>% dplyr::filter(lubridate::year(Data_campionamento) == input$selyearoilmap)
+    #data with coordinates
+    data = data() %>% dplyr::select(Codice_azienda, starts_with("UTM"))
+    
+    datamap = dplyr::left_join(x = data, y = datayear, by = "Codice_azienda")
+
+    colmap = Olv_select_col(data = oliocamp(), input = input$selcoloilmap)
+    make_tmap(data = datamap, dotlegend = colmap, palette = "Set1")
+  })
+  
+  
+  
+  ############ Calendario #################
+
+  
+  joinedcalendar = reactive({
+    
+    if(!is.null(input$drupeinput) == TRUE && !is.null(input$olioinput) == TRUE){
+      drupdate = dplyr::select(drupe(), Codice_azienda, Data_campionamento) %>% dplyr::mutate(campione = "Campionamento drupe e foglie")
+      oliodate = dplyr::select(oliocamp(), Codice_azienda, Data_campionamento) %>% dplyr::mutate(campione = "Campionamento olio")
+      joindate = dplyr::bind_rows(oliodate, drupdate) %>% tidyr::drop_na()
+
+    } else if(!is.null(input$drupeinput) == TRUE && !is.null(input$olioinput) == FALSE){
+      joindate = dplyr::select(drupe(), Codice_azienda, Data_campionamento) %>% dplyr::mutate(campione = "Campionamento drupe e foglie") %>%
+        tidyr::drop_na()
+
+    } else if (!is.null(input$drupeinput) == FALSE && !is.null(input$olioinput) == TRUE){
+      joindate = dplyr::select(oliocamp(), Codice_azienda, Data_campionamento) %>% dplyr::mutate(campione = "Campionamento olio") %>%
+        tidyr::drop_na()
+    }
+    
+    return(joindate)
+  })
+
+  #filtra in base all'anno
+  
+  #aggiorna il selectinput "selyearcalend" in base agli anni presenti e seleziono
+  observeEvent(joinedcalendar(), {
+    updateSelectInput(session, "selyearcalend", choices = unique(lubridate::year(joinedcalendar()$Data_campionamento)))
+  })
+  
+  joinfiltered = reactive({
+    req(joinedcalendar())
+    dplyr::filter(joinedcalendar(), lubridate::year(Data_campionamento) == input$selyearcalend)
+    })
+  
+  
+  #creo il calendario
+  output$yearcalendar = renderPlot({
+    req(joinfiltered())
+    #mi salvo quanti giorni ci sono in quell'anno
+    if (lubridate::leap_year(as.numeric(input$selyearcalend)) == TRUE){totaldays = 366} else{totaldays = 365}
+    
+    
+    #mi salvo i giorni speciali
+    onlyspecial = joinfiltered() %>% dplyr::mutate(day = lubridate::yday(Data_campionamento)) %>% 
+      dplyr::select(campione, day) %>% dplyr::distinct()
+    
+    #ora però ho il problema di due campionamenti diversi (es. olio e drupe) nello stesso giorno. Infatto avrò due giorni
+    #uguali ma con campionamenti diversi (es. day 314 = olio, day 314 = drupe). 
+    #Per fare questo mi creo un vettore contenente i duplicati. Lo faccio avanti e indietro (fromLast = T) o mi prende solo l'ultimo doppione
+    all_dup = duplicated(onlyspecial$day) + duplicated(onlyspecial$day, fromLast = TRUE) >0
+    
+    #poi lo unisco con i dati, e se quella riga ha i doppioni (all_dup = T) mi cambia la scritta, altrimenti lascio come sta. 
+    #Elimino i doppioni con distinct e elimino la colonna dei true/false
+    ggg = cbind(onlyspecial, all_dup) %>% dplyr::mutate(campione = ifelse(all_dup == TRUE, "Campionamento olio, drupe e foglie", campione)) %>% 
+      dplyr::distinct() %>% dplyr::select(-all_dup)
+    
+    #ora mi creo il vettore finale contenente i NA dove non ci sta nulla e lo unisco agli "eventi"
+    totspecial =  dplyr::left_join(tibble(day = rep(1:totaldays)), ggg, by = "day") 
+    
+    ncolors = grDevices::hcl.colors(length(row.names(table(totspecial$campione))), palette = "Harmonic")
+    #creo il calendario
+    calendR::calendR(year = input$selyearcalend, special.days = totspecial$campione,  
+      special.col = ncolors, legend.pos = "right", mbg.col = 4, day.size = 5, months.size = 15, bg.col = "#f4f4f4", 
+      lty = 0, months.col = "white") + ggplot2::theme(legend.key.size = unit(5, units = "mm"), # Keys size
+                                                      legend.text = element_text(size = 20))
+    
+  })
+
   
   
   ##########################POLIFENOLI##############################################
