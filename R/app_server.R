@@ -457,7 +457,7 @@ app_server <- function( input, output, session ) {
 
   
   joinedcalendar = reactive({
-    
+    req(oliocamp())
     if(!is.null(input$drupeinput) == TRUE && !is.null(input$olioinput) == TRUE){
       drupdate = dplyr::select(drupe(), Codice_azienda, Data_campionamento) %>% dplyr::mutate(campione = "Campionamento drupe e foglie")
       oliodate = dplyr::select(oliocamp(), Codice_azienda, Data_campionamento) %>% dplyr::mutate(campione = "Campionamento olio")
