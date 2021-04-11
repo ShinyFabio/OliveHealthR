@@ -23,14 +23,14 @@ sorder_data(data, data2, year, n_camp, heat_sort, add_annot)
 Sort and/or order a dataframe to be used for the heatmap (will be the "datasorted" variable).
 }
 \examples{
-\dontrun {
-
+\dontrun{
 sorder_data(
-data2 = datapolind(), 
-year = input$selyearheatind, 
-n_camp = input$numheat, 
-heat_sort = input$heatsort, 
-add_annot = input$selectannot)
+data2 = datapolind(),
+year = input$selyearheatind,
+n_camp = input$numheat,
+heat_sort = input$heatsort,
+add_annot = input$selectannot
+)
 }
 
 

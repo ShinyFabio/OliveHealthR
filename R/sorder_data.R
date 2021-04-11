@@ -14,14 +14,14 @@
 #' @importFrom dplyr filter select inner_join
 #'
 #'
-#' @examples \dontrun {
-#' 
+#' @examples \dontrun{
 #' sorder_data(
-#' data2 = datapolind(), 
-#' year = input$selyearheatind, 
-#' n_camp = input$numheat, 
-#' heat_sort = input$heatsort, 
-#' add_annot = input$selectannot)
+#' data2 = datapolind(),
+#' year = input$selyearheatind,
+#' n_camp = input$numheat,
+#' heat_sort = input$heatsort,
+#' add_annot = input$selectannot
+#' )
 #' }
 #'
 #'
