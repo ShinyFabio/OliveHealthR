@@ -455,26 +455,77 @@ app_server <- function( input, output, session ) {
   
   ############ Calendario #################
 
-  
-  joinedcalendar = reactive({
-    req(oliocamp())
+ 
+  #vettore per il radiobutton
+  checkfilecalend = reactive({
     if(!is.null(input$drupeinput) == TRUE && !is.null(input$olioinput) == TRUE){
-      drupdate = dplyr::select(drupe(), Codice_azienda, Data_campionamento) %>% dplyr::mutate(campione = "Campionamento drupe e foglie")
-      oliodate = dplyr::select(oliocamp(), Codice_azienda, Data_campionamento) %>% dplyr::mutate(campione = "Campionamento olio")
-      joindate = dplyr::bind_rows(oliodate, drupdate) %>% tidyr::drop_na()
-
+      c("Tutto", "Olio", "Drupe e foglie")
     } else if(!is.null(input$drupeinput) == TRUE && !is.null(input$olioinput) == FALSE){
-      joindate = dplyr::select(drupe(), Codice_azienda, Data_campionamento) %>% dplyr::mutate(campione = "Campionamento drupe e foglie") %>%
+      "Drupe e foglie"
+    }else if (!is.null(input$drupeinput) == FALSE && !is.null(input$olioinput) == TRUE){
+      "Olio"
+    }
+  })
+  
+  #aggiorna il awesomeradio "selfilecalend" in base ai file
+  observeEvent(checkfilecalend(), {
+    updateAwesomeRadio(session, "selfilecalend", choices = checkfilecalend())
+  })
+  
+  
+  
+  joinfilecalendar = reactive({
+    if(input$selfilecalend == "Tutto"){
+      drupdate = dplyr::select(drupe(), Codice_azienda, Data_campionamento, N_campionamento) %>% dplyr::mutate(campione = "Campionamento drupe e foglie")
+      oliodate = dplyr::select(oliocamp(), Codice_azienda, Data_campionamento, N_campionamento) %>% dplyr::mutate(campione = "Campionamento olio")
+      joindate = dplyr::bind_rows(oliodate, drupdate) %>% tidyr::drop_na()
+      
+    } else if(input$selfilecalend == "Drupe e foglie"){
+      joindate = dplyr::select(drupe(), Codice_azienda, Data_campionamento, N_campionamento) %>% dplyr::mutate(campione = "Campionamento drupe e foglie") %>%
         tidyr::drop_na()
-
-    } else if (!is.null(input$drupeinput) == FALSE && !is.null(input$olioinput) == TRUE){
-      joindate = dplyr::select(oliocamp(), Codice_azienda, Data_campionamento) %>% dplyr::mutate(campione = "Campionamento olio") %>%
+      
+    } else if (input$selfilecalend == "Olio"){
+      joindate = dplyr::select(oliocamp(), Codice_azienda, Data_campionamento, N_campionamento) %>% dplyr::mutate(campione = "Campionamento olio") %>%
         tidyr::drop_na()
     }
-    
     return(joindate)
   })
+  
+  
+  #scelgo il campionamento
+  selcampcalendar = reactive({
+    req(joinfilecalendar())
+    if(input$selfilecalend == "Drupe e foglie"){
+      if(input$selcampcalend == "R1"){
+        joinfilecalendar() %>% dplyr::filter(N_campionamento == "R1") %>% dplyr::select(-N_campionamento)
+      } else if(input$selcampcalend == "R2"){
+        joinfilecalendar() %>% dplyr::filter(N_campionamento == "R2") %>% dplyr::select(-N_campionamento)
+      } else{
+        joinfilecalendar() %>% dplyr::select(-N_campionamento)
+      }
+    } else{
+      joinfilecalendar() %>% dplyr::select(-N_campionamento)
+    }
+  })
+  
+  
+  #scelgo l'azienda
+  
+  #aggiorna il selectinput "selyearcalend" in base agli anni presenti e seleziono
+  observeEvent(selcampcalendar(), {
+    updateSelectInput(session, "selaziendacalend", choices = c("Tutte", unique(selcampcalendar()$Codice_azienda)), selected = "Tutte")
+  })
+  
+  joinedcalendar = reactive({
+    req(selcampcalendar())
+    if(input$selaziendacalend == "Tutte"){
+      selcampcalendar()
+    } else{
+      selcampcalendar() %>% dplyr::filter(Codice_azienda == input$selaziendacalend) 
+    }
+  })
 
+  
   #filtra in base all'anno
   
   #aggiorna il selectinput "selyearcalend" in base agli anni presenti e seleziono
@@ -486,6 +537,7 @@ app_server <- function( input, output, session ) {
     req(joinedcalendar())
     dplyr::filter(joinedcalendar(), lubridate::year(Data_campionamento) == input$selyearcalend)
     })
+  
   
   
   #creo il calendario

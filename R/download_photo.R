@@ -16,9 +16,9 @@
 
 
 
-download_photo = function(url = "https://srv-store4.gofile.io/download/Vhtmor/9e840835a48fcd254263fdc03dbf690d"){
+download_photo = function(url = "https://srv-store4.gofile.io/download/Vhtmor/9e840835a48fcd254263fdc03dbf690d/imagedata.zip"){
   
-  url = paste(url, "imagedata.zip", sep = "/")
+  #url = paste(url, "imagedata.zip", sep = "/")
   temp = tempfile()
   destpath = base::system.file(package = "OliveHealthR")
   destpath = paste0(destpath, "/app/www")

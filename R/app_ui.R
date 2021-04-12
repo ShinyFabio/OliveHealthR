@@ -317,13 +317,15 @@ app_ui <- function(request) {
                                       sidebarPanel(
                                         width = 3,
                                         div(actionButton("updateoilmap", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:160%'), align = "center"),
-                                        hr(),
-                                        selectInput("selcoloilmap", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
-                                        selectInput("selyearoilmap", "Seleziona l'anno", choices = "", multiple = FALSE),
-                                        
+                                        conditionalPanel(condition = "input.updateoilmap != 0",
+                                          hr(),
+                                          selectInput("selcoloilmap", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
+                                          selectInput("selyearoilmap", "Seleziona l'anno", choices = "", multiple = FALSE)
+                                        )
                                       ),
                                       mainPanel(width = 9,
-                                        tmapOutput("mapolio")
+                                        conditionalPanel(condition = "input.updateoilmap != 0",
+                                          tmapOutput("mapolio")),
                                       )
                                     )
                                     
@@ -335,7 +337,12 @@ app_ui <- function(request) {
                               tabItem(tabName = "calendar",
                                 sidebarLayout(
                                   sidebarPanel(width = 2,
+                                    awesomeRadio("selfilecalend", "Seleziona il tipo di campionamento", choices = ""),
+                                    conditionalPanel(condition = "input.selfilecalend == 'Drupe e foglie'",
+                                      awesomeRadio("selcampcalend", "Seleziona il numero di campionamento", choices = c("Entrambi", "R1", "R2")),
+                                    ),
                                     selectInput("selyearcalend", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                    selectInput("selaziendacalend", "Scegli l'azienda", choices = "", multiple = FALSE),
                                   ),
                                   mainPanel(width = 10,
                                     plotOutput("yearcalendar", height = "700px")
