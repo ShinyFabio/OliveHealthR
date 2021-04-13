@@ -1147,7 +1147,7 @@ app_server <- function( input, output, session ) {
   })
   
   
-  ################# FOTO CAMPIONI ############
+  ################# Foto campioni ############
   
   #crea la tabella
   output$dtfotomorfo = DT::renderDT(dplyr::select(data(), c("Azienda", "Codice_azienda")), selection = "single", server = FALSE, rownames = FALSE)
@@ -1309,7 +1309,7 @@ app_server <- function( input, output, session ) {
   })
   
   
-  #### HEATMAP MORFO ####
+  #### Heatmap morfo ####
   
   #aggiorna il selectinput , "selyearheatind" in base agli anni presenti
   observeEvent(datamorfo(), {
@@ -1567,8 +1567,92 @@ app_server <- function( input, output, session ) {
   })
   
   
+  
+  ###### Test d'ipotesi #####################
+  #aggiorna il selectinput "selvarttest" in base ai double presenti
+  observeEvent(datamorfo(), {
+    updateSelectInput(session, "catvarttest", choices = colnames(dplyr::select(datamorfo(), where(is.character))))
+    
+    updateSelectInput(session, "numvarttest", choices = colnames(dplyr::select(datamorfo(), where(is.double), -Anno, -starts_with("ID"))))
+  })
+  
+  #culttest1 e 2
+  observeEvent(input$catvarttest, {
+    updateSelectInput(session, "culttest1", choices = unique(dplyr::select(datamorfo(), input$catvarttest)))
+    updateSelectInput(session, "culttest2", choices = unique(dplyr::select(datamorfo(), input$catvarttest)))
+  })
+  
+  
+  
+   #creo la variabile dei dati con le due opzioni
+  datattest = reactive({
+    req(datamorfo())
+    #datamorfo() %>% dplyr::filter(input$catvarttest == input$culttest1 | input$catvarttest %in% input$culttest2)
+    datamorfo()[datamorfo()[[input$catvarttest]] %in% c(input$culttest1, input$culttest2),]
+    
+  })
+  
 
-  ### Mappa
+
+  
+  #test normalità con shapiro test
+  output$shapiro1 = renderPrint({
+    req(datamorfo())
+    shp1 = datamorfo()[datamorfo()[[input$catvarttest]] %in% input$culttest1,] %>% dplyr::pull(input$numvarttest) %>% 
+      stats::shapiro.test()
+    shp1$data.name = paste(input$culttest1)
+    shp1
+  })
+  
+  output$shapiro2 = renderPrint({
+    req(datamorfo())
+    shp2 = datamorfo()[datamorfo()[[input$catvarttest]] %in% input$culttest2,] %>% dplyr::pull(input$numvarttest) %>% 
+      stats::shapiro.test()
+    shp2$data.name = paste(input$culttest2)
+    shp2
+  })
+  
+  #test varianza F-test
+  output$vartest1 = renderPrint({
+    req(datattest())
+    num = datattest() %>% dplyr::pull(input$numvarttest)
+    cat = datattest() %>% dplyr::pull(input$catvarttest)
+    var1 = stats::var.test(num ~ cat)
+    var1$data.name = paste(input$numvarttest, "~", input$catvarttest)
+    var1
+  })
+  
+  
+  #T-test
+  output$ttest1 = renderPrint({
+    req(datattest())
+    num = datattest() %>% dplyr::pull(input$numvarttest)
+    cat = datattest() %>% dplyr::pull(input$catvarttest)
+    if(input$selectttest == "T-test"){
+      test = stats::t.test(num ~ cat, var.equal = input$selvarequal)
+      test$data.name = paste(input$numvarttest, "~", input$catvarttest)
+    } else{
+      test = stats::wilcox.test(num ~ cat, var.equal = input$selvarequal)
+      test$data.name = paste(input$numvarttest, "~", input$catvarttest)
+    }
+    test
+  })
+  
+  # ue = morfodrupt %>% filter(Cultivar_principale == "Frantoio" | Cultivar_principale == "Carpellese" )
+  # ue$Cultivar_principale
+  # frantoio = morfodrupt %>% filter(Cultivar_principale == "Frantoio")
+  # carpellese = morfodrupt %>% filter(Cultivar_principale == "Carpellese")
+  # with(frantoio, shapiro.test(`Lunghezza_(mm)`))#
+  # with(carpellese, shapiro.test(`Lunghezza_(mm)`))#
+  # 
+
+  
+  
+  
+  #test varianza con F-test
+  
+  
+  ##### Mappa
 
   #stampa mappa 1
   output$mapmorfo1 = renderTmap({

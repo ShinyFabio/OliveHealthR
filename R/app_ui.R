@@ -803,6 +803,20 @@ app_ui <- function(request) {
                                         selectInput("selclusthmorfo", "Seleziona l'algoritmo di clustering", choices = c("K-means", "PAM", "Clara"), selected = "K-means", multiple = FALSE),
                                       ) 
                                     ),
+                                    
+                                    
+                                    
+                                    #Test d'ipotesi
+                                    conditionalPanel(
+                                      condition = "input.tabboxmorfo == 'tabtestmor'",
+                                      selectInput("catvarttest", "Scegli la variabile categorica", choices = "", multiple = FALSE),
+                                      selectInput("culttest1", "Variabile dipendente", choices = "", multiple = FALSE),
+                                      selectInput("culttest2", "Fattore esplicativo", choices = "", multiple = FALSE),
+                                      selectInput("numvarttest", "Scegli la variabile numerica da confrontare", choices = "", multiple = FALSE),
+                                      awesomeRadio("selectttest", "Tipo di test", choices = c("T-test", "Wilcoxon-Mann-Whitney")),
+                                      awesomeCheckbox("selvarequal", "Omoschedasticità", value = TRUE)
+                                      
+                                    ),
 
                                     # Mappa
                                     conditionalPanel(
@@ -980,6 +994,28 @@ app_ui <- function(request) {
                                                 )
                                       ), #end of tabpanel clustering
 
+                                      
+                                      
+                                      #tabpanel test d'ipotesi
+                                      tabPanel(tagList(shiny::icon("clipboard-check"), HTML("&nbsp;Test d'ipotesi")), value = "tabtestmor",
+                                          fluidPage(
+                                          box(title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapiro1")),
+                                          box(title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapiro2")),
+                                        conditionalPanel(condition = "input.culttest1 != input.culttest2",
+                                          box(title = strong("Test sulla varianza"), status = "primary", verbatimTextOutput("vartest1")),
+                                          box(title = strong("T-test"), status = "primary", verbatimTextOutput("ttest1"))
+                                            ),
+                                        conditionalPanel(condition = "input.culttest1 == input.culttest2",
+                                          box(title = strong("Test sulla varianza"), status = "primary", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 20px"), h5(strong("Errore. La variabile dipendente e il fattore esplicativo devono essere diversi.")), style = "text-align: justify;  text-align: center;"),
+                                          ),
+                                          
+                                      )
+                                      
+                                      
+                                      ),
+                                      
+                                      
+                                      #tabpanel mappa
                                       tabPanel(tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")), value = "tabmapmor",
                                               conditionalPanel(condition = ("input.upmapmorfo != 0"),
                                               tmapOutput("mapmorfo1"),
