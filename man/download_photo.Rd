@@ -7,7 +7,7 @@
 download_photo()
 }
 \arguments{
-\item{url}{Url where download the zip file. By default "https://srv-store4.gofile.io/download/Vhtmor/9e840835a48fcd254263fdc03dbf690d".}
+\item{url}{Url where download the zip file. By default "https://drive.google.com/u/0/uc?export=download&confirm=_w5z&id=1cLQn3Xhs5aH0hVBrzRksBC0m5Nvk7Zpk".}
 }
 \description{
 This function download photos from a link and copy them in the www folder. Data are uploaded on https://gofile.io/uploadFiles.

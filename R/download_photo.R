@@ -6,7 +6,7 @@
 #' 
 #' 
 #' 
-#' @param url Url where download the zip file. By default "https://srv-store4.gofile.io/download/Vhtmor/9e840835a48fcd254263fdc03dbf690d".
+#' @param url Url where download the zip file. By default "https://drive.google.com/u/0/uc?export=download&confirm=_w5z&id=1cLQn3Xhs5aH0hVBrzRksBC0m5Nvk7Zpk".
 #' 
 #' @export
 #' 
@@ -16,7 +16,7 @@
 
 
 
-download_photo = function(url = "https://srv-store4.gofile.io/download/Vhtmor/9e840835a48fcd254263fdc03dbf690d/imagedata.zip"){
+download_photo = function(url = "https://drive.google.com/u/0/uc?export=download&confirm=_w5z&id=1cLQn3Xhs5aH0hVBrzRksBC0m5Nvk7Zpk"){
   
   #url = paste(url, "imagedata.zip", sep = "/")
   temp = tempfile()
