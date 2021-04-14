@@ -7,12 +7,12 @@
 #' @importFrom plotly renderPlotly ggplotly layout
 #' @rawNamespace import(ggplot2, except = last_plot)
 #' @rawNamespace import(stats, except = filter)
+#' @rawNamespace import(dplyr, except = lag)
 #' @import tmap
 #' @import tmaptools
 #' @import ggfortify
 #' @import htmltools
 #' @import scales
-#' @importFrom dplyr select inner_join mutate filter rename across group_by summarise left_join ungroup n semi_join distinct
 #' @importFrom tidyr unite starts_with separate
 #' @importFrom tibble column_to_rownames rownames_to_column
 #' @importFrom grid gpar
@@ -1587,8 +1587,8 @@ app_server <- function( input, output, session ) {
    #creo la variabile dei dati con le due opzioni
   datattest = reactive({
     req(datamorfo())
-    #datamorfo() %>% dplyr::filter(input$catvarttest == input$culttest1 | input$catvarttest %in% input$culttest2)
-    datamorfo()[datamorfo()[[input$catvarttest]] %in% c(input$culttest1, input$culttest2),]
+    datamorfo() %>% dplyr::filter(.data[[input$catvarttest]] %in% c(input$culttest1, input$culttest2))
+    #datamorfo()[datamorfo()[[input$catvarttest]] %in% c(input$culttest1, input$culttest2),]
     
   })
   
@@ -1598,16 +1598,18 @@ app_server <- function( input, output, session ) {
   #test normalità con shapiro test
   output$shapiro1 = renderPrint({
     req(datamorfo())
-    shp1 = datamorfo()[datamorfo()[[input$catvarttest]] %in% input$culttest1,] %>% dplyr::pull(input$numvarttest) %>% 
-      stats::shapiro.test()
+    #shp1 = datamorfo()[datamorfo()[[input$catvarttest]] %in% input$culttest1,] %>% dplyr::pull(input$numvarttest) %>% 
+     # stats::shapiro.test()
+    shp1 = datamorfo() %>% dplyr::filter(.data[[input$catvarttest]] %in% input$culttest1) %>%
+      dplyr::pull(input$numvarttest) %>%  stats::shapiro.test()
     shp1$data.name = paste(input$culttest1)
     shp1
   })
   
   output$shapiro2 = renderPrint({
     req(datamorfo())
-    shp2 = datamorfo()[datamorfo()[[input$catvarttest]] %in% input$culttest2,] %>% dplyr::pull(input$numvarttest) %>% 
-      stats::shapiro.test()
+    shp2 = datamorfo() %>% dplyr::filter(.data[[input$catvarttest]] %in% input$culttest2) %>%
+      dplyr::pull(input$numvarttest) %>%  stats::shapiro.test()
     shp2$data.name = paste(input$culttest2)
     shp2
   })
@@ -1638,19 +1640,9 @@ app_server <- function( input, output, session ) {
     test
   })
   
-  # ue = morfodrupt %>% filter(Cultivar_principale == "Frantoio" | Cultivar_principale == "Carpellese" )
-  # ue$Cultivar_principale
-  # frantoio = morfodrupt %>% filter(Cultivar_principale == "Frantoio")
-  # carpellese = morfodrupt %>% filter(Cultivar_principale == "Carpellese")
-  # with(frantoio, shapiro.test(`Lunghezza_(mm)`))#
-  # with(carpellese, shapiro.test(`Lunghezza_(mm)`))#
-  # 
 
-  
-  
-  
-  #test varianza con F-test
-  
+
+
   
   ##### Mappa
 
