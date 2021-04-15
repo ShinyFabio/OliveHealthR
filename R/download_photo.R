@@ -21,6 +21,6 @@ download_photo = function(url = "https://www.dropbox.com/s/9z6ozynsxg23quj/image
   temp = tempfile()
   destpath = base::system.file(package = "OliveHealthR")
   destpath = paste0(destpath, "/app/www")
-  utils::download.file(url, temp)
+  utils::download.file(url, temp, cacheOK = FALSE, mode = "wb")
   utils::unzip(zipfile = temp, exdir = destpath)
 }
