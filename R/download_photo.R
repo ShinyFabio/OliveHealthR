@@ -16,9 +16,8 @@
 
 
 
-download_photo = function(url = "https://drive.google.com/u/0/uc?export=download&confirm=_w5z&id=1cLQn3Xhs5aH0hVBrzRksBC0m5Nvk7Zpk"){
+download_photo = function(url = "https://www.dropbox.com/s/9z6ozynsxg23quj/imagedata.zip?dl=1"){
   
-  #url = paste(url, "imagedata.zip", sep = "/")
   temp = tempfile()
   destpath = base::system.file(package = "OliveHealthR")
   destpath = paste0(destpath, "/app/www")
