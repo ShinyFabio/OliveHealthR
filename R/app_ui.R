@@ -775,7 +775,12 @@ app_ui <- function(request) {
                                                        h4(strong("Dendrogramma su colonna")),
                                                        uiOutput("sliderheatcolmorfo"),
                                       )
-                                     )
+                                     ),
+                                    
+                                    conditionalPanel(condition = "input.boxmorfograph == 'tabpancorrmorfo'",
+                                      selectInput("selyearcorrmorfo", "Seleziona l'anno", choices = "", multiple = FALSE)
+                                      )
+                                    
 
                                     ), #end of conditionapanel dei grafici
                                     
@@ -806,16 +811,41 @@ app_ui <- function(request) {
                                     
                                     
                                     
+
                                     #Test d'ipotesi
-                                    conditionalPanel(
-                                      condition = "input.tabboxmorfo == 'tabtestmor'",
-                                      selectInput("catvarttest", "Scegli la variabile categorica", choices = "", multiple = FALSE),
+                                    conditionalPanel(condition = "input.tabboxmorfo == 'tabpanmorfotest'",
+                                      h4(strong("Opzioni test")),
+                                      selectInput("selyearttestmorfo", "Scegli l'anno", choices = "", multiple = FALSE),
+                                      hr(),
+                                      
+                                      #T-test
+                                      conditionalPanel(condition = "input.boxmorfotest == 'tabpanttestmorfo'",
+                                       selectInput("catvarttest", "Variabile categorica", choices = "", multiple = FALSE),
                                       selectInput("culttest1", "Variabile dipendente", choices = "", multiple = FALSE),
                                       selectInput("culttest2", "Fattore esplicativo", choices = "", multiple = FALSE),
-                                      selectInput("numvarttest", "Scegli la variabile numerica da confrontare", choices = "", multiple = FALSE),
+                                      selectInput("numvarttest", "Variabile numerica da confrontare", choices = "", multiple = FALSE),
                                       awesomeRadio("selectttest", "Tipo di test", choices = c("T-test", "Wilcoxon-Mann-Whitney")),
-                                      awesomeCheckbox("selvarequal", "Omoschedasticità", value = TRUE)
+                                      conditionalPanel(condition = "input.selectttest == 'T-test'",
+                                        awesomeCheckbox("selvarequal", "Omoschedasticità", value = TRUE)
+                                      ) 
+                                      ),
                                       
+                                      #Test correlazione
+                                      conditionalPanel(
+                                        condition = "input.boxmorfotest == 'tabpancorrtestmorfo'",
+                                        selectInput("corrtest1", "Variabile dipendente", choices = "", multiple = FALSE),
+                                        selectInput("corrtest2", "Fattore esplicativo", choices = "", multiple = FALSE),
+                                        awesomeRadio("selectcorrtest", "Tipo di test", choices = c("Pearson" = "pearson", "Kendall" = "kendall", "Spearman" = "spearman")),
+                                        
+                                      ),
+                                      
+                                      #Test Anova
+                                      conditionalPanel(
+                                        condition = "input.boxmorfotest == 'tabpananovamorfo'",
+                                        
+                                      ),
+                                      
+
                                     ),
 
                                     # Mappa
@@ -916,7 +946,11 @@ app_ui <- function(request) {
                                           tabPanel("Heatmap", value = "tabpanheatmorfo",
                                                    br(),
                                                    htmlOutput("heatmap_outputmorfo")
-                                                   )
+                                                   ),
+                                          tabPanel("Correlation plot", value = "tabpancorrmorfo",
+                                            br(),
+                                            plotly::plotlyOutput("corrplotmorfo")
+                                          )
                                         )
                                       ),
                                       
@@ -966,53 +1000,94 @@ app_ui <- function(request) {
                                       
                                       # Clustering
                                       tabPanel(tagList(tags$img(src = "www/clustering_icon.png", height = "16px", width = "16px"), HTML("&nbsp;Clustering")), value = "tabclustmor",
-                                                tabsetPanel(
-                                                  tabPanel("Numero cluster",
-                                                    br(),
-                                                    plotOutput("numclustergraph", height = "800px")
-                                                  ),
+                                        tabsetPanel(
+                                          tabPanel("Numero cluster",
+                                            br(),
+                                            plotOutput("numclustergraph", height = "800px")
+                                          ),
                                                   
-                                                  tabPanel("Cluster plot",
-                                                    br(),
-                                                    fluidPage(
-                                                      fluidRow(
-                                                        column(4, 
-                                                               box(width = NULL, status = "primary",
-                                                                      sliderInput("selnumclustmorfo", "Numero cluster:", min = 1, max = 10, value = 2))),
-                                                        column(4, 
-                                                               conditionalPanel(condition = "input.selclustmethod == 'Gerarchico'",
-                                                                 box(width=NULL, status = "primary",
-                                                                  selectInput("selhclustmeth", "Seleziona metodo agglomerazione", choices = c("single", "complete", "ward.D", "ward.D2"), selected = "ward.D2")
-                                                                     )
-                                                                 )
-                                                               )
-                                                        ),
-                                                      fluidRow(plotOutput("plotclustermorfo", height = "600px"))
-                                                      )
+                                          tabPanel("Cluster plot",
+                                            br(),
+                                            fluidPage(
+                                              fluidRow(
+                                                column(4, 
+                                                  box(width = NULL, status = "primary",
+                                                    sliderInput("selnumclustmorfo", "Numero cluster:", min = 1, max = 10, value = 2))),
+                                                
+                                                column(4, 
+                                                  conditionalPanel(condition = "input.selclustmethod == 'Gerarchico'",
+                                                    box(width=NULL, status = "primary",
+                                                      selectInput("selhclustmeth", "Seleziona metodo agglomerazione", choices = c("single", "complete", "ward.D", "ward.D2"), selected = "ward.D2"))
                                                   )
-                                                  
                                                 )
+                                              ), 
+                                              fluidRow(plotOutput("plotclustermorfo", height = "600px"))
+                                            )
+                                          )
+                                          
+                                        )
                                       ), #end of tabpanel clustering
 
                                       
                                       
                                       #tabpanel test d'ipotesi
-                                      tabPanel(tagList(shiny::icon("clipboard-check"), HTML("&nbsp;Test d'ipotesi")), value = "tabtestmor",
-                                          fluidPage(
-                                          box(title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapiro1")),
-                                          box(title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapiro2")),
-                                        conditionalPanel(condition = "input.culttest1 != input.culttest2",
-                                          box(title = strong("Test sulla varianza"), status = "primary", verbatimTextOutput("vartest1")),
-                                          box(title = strong("T-test"), status = "primary", verbatimTextOutput("ttest1"))
-                                            ),
-                                        conditionalPanel(condition = "input.culttest1 == input.culttest2",
-                                          box(title = strong("Test sulla varianza"), status = "primary", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 20px"), h5(strong("Errore. La variabile dipendente e il fattore esplicativo devono essere diversi.")), style = "text-align: justify;  text-align: center;"),
-                                          ),
+                                      tabPanel(tagList(shiny::icon("clipboard-check"), HTML("&nbsp;Test d'ipotesi")), value = "tabpanmorfotest",
+                                          tabsetPanel(id = "boxmorfotest",
+                                            tabPanel("Confronto tra due gruppi", value = "tabpanttestmorfo",
+                                              br(),
+                                              fluidPage(
+                                                fluidRow(
+                                                  column(6, box(width = NULL, title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapiro1"))),
+                                                  column(6, box(width = NULL, title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapiro2")))
+                                                ),
+                                                fluidRow(
+                                                  conditionalPanel(condition = "input.culttest1 != input.culttest2",
+                                                    column(6,box(width = NULL, title = strong("Test sulla varianza"), status = "primary", verbatimTextOutput("vartest1"))),
+                                                    column(6,box(width = NULL, title = strong("Test statistico"), status = "primary", verbatimTextOutput("ttest1")))
+                                                  ),
+                                                conditionalPanel(condition = "input.culttest1 == input.culttest2",
+                                                  column(6, box(width = NULL, title = strong("Test sulla varianza"), status = "primary", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 20px; color: rgb(243,156,18)"), 
+                                                                h5(strong("Errore. La variabile dipendente e il fattore esplicativo devono essere diversi.", style = "color: rgb(243,156,18)")), style = "text-align: justify;  text-align: center;")),
+                                                  column(6, box(width = NULL, title = strong("Test statistico"), status = "primary", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 20px; color: rgb(243,156,18)"), 
+                                                                h5(strong("Errore. La variabile dipendente e il fattore esplicativo devono essere diversi.", style = "color: rgb(243,156,18)")), style = "text-align: justify;  text-align: center;"))
+                                                  )
+                                                ),
+                                                
+                                                fluidRow(
+                                                  column(10, offset = 1, box(width = NULL, title = strong("Grafico"), status = "primary", plotlyOutput("boxttest")))
+                                                )
+                                              ) #end of fluidpage
+                                                
+                                                 
+                                          ), #end of tabpanel conf 2 gruppi
                                           
-                                      )
+                                          tabPanel("Test correlazione", value = "tabpancorrtestmorfo",
+                                            br(), 
+                                            fluidPage(
+                                              fluidRow(
+                                                column(6, box(width = NULL, title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapirocorr1"))),
+                                                column(6, box(width = NULL, title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapirocorr2")))
+                                              ),
+                                              fluidRow(
+                                                  column(6,
+                                                    conditionalPanel(condition = "input.corrtest1 != input.corrtest2",
+                                                      box(width = NULL, title = strong("Test statistico"), status = "primary", verbatimTextOutput("corrtest"))),
+                                                    conditionalPanel(condition = "input.corrtest1 == input.corrtest2",
+                                                      box(width = NULL, title = strong("Test statistico"), status = "warning", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 20px; color: rgb(243,156,18)"), 
+                                                                  h5(strong("Errore. La variabile dipendente e il fattore esplicativo devono essere diversi.", style = "color: rgb(243,156,18)")), style = "text-align: justify;  text-align: center;"))
+                                                  ), 
+                                                  column(6, box(width = NULL, title = strong("Grafico"), status = "primary", plotly::plotlyOutput("scattcorrtest")))
+                                              ),
+                                            ),
+                                          ), #end of tabpanel
+                                          
+                                          tabPanel("Confronto tra più gruppi", value = "tabpananovamorfo",
+                                            fluidPage(
+                                            )
+                                          )
                                       
-                                      
-                                      ),
+                                      ) #end of tabset panel
+                                    ),
                                       
                                       
                                       #tabpanel mappa

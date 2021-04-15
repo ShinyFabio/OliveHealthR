@@ -475,20 +475,17 @@ app_server <- function( input, output, session ) {
   
   
   joinfilecalendar = reactive({
+    drupdate = dplyr::select(drupe(), Codice_azienda, Data_campionamento, N_campionamento) %>% dplyr::mutate(campione = "Campionamento drupe e foglie") %>% tidyr::drop_na()
+    oliodate = dplyr::select(oliocamp(), Codice_azienda, Data_campionamento, N_campionamento) %>% dplyr::mutate(campione = "Campionamento olio") %>% tidyr::drop_na()
+    
     if(input$selfilecalend == "Tutto"){
-      drupdate = dplyr::select(drupe(), Codice_azienda, Data_campionamento, N_campionamento) %>% dplyr::mutate(campione = "Campionamento drupe e foglie")
-      oliodate = dplyr::select(oliocamp(), Codice_azienda, Data_campionamento, N_campionamento) %>% dplyr::mutate(campione = "Campionamento olio")
-      joindate = dplyr::bind_rows(oliodate, drupdate) %>% tidyr::drop_na()
-      
+      joindate = dplyr::bind_rows(oliodate, drupdate) 
     } else if(input$selfilecalend == "Drupe e foglie"){
-      joindate = dplyr::select(drupe(), Codice_azienda, Data_campionamento, N_campionamento) %>% dplyr::mutate(campione = "Campionamento drupe e foglie") %>%
-        tidyr::drop_na()
-      
-    } else if (input$selfilecalend == "Olio"){
-      joindate = dplyr::select(oliocamp(), Codice_azienda, Data_campionamento, N_campionamento) %>% dplyr::mutate(campione = "Campionamento olio") %>%
-        tidyr::drop_na()
+      joindate = drupdate
+    } else if(input$selfilecalend == "Olio"){
+      joindate = oliodate
     }
-    return(joindate)
+    joindate
   })
   
   
@@ -509,36 +506,31 @@ app_server <- function( input, output, session ) {
   })
   
   
-  #scelgo l'azienda
-  
-  #aggiorna il selectinput "selyearcalend" in base agli anni presenti e seleziono
+
+  #filtra in base all'anno
   observeEvent(selcampcalendar(), {
-    updateSelectInput(session, "selaziendacalend", choices = c("Tutte", unique(selcampcalendar()$Codice_azienda)), selected = "Tutte")
+    updateSelectInput(session, "selyearcalend", choices = unique(lubridate::year(selcampcalendar()$Data_campionamento)))
   })
   
-  joinedcalendar = reactive({
+  yearcalendar = reactive({
     req(selcampcalendar())
-    if(input$selaziendacalend == "Tutte"){
-      selcampcalendar()
-    } else{
-      selcampcalendar() %>% dplyr::filter(Codice_azienda == input$selaziendacalend) 
-    }
-  })
+    dplyr::filter(selcampcalendar(), lubridate::year(Data_campionamento) == input$selyearcalend)
+    })
 
   
-  #filtra in base all'anno
-  
-  #aggiorna il selectinput "selyearcalend" in base agli anni presenti e seleziono
-  observeEvent(joinedcalendar(), {
-    updateSelectInput(session, "selyearcalend", choices = unique(lubridate::year(joinedcalendar()$Data_campionamento)))
+  #scelgo l'azienda
+  observeEvent(yearcalendar(), {
+    updateSelectInput(session, "selaziendacalend", choices = c("Tutte", unique(yearcalendar()$Codice_azienda)), selected = "Tutte")
   })
   
   joinfiltered = reactive({
-    req(joinedcalendar())
-    dplyr::filter(joinedcalendar(), lubridate::year(Data_campionamento) == input$selyearcalend)
-    })
-  
-  
+    req(yearcalendar())
+    if(input$selaziendacalend == "Tutte"){
+      yearcalendar()
+    } else{
+      yearcalendar() %>% dplyr::filter(Codice_azienda == input$selaziendacalend) 
+    }
+  })
   
   #creo il calendario
   output$yearcalendar = renderPlot({
@@ -686,7 +678,7 @@ app_server <- function( input, output, session ) {
   })
   
   
-  #########BOXPLOT POLIFENOLI TOTALI#####################
+  #########BARPLOT POLIFENOLI TOTALI#####################
   
   ###modificare la colonna campionamento con unite (R1_2020)
   datapoltotyearunite = reactive({
@@ -929,7 +921,7 @@ app_server <- function( input, output, session ) {
     ###scegliere anno e  il campionamento (scatter plot)
     datatemp = datapolind() %>% dplyr::filter(Anno == input$selyearcorrind) %>% dplyr::filter(N_campionamento == input$numcorr)
     
-    temp = datatemp %>% dplyr::select(-Anno, - N_campionamento, -Azienda, -Codice_azienda, -Cultivar_principale)
+    temp = datatemp %>% dplyr::select(where(is.double), -Anno)
     temp2 = round(stats::cor(temp, use = "na.or.complete"),1)
     par(xpd = TRUE)
     
@@ -1222,6 +1214,7 @@ app_server <- function( input, output, session ) {
     
   })
   
+  ######## Grafici morfo ##########
 
   observeEvent(datamorfo(), {
     #boxplot e barplot
@@ -1268,7 +1261,7 @@ app_server <- function( input, output, session ) {
     fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfobb)
     temp = ggplot(data = datamorfo(), 
                   mapping = aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"), fill = paste0("`",colnames(fill),"`"))) + 
-    geom_boxplot() + geom_jitter() + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+    geom_boxplot() + geom_jitter(width = 0.3) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
     plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
   })
   
@@ -1376,6 +1369,27 @@ app_server <- function( input, output, session ) {
   })
   
 
+  
+  ###### Correlation plot morfo ######
+  
+  #aggiorna il selectinput , "selyearheatind" in base agli anni presenti e filtra
+  observeEvent(datamorfo(), {
+    updateSelectInput(session, "selyearcorrmorfo", choices = row.names(table(dplyr::select(datamorfo(), "Anno"))))
+  })
+  
+  
+  ###creo il corrplot
+  output$corrplotmorfo = plotly::renderPlotly({
+    req(datamorfo())
+    ###scegliere anno e  il campionamento (scatter plot)
+    datatemp = datamorfo() %>% dplyr::filter(Anno == input$selyearcorrmorfo) 
+    
+    temp = datatemp %>% dplyr::select(where(is.double), -Anno)
+    temp2 = round(stats::cor(temp, use = "na.or.complete"),1)
+    par(xpd = TRUE)
+    
+    ggcorrplot::ggcorrplot(temp2, hc.order = TRUE, type = "lower", outline.col = "white", show.diag = TRUE) %>% plotly::ggplotly()
+  })
   
   
   ###### PCA morfo ####
@@ -1569,46 +1583,53 @@ app_server <- function( input, output, session ) {
   
   
   ###### Test d'ipotesi #####################
-  #aggiorna il selectinput "selvarttest" in base ai double presenti
+  
+  #dati filtrati per anno
   observeEvent(datamorfo(), {
-    updateSelectInput(session, "catvarttest", choices = colnames(dplyr::select(datamorfo(), where(is.character))))
-    
-    updateSelectInput(session, "numvarttest", choices = colnames(dplyr::select(datamorfo(), where(is.double), -Anno, -starts_with("ID"))))
+    updateSelectInput(session, "selyearttestmorfo", choices = row.names(table(dplyr::select(datamorfo(), Anno))))
+  })
+  
+  datamorfoyeartest = reactive({
+    datamorfo() %>% dplyr::filter(Anno == input$selyearttestmorfo)
+  })
+  
+  ###### t-test 
+  #aggiorna il selectinput "selvarttest" in base ai double presenti
+  observeEvent(datamorfoyeartest(), {
+    updateSelectInput(session, "catvarttest", choices = colnames(dplyr::select(datamorfoyeartest(), where(is.character))))
+    updateSelectInput(session, "numvarttest", choices = colnames(dplyr::select(datamorfoyeartest(), where(is.double), -Anno, -starts_with("ID"))))
   })
   
   #culttest1 e 2
   observeEvent(input$catvarttest, {
-    updateSelectInput(session, "culttest1", choices = unique(dplyr::select(datamorfo(), input$catvarttest)))
-    updateSelectInput(session, "culttest2", choices = unique(dplyr::select(datamorfo(), input$catvarttest)))
+    updateSelectInput(session, "culttest1", choices = unique(dplyr::select(datamorfoyeartest(), input$catvarttest)))
+    updateSelectInput(session, "culttest2", choices = unique(dplyr::select(datamorfoyeartest(), input$catvarttest)))
   })
-  
   
   
    #creo la variabile dei dati con le due opzioni
   datattest = reactive({
-    req(datamorfo())
-    datamorfo() %>% dplyr::filter(.data[[input$catvarttest]] %in% c(input$culttest1, input$culttest2))
+    req(datamorfoyeartest())
+    datamorfoyeartest() %>% dplyr::filter(.data[[input$catvarttest]] %in% c(input$culttest1, input$culttest2))
     #datamorfo()[datamorfo()[[input$catvarttest]] %in% c(input$culttest1, input$culttest2),]
     
   })
   
 
-
-  
   #test normalità con shapiro test
   output$shapiro1 = renderPrint({
-    req(datamorfo())
+    req(datamorfoyeartest())
     #shp1 = datamorfo()[datamorfo()[[input$catvarttest]] %in% input$culttest1,] %>% dplyr::pull(input$numvarttest) %>% 
      # stats::shapiro.test()
-    shp1 = datamorfo() %>% dplyr::filter(.data[[input$catvarttest]] %in% input$culttest1) %>%
+    shp1 = datamorfoyeartest() %>% dplyr::filter(.data[[input$catvarttest]] %in% input$culttest1) %>%
       dplyr::pull(input$numvarttest) %>%  stats::shapiro.test()
     shp1$data.name = paste(input$culttest1)
     shp1
   })
   
   output$shapiro2 = renderPrint({
-    req(datamorfo())
-    shp2 = datamorfo() %>% dplyr::filter(.data[[input$catvarttest]] %in% input$culttest2) %>%
+    req(datamorfoyeartest())
+    shp2 = datamorfoyeartest() %>% dplyr::filter(.data[[input$catvarttest]] %in% input$culttest2) %>%
       dplyr::pull(input$numvarttest) %>%  stats::shapiro.test()
     shp2$data.name = paste(input$culttest2)
     shp2
@@ -1625,6 +1646,18 @@ app_server <- function( input, output, session ) {
   })
   
   
+  #Boxplot
+  output$boxttest = plotly::renderPlotly({
+    req(datattest())
+    y =  Olv_select_col(data = datattest(), input = input$numvarttest)
+    fill = Olv_select_col(data = datattest(), input = input$catvarttest)
+    
+    temp = ggplot(data = datattest(), 
+                  mapping = aes_string(x = "Codice_azienda", y = paste0("`",colnames(y), "`"), fill = paste0("`",colnames(fill),"`"))) + 
+      geom_boxplot() + geom_jitter(width = 0.3) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
+  })
+  
   #T-test
   output$ttest1 = renderPrint({
     req(datattest())
@@ -1634,15 +1667,60 @@ app_server <- function( input, output, session ) {
       test = stats::t.test(num ~ cat, var.equal = input$selvarequal)
       test$data.name = paste(input$numvarttest, "~", input$catvarttest)
     } else{
-      test = stats::wilcox.test(num ~ cat, var.equal = input$selvarequal)
+      test = stats::wilcox.test(num ~ cat)
       test$data.name = paste(input$numvarttest, "~", input$catvarttest)
     }
     test
   })
   
 
+  ######################### correlation test ____________________________
+  
+  #aggiorna il selectinput "selvarttest" in base ai double presenti
+  observeEvent(datamorfoyeartest(), {
+    updateSelectInput(session, "corrtest1", choices = colnames(dplyr::select(datamorfoyeartest(), where(is.double), -Anno, -starts_with("ID"))))
+    updateSelectInput(session, "corrtest2", choices = colnames(dplyr::select(datamorfoyeartest(), where(is.double), -Anno, -starts_with("ID"))))
+  })
+  
+  #test normalità con shapiro test
+  output$shapirocorr1 = renderPrint({
+    req(datamorfoyeartest())
+    shp1 = datamorfoyeartest() %>% dplyr::pull(input$corrtest1) %>% stats::shapiro.test()
+    shp1$data.name = paste(input$corrtest1)
+    shp1
+  })
+  
+  output$shapirocorr2 = renderPrint({
+    req(datamorfoyeartest())
+    shp2 = datamorfoyeartest() %>% dplyr::pull(input$corrtest2) %>% stats::shapiro.test()
+    shp2$data.name = paste(input$corrtest2)
+    shp2
+  })
 
-
+  #selectcorrtest
+  
+  #T-test
+  output$corrtest = renderPrint({
+    req(datamorfoyeartest())
+    x = datamorfoyeartest() %>% dplyr::pull(input$corrtest1)
+    y = datamorfoyeartest() %>% dplyr::pull(input$corrtest2)
+    
+    test = stats::cor.test(x, y, method = input$selectcorrtest)
+    test$data.name = paste(input$corrtest1, "and", input$corrtest2)
+    test
+  })
+  
+  
+  #scatterplot
+  output$scattcorrtest = plotly::renderPlotly({
+    req(datamorfoyeartest())
+    x = Olv_select_col(data = datamorfoyeartest(), input = input$corrtest1)
+    y =  Olv_select_col(data = datamorfoyeartest(), input = input$corrtest2)
+    temp = ggplot(data = datamorfoyeartest(), 
+                  mapping = aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"))) + 
+      geom_point() + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + geom_smooth(method=lm)
+    plotly::ggplotly(temp) 
+  })
   
   ##### Mappa
 
