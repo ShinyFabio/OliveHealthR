@@ -1722,7 +1722,71 @@ app_server <- function( input, output, session ) {
     plotly::ggplotly(temp) 
   })
   
-  ##### Mappa
+  
+  
+  #ANOVA
+  #aggiorna il selectinput "selvarttest" in base ai double presenti
+  observeEvent(datamorfoyeartest(), {
+    updateSelectInput(session, "anovanum", choices = colnames(dplyr::select(datamorfoyeartest(), where(is.double), -Anno, -starts_with("ID"))))
+    updateSelectInput(session, "anovacat", choices = colnames(dplyr::select(datamorfoyeartest(), where(is.character))))
+    updateSelectInput(session, "anovacat2", choices = colnames(dplyr::select(datamorfoyeartest(), where(is.character))))
+  })
+  
+  
+  
+  #test normalità con shapiro test
+  output$shapiroanova1 = renderPrint({
+    req(datamorfoyeartest())
+    shp1 = datamorfoyeartest() %>% dplyr::pull(input$anovanum) %>% stats::shapiro.test()
+    shp1$data.name = paste(input$anovanum)
+    shp1
+  })
+  
+
+  anova1morfo = reactive({
+    req(datamorfoyeartest())
+    var_numerica = datamorfoyeartest() %>% dplyr::pull(input$anovanum)
+    var_categorica = datamorfoyeartest() %>% dplyr::pull(input$anovacat)
+    if(input$selectanovatest == "Two-way ANOVA"){
+      var_categorica1 = datamorfoyeartest() %>% dplyr::pull(input$anovacat)
+      var_categorica2 = datamorfoyeartest() %>% dplyr::pull(input$anovacat2)
+      stats::aov(var_numerica ~ var_categorica1 * var_categorica2)
+    }else{
+      stats::aov(var_numerica ~ var_categorica)
+    }
+    
+  })
+  
+  output$anova1morfoprint = renderPrint({
+    anova1morfo()
+  })
+  
+
+  #kruskal-wallis
+  output$kruskmorfo = renderPrint({
+    req(datamorfoyeartest())
+    if(input$selectanovatest2 == "Kruskal-Wallis"){
+      var_numerica = datamorfoyeartest() %>% dplyr::pull(input$anovanum)
+      var_categorica = datamorfoyeartest() %>% dplyr::pull(input$anovacat)
+      kru = stats::kruskal.test(var_numerica~var_categorica)
+      kru$data.name = paste(input$anovanum, "by", input$anovacat)
+      kru
+    }else{NULL}
+  })
+  
+  #post hoc tukey o dunn
+  output$posthocmorfo = renderPrint({
+    req(anova1morfo())
+    if(input$selectanovatest2 == "Kruskal-Wallis"){
+      var_numerica = datamorfoyeartest() %>% dplyr::pull(input$anovanum)
+      var_categorica = datamorfoyeartest() %>% dplyr::pull(input$anovacat)
+      FSA::dunnTest(var_numerica~var_categorica, method = "bonferroni")
+    } else{
+      anova1morfo() %>% stats::TukeyHSD() 
+    }
+  })
+  
+  ######### Mappa morfo ##########
 
   #stampa mappa 1
   output$mapmorfo1 = renderTmap({

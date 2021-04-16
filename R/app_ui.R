@@ -840,9 +840,16 @@ app_ui <- function(request) {
                                       ),
                                       
                                       #Test Anova
-                                      conditionalPanel(
-                                        condition = "input.boxmorfotest == 'tabpananovamorfo'",
-                                        
+                                      conditionalPanel(condition = "input.boxmorfotest == 'tabpananovamorfo'",
+                                        awesomeRadio("selectanovatest", "Tipo di test", choices = c("One-way ANOVA", "Two-way ANOVA")),
+                                        conditionalPanel(condition = "input.selectanovatest == 'One-way ANOVA'",
+                                          awesomeRadio("selectanovatest2", "Tipo di test", choices = c("ANOVA", "Kruskal-Wallis")),
+                                        ),
+                                        selectInput("anovanum", "Variabile numerica", choices = "", multiple = FALSE),
+                                        selectInput("anovacat", "Variabile categorica", choices = "", multiple = FALSE),
+                                        conditionalPanel(condition = "input.selectanovatest == 'Two-way ANOVA'",
+                                          selectInput("anovacat2", "Seconda variabile categorica", choices = "", multiple = FALSE)
+                                        )
                                       ),
                                       
 
@@ -1061,6 +1068,7 @@ app_ui <- function(request) {
                                                  
                                           ), #end of tabpanel conf 2 gruppi
                                           
+                                          
                                           tabPanel("Test correlazione", value = "tabpancorrtestmorfo",
                                             br(), 
                                             fluidPage(
@@ -1081,10 +1089,32 @@ app_ui <- function(request) {
                                             ),
                                           ), #end of tabpanel
                                           
+                                          
                                           tabPanel("Confronto tra più gruppi", value = "tabpananovamorfo",
                                             fluidPage(
+                                              fluidRow(
+                                                column(6, box(width = NULL, title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapiroanova1"))),
+                                                conditionalPanel(condition = "input.selectanovatest2 != 'Kruskal-Wallis'",
+                                                  column(6, box(width = NULL, title = strong("Test ANOVA"), status = "primary", verbatimTextOutput("anova1morfoprint")))
+                                                ),
+                                                conditionalPanel(condition = "input.selectanovatest2 == 'Kruskal-Wallis'",
+                                                  column(6, box(width = NULL, title = strong("Test Kruskal-Wallis"), status = "primary", verbatimTextOutput("kruskmorfo")))
+                                                )
+                                              ),
+                                              fluidRow(
+                                                box(width = 12, title = strong("Post-hoc"), status = "primary", 
+                                                    conditionalPanel(
+                                                      condition = "input.selectanovatest2 != 'Kruskal-Wallis'",
+                                                      h4("Tukey HSD")
+                                                    ),
+                                                    conditionalPanel(
+                                                      condition = "input.selectanovatest2 == 'Kruskal-Wallis'",
+                                                      h4("Dunn Test")
+                                                    ),
+                                                    verbatimTextOutput("posthocmorfo"))
+                                              )
                                             )
-                                          )
+                                          ) #end of tabpanel più gruppi
                                       
                                       ) #end of tabset panel
                                     ),
