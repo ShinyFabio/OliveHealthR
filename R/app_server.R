@@ -1653,7 +1653,7 @@ app_server <- function( input, output, session ) {
     fill = Olv_select_col(data = datattest(), input = input$catvarttest)
     
     temp = ggplot(data = datattest(), 
-                  mapping = aes_string(x = "Codice_azienda", y = paste0("`",colnames(y), "`"), fill = paste0("`",colnames(fill),"`"))) + 
+                  mapping = aes_string(x = paste0("`",colnames(fill), "`"), y = paste0("`",colnames(y), "`"), fill = paste0("`",colnames(fill),"`"))) + 
       geom_boxplot() + geom_jitter(width = 0.3) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
     plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
   })
@@ -1724,12 +1724,12 @@ app_server <- function( input, output, session ) {
   
   
   
-  #ANOVA
+  ############################# ANOVA ____________
   #aggiorna il selectinput "selvarttest" in base ai double presenti
   observeEvent(datamorfoyeartest(), {
     updateSelectInput(session, "anovanum", choices = colnames(dplyr::select(datamorfoyeartest(), where(is.double), -Anno, -starts_with("ID"))))
-    updateSelectInput(session, "anovacat", choices = colnames(dplyr::select(datamorfoyeartest(), where(is.character))))
-    updateSelectInput(session, "anovacat2", choices = colnames(dplyr::select(datamorfoyeartest(), where(is.character))))
+    updateSelectInput(session, "anovacat", choices = colnames(dplyr::select(datamorfoyeartest(), where(is.character), -c(Azienda, N_campionamento, starts_with("ID")))), selected = "Cultivar_principale")
+    updateSelectInput(session, "anovacat2", choices = colnames(dplyr::select(datamorfoyeartest(), where(is.character), -c(Azienda, N_campionamento, starts_with("ID")))))
   })
   
   
@@ -1742,6 +1742,19 @@ app_server <- function( input, output, session ) {
     shp1
   })
   
+  
+  #Boxplot anova
+  output$boxanova = plotly::renderPlotly({
+    req(datamorfoyeartest())
+    y =  Olv_select_col(data = datamorfoyeartest(), input = input$anovanum)
+    x = Olv_select_col(data = datamorfoyeartest(), input = input$anovacat)
+    
+    temp = ggplot(data = datamorfoyeartest(), 
+                  mapping = aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"), fill = paste0("`",colnames(x),"`"))) + 
+      geom_boxplot() + geom_jitter(width = 0.3) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(x))))
+  })
+  
 
   anova1morfo = reactive({
     req(datamorfoyeartest())
@@ -1750,41 +1763,92 @@ app_server <- function( input, output, session ) {
     if(input$selectanovatest == "Two-way ANOVA"){
       var_categorica1 = datamorfoyeartest() %>% dplyr::pull(input$anovacat)
       var_categorica2 = datamorfoyeartest() %>% dplyr::pull(input$anovacat2)
-      stats::aov(var_numerica ~ var_categorica1 * var_categorica2)
+      if(input$anova2typemorfo == "Modello additivo"){
+        stats::aov(var_numerica ~ var_categorica1 + var_categorica2)
+      }else{
+       stats::aov(var_numerica ~ var_categorica1 * var_categorica2) 
+      }
     }else{
       stats::aov(var_numerica ~ var_categorica)
     }
-    
   })
   
   output$anova1morfoprint = renderPrint({
-    anova1morfo()
+    summary(anova1morfo())
   })
   
 
+  
+  #kruskal-wallis data
+  kruskmorfodata = reactive({
+    req(datamorfoyeartest())
+    var_numerica = datamorfoyeartest() %>% dplyr::pull(input$anovanum)
+    var_categorica = datamorfoyeartest() %>% dplyr::pull(input$anovacat)
+    kru = stats::kruskal.test(var_numerica ~ var_categorica)
+    kru$data.name = paste(input$anovanum, "by", input$anovacat)
+    kru
+  })
   #kruskal-wallis
   output$kruskmorfo = renderPrint({
-    req(datamorfoyeartest())
-    if(input$selectanovatest2 == "Kruskal-Wallis"){
-      var_numerica = datamorfoyeartest() %>% dplyr::pull(input$anovanum)
-      var_categorica = datamorfoyeartest() %>% dplyr::pull(input$anovacat)
-      kru = stats::kruskal.test(var_numerica~var_categorica)
-      kru$data.name = paste(input$anovanum, "by", input$anovacat)
-      kru
-    }else{NULL}
+    kruskmorfodata()
   })
   
-  #post hoc tukey o dunn
-  output$posthocmorfo = renderPrint({
-    req(anova1morfo())
-    if(input$selectanovatest2 == "Kruskal-Wallis"){
-      var_numerica = datamorfoyeartest() %>% dplyr::pull(input$anovanum)
-      var_categorica = datamorfoyeartest() %>% dplyr::pull(input$anovacat)
-      FSA::dunnTest(var_numerica~var_categorica, method = "bonferroni")
+  #variabile che mi dice se il test è significativo
+  signiftestmorfo = reactive({
+    anovasumm = summary(anova1morfo())
+    if(round(anovasumm[[1]][["Pr(>F)"]][[1]], digits = 4) <= input$pvalanovamorfo ||  kruskmorfodata()$p.value <= input$pvalanovamorfo){
+      "significativo"
     } else{
-      anova1morfo() %>% stats::TukeyHSD() 
+      "non significativo"
     }
   })
+  
+  #output per l'ui
+  output$signiftestmorfoui = reactive({
+    signiftestmorfo()
+  })
+  outputOptions(output, 'signiftestmorfoui', suspendWhenHidden = FALSE)
+  
+  #post hoc tukey o dunn
+  posthocmorfo = reactive({
+    req(anova1morfo())
+    if(signiftestmorfo() == "significativo"){
+     if(input$selectanovatest2 == "Kruskal-Wallis"){
+      var_numerica = datamorfoyeartest() %>% dplyr::pull(input$anovanum)
+      var_categorica = datamorfoyeartest() %>% dplyr::pull(input$anovacat)
+      FSA::dunnTest(var_numerica ~ var_categorica, method = "bh")
+     } else{
+       anova1morfo() %>% stats::TukeyHSD()
+     }
+    } else{
+      NULL
+    }
+  })
+  
+  #mi serve perchè altrimenti quando passo da un file morfo all'altro mi si riduce la dimensione del grafico
+  cdata <- session$clientData
+  
+  #grafico post-hoc
+  output$posthocmorfograph = plotly::renderPlotly({
+    req(posthocmorfo())
+    if(input$selectanovatest2 == "Kruskal-Wallis"){
+      data = as.data.frame(f$res) %>% dplyr::select("Comparison", "P.adj") %>% tibble::as_tibble() %>% 
+        tidyr::separate(Comparison, c("Cultivar_2", "Cultivar_1"), sep = " - " )
+    } else{
+      #trasformo in df, prendo solo la colonna di p.adj, prendo i rownames e trasformo in tibble
+      data = as.data.frame(posthocmorfo()[1:1]) %>% dplyr::select(ends_with("adj")) %>% rownames_to_column("Cultivar_principale") %>% tibble::as_tibble() 
+      #divido in due colonne le cultivar, rinomino la colonna dei p.adj e creo la colonna p_value
+      data = data %>% tidyr::separate(Cultivar_principale, c("Cultivar_1", "Cultivar_2"), sep = "-") %>% dplyr::rename("P.adj" = ends_with("adj"))
+    }
+    
+    data = data %>% dplyr::mutate(p_value = case_when(round(P.adj, digits = 4) > input$pvalanovamorfo ~ "non significativo",
+                                                    round(P.adj, digits = 4) <= input$pvalanovamorfo ~ "significativo"))
+    
+    temp = ggplot2::ggplot(data, aes_string(x= "Cultivar_1", y = "Cultivar_2", fill = "p_value")) + geom_tile(colour = "black") + 
+      theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) 
+    plotly::ggplotly(temp, width = cdata$output_posthocmorfograph_width, height = cdata$output_posthocmorfograph_height)
+  })
+
   
   ######### Mappa morfo ##########
 

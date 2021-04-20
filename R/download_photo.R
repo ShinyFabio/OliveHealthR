@@ -16,7 +16,7 @@
 
 
 
-download_photo = function(url = "https://www.dropbox.com/s/9z6ozynsxg23quj/imagedata.zip?dl=1"){
+download_photo = function(url = "http://bioinfo.na.iac.cnr.it/olivehealth/foto_drupe_foglie_20_21.zip"){
   
   temp = tempfile()
   destpath = base::system.file(package = "OliveHealthR")

@@ -845,10 +845,12 @@ app_ui <- function(request) {
                                         conditionalPanel(condition = "input.selectanovatest == 'One-way ANOVA'",
                                           awesomeRadio("selectanovatest2", "Tipo di test", choices = c("ANOVA", "Kruskal-Wallis")),
                                         ),
+                                        awesomeRadio("pvalanovamorfo", "Livello di significatività", choices = c(0.01, 0.05, 0.1), selected = 0.05),
                                         selectInput("anovanum", "Variabile numerica", choices = "", multiple = FALSE),
                                         selectInput("anovacat", "Variabile categorica", choices = "", multiple = FALSE),
                                         conditionalPanel(condition = "input.selectanovatest == 'Two-way ANOVA'",
-                                          selectInput("anovacat2", "Seconda variabile categorica", choices = "", multiple = FALSE)
+                                          selectInput("anovacat2", "Seconda variabile categorica", choices = "", multiple = FALSE),
+                                          awesomeRadio("anova2typemorfo", "Tipo di ANOVA", choices = c("Modello additivo", "Modello con interazione"))
                                         )
                                       ),
                                       
@@ -1061,7 +1063,7 @@ app_ui <- function(request) {
                                                 ),
                                                 
                                                 fluidRow(
-                                                  column(10, offset = 1, box(width = NULL, title = strong("Grafico"), status = "primary", plotlyOutput("boxttest")))
+                                                  column(8, offset = 2, box(width = NULL, title = strong("Grafico"), status = "primary", plotlyOutput("boxttest")))
                                                 )
                                               ) #end of fluidpage
                                                 
@@ -1093,6 +1095,10 @@ app_ui <- function(request) {
                                           tabPanel("Confronto tra più gruppi", value = "tabpananovamorfo",
                                             fluidPage(
                                               fluidRow(
+                                                column(12, box(width = NULL, title = strong("Boxplot"), status = "primary", plotly::plotlyOutput("boxanova")))
+                                              ),
+                                              
+                                              fluidRow(
                                                 column(6, box(width = NULL, title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapiroanova1"))),
                                                 conditionalPanel(condition = "input.selectanovatest2 != 'Kruskal-Wallis'",
                                                   column(6, box(width = NULL, title = strong("Test ANOVA"), status = "primary", verbatimTextOutput("anova1morfoprint")))
@@ -1101,17 +1107,25 @@ app_ui <- function(request) {
                                                   column(6, box(width = NULL, title = strong("Test Kruskal-Wallis"), status = "primary", verbatimTextOutput("kruskmorfo")))
                                                 )
                                               ),
+                                              
+
                                               fluidRow(
-                                                box(width = 12, title = strong("Post-hoc"), status = "primary", 
-                                                    conditionalPanel(
-                                                      condition = "input.selectanovatest2 != 'Kruskal-Wallis'",
-                                                      h4("Tukey HSD")
+                                                column(10,offset = 1,
+                                                  box(width = NULL, title = strong("Post-hoc"), status = "primary", style = "text-align: justify;  text-align: center;",
+                                                    conditionalPanel(condition = "output.signiftestmorfoui == 'significativo'",
+                                                                     
+                                                      conditionalPanel(condition = "input.selectanovatest2 != 'Kruskal-Wallis'",
+                                                        h4(strong("Tukey HSD"))), 
+                                                      conditionalPanel(condition = "input.selectanovatest2 == 'Kruskal-Wallis'",
+                                                        h4(strong("Dunn Test"))), 
+                                                      plotly::plotlyOutput("posthocmorfograph")
                                                     ),
-                                                    conditionalPanel(
-                                                      condition = "input.selectanovatest2 == 'Kruskal-Wallis'",
-                                                      h4("Dunn Test")
-                                                    ),
-                                                    verbatimTextOutput("posthocmorfo"))
+                                                    conditionalPanel(condition = "output.signiftestmorfoui == 'non significativo'",
+                                                      tags$i(class = "fas fa-exclamation-triangle", style="font-size: 20px; color: rgb(243,156,18)"), 
+                                                      strong(h5("Il p-value è maggiore del livello di significatività impostato. Non ci sono differenze significative tra le variabili.", style = "color: rgb(243,156,18)"))
+                                                    )
+                                                  )
+                                                )
                                               )
                                             )
                                           ) #end of tabpanel più gruppi
