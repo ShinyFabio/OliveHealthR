@@ -1617,7 +1617,7 @@ app_server <- function( input, output, session ) {
   
 
   #test normalità con shapiro test
-  output$shapiro1 = renderPrint({
+  shapiro1data = reactive({
     req(datamorfoyeartest())
     #shp1 = datamorfo()[datamorfo()[[input$catvarttest]] %in% input$culttest1,] %>% dplyr::pull(input$numvarttest) %>% 
      # stats::shapiro.test()
@@ -1627,13 +1627,31 @@ app_server <- function( input, output, session ) {
     shp1
   })
   
-  output$shapiro2 = renderPrint({
+  output$shapiro1 = renderPrint({
+    shapiro1data()
+  })
+  
+  shapiro2data = reactive({
     req(datamorfoyeartest())
     shp2 = datamorfoyeartest() %>% dplyr::filter(.data[[input$catvarttest]] %in% input$culttest2) %>%
       dplyr::pull(input$numvarttest) %>%  stats::shapiro.test()
     shp2$data.name = paste(input$culttest2)
     shp2
   })
+  
+  output$shapiro2 = renderPrint({
+    shapiro2data()
+  })
+  
+
+  #output per l'ui
+  output$shapttestmorfoui = reactive({
+    if(shapiro1data()$p.value < 0.05 && shapiro2data()$p.value < 0.05){
+      "distribuzione normale"
+    }else{"distribuzione non normale"}
+  })
+  outputOptions(output, 'shapttestmorfoui', suspendWhenHidden = FALSE)
+  
   
   #test varianza F-test
   output$vartest1 = renderPrint({
@@ -1735,12 +1753,26 @@ app_server <- function( input, output, session ) {
   
   
   #test normalità con shapiro test
-  output$shapiroanova1 = renderPrint({
+  shapiroanova1data = reactive({
     req(datamorfoyeartest())
     shp1 = datamorfoyeartest() %>% dplyr::pull(input$anovanum) %>% stats::shapiro.test()
     shp1$data.name = paste(input$anovanum)
     shp1
   })
+  
+  output$shapiroanova1 = renderPrint({
+    shapiroanova1data()
+  })
+  
+  
+  #output per l'ui
+  output$shapanovamorfoui = reactive({
+    if(shapiroanova1data()$p.value < 0.05){
+      "distribuzione normale"
+    }else{"distribuzione non normale"}
+  })
+  outputOptions(output, 'shapanovamorfoui', suspendWhenHidden = FALSE)
+  
   
   
   #Boxplot anova

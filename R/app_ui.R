@@ -1050,17 +1050,27 @@ app_ui <- function(request) {
                                                   column(6, box(width = NULL, title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapiro2")))
                                                 ),
                                                 fluidRow(
-                                                  conditionalPanel(condition = "input.culttest1 != input.culttest2",
+                                                  conditionalPanel(condition = "input.culttest1 != input.culttest2 && (output.shapttestmorfoui == 'distribuzione normale' || input.selectttest == 'Wilcoxon-Mann-Whitney')",
                                                     column(6,box(width = NULL, title = strong("Test sulla varianza"), status = "primary", verbatimTextOutput("vartest1"))),
                                                     column(6,box(width = NULL, title = strong("Test statistico"), status = "primary", verbatimTextOutput("ttest1")))
                                                   ),
                                                 conditionalPanel(condition = "input.culttest1 == input.culttest2",
-                                                  column(6, box(width = NULL, title = strong("Test sulla varianza"), status = "primary", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 20px; color: rgb(243,156,18)"), 
+                                                  column(6, box(width = NULL, title = strong("Test sulla varianza"), status = "warning", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 20px; color: rgb(243,156,18)"), 
                                                                 h5(strong("Errore. La variabile dipendente e il fattore esplicativo devono essere diversi.", style = "color: rgb(243,156,18)")), style = "text-align: justify;  text-align: center;")),
-                                                  column(6, box(width = NULL, title = strong("Test statistico"), status = "primary", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 20px; color: rgb(243,156,18)"), 
+                                                  column(6, box(width = NULL, title = strong("Test statistico"), status = "warning", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 20px; color: rgb(243,156,18)"), 
                                                                 h5(strong("Errore. La variabile dipendente e il fattore esplicativo devono essere diversi.", style = "color: rgb(243,156,18)")), style = "text-align: justify;  text-align: center;"))
+                                                  ),
+                                                conditionalPanel(
+                                                  condition = "input.culttest1 != input.culttest2 && output.shapttestmorfoui == 'distribuzione non normale' && input.selectttest == 'T-test'",
+                                                  column(6, offset = 3,
+                                                    box(width = NULL, status = "warning", style = "text-align: justify;  text-align: center;", br(),
+                                                    tags$i(class = "fas fa-exclamation-triangle", style="font-size: 25px; color: rgb(243,156,18)"), 
+                                                    h4(strong("Una o più variabili non seguono una distribuzione normale. Scegli il Wilcoxon-Mann-Whitney test.", style = "color: rgb(243,156,18)")),
+                                                    br()
+                                                    )
                                                   )
-                                                ),
+                                                )
+                                                ), 
                                                 
                                                 fluidRow(
                                                   column(8, offset = 2, box(width = NULL, title = strong("Grafico"), status = "primary", plotlyOutput("boxttest")))
@@ -1078,6 +1088,7 @@ app_ui <- function(request) {
                                                 column(6, box(width = NULL, title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapirocorr1"))),
                                                 column(6, box(width = NULL, title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapirocorr2")))
                                               ),
+                                              
                                               fluidRow(
                                                   column(6,
                                                     conditionalPanel(condition = "input.corrtest1 != input.corrtest2",
@@ -1085,9 +1096,9 @@ app_ui <- function(request) {
                                                     conditionalPanel(condition = "input.corrtest1 == input.corrtest2",
                                                       box(width = NULL, title = strong("Test statistico"), status = "warning", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 20px; color: rgb(243,156,18)"), 
                                                                   h5(strong("Errore. La variabile dipendente e il fattore esplicativo devono essere diversi.", style = "color: rgb(243,156,18)")), style = "text-align: justify;  text-align: center;"))
-                                                  ), 
+                                                  ),
                                                   column(6, box(width = NULL, title = strong("Grafico"), status = "primary", plotly::plotlyOutput("scattcorrtest")))
-                                              ),
+                                              )
                                             ),
                                           ), #end of tabpanel
                                           
@@ -1100,32 +1111,50 @@ app_ui <- function(request) {
                                               
                                               fluidRow(
                                                 column(6, box(width = NULL, title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapiroanova1"))),
+                                                
+                                                conditionalPanel(
+                                                  condition = "(output.shapanovamorfoui == 'distribuzione normale' && input.selectanovatest2 == 'ANOVA') || (output.shapanovamorfoui == 'distribuzione non normale' && input.selectanovatest2 == 'Kruskal-Wallis')",
+                                                
                                                 conditionalPanel(condition = "input.selectanovatest2 != 'Kruskal-Wallis'",
                                                   column(6, box(width = NULL, title = strong("Test ANOVA"), status = "primary", verbatimTextOutput("anova1morfoprint")))
                                                 ),
                                                 conditionalPanel(condition = "input.selectanovatest2 == 'Kruskal-Wallis'",
                                                   column(6, box(width = NULL, title = strong("Test Kruskal-Wallis"), status = "primary", verbatimTextOutput("kruskmorfo")))
                                                 )
+                                               ),
+                                               
+                                               conditionalPanel(condition = "output.shapanovamorfoui == 'distribuzione non normale' && input.selectanovatest2 == 'ANOVA'",
+                                                 column(6, box(width = NULL, status = "warning", style = "text-align: justify;  text-align: center;", br(),
+                                                       tags$i(class = "fas fa-exclamation-triangle", style="font-size: 25px; color: rgb(243,156,18)"), 
+                                                       h4(strong("La variabile numerica non segue la distribuzione normale. Scegli il test Kruskal-Wallis.", style = "color: rgb(243,156,18)")),
+                                                       br(),
+                                                 ))
+                                               )
                                               ),
                                               
-
-                                              fluidRow(
-                                                column(10,offset = 1,
-                                                  box(width = NULL, title = strong("Post-hoc"), status = "primary", style = "text-align: justify;  text-align: center;",
-                                                    conditionalPanel(condition = "output.signiftestmorfoui == 'significativo'",
+                                              
+                                              # selectanovatest2 = c("ANOVA", "Kruskal-Wallis")
+                                              conditionalPanel(
+                                                condition = "(output.shapanovamorfoui == 'distribuzione normale' && input.selectanovatest2 == 'ANOVA') || (output.shapanovamorfoui == 'distribuzione non normale' && input.selectanovatest2 == 'Kruskal-Wallis')",
+                                                
+                                                fluidRow(
+                                                  column(10,offset = 1,
+                                                    box(width = NULL, title = strong("Post-hoc"), status = "primary", style = "text-align: justify;  text-align: center;",
+                                                      conditionalPanel(condition = "output.signiftestmorfoui == 'significativo'",
                                                                      
-                                                      conditionalPanel(condition = "input.selectanovatest2 != 'Kruskal-Wallis'",
-                                                        h4(strong("Tukey HSD"))), 
-                                                      conditionalPanel(condition = "input.selectanovatest2 == 'Kruskal-Wallis'",
-                                                        h4(strong("Dunn Test"))), 
-                                                      plotly::plotlyOutput("posthocmorfograph")
-                                                    ),
-                                                    conditionalPanel(condition = "output.signiftestmorfoui == 'non significativo'",
-                                                      tags$i(class = "fas fa-exclamation-triangle", style="font-size: 20px; color: rgb(243,156,18)"), 
-                                                      strong(h5("Il p-value è maggiore del livello di significatività impostato. Non ci sono differenze significative tra le variabili.", style = "color: rgb(243,156,18)"))
+                                                        conditionalPanel(condition = "input.selectanovatest2 != 'Kruskal-Wallis'",
+                                                          h4(strong("Tukey HSD"))), 
+                                                        conditionalPanel(condition = "input.selectanovatest2 == 'Kruskal-Wallis'",
+                                                          h4(strong("Dunn Test"))), 
+                                                        plotly::plotlyOutput("posthocmorfograph")
+                                                      ),
+                                                      conditionalPanel(condition = "output.signiftestmorfoui == 'non significativo'",
+                                                        tags$i(class = "fas fa-exclamation-triangle", style="font-size: 25px; color: rgb(243,156,18)"), 
+                                                        h4(strong("Il p-value è maggiore del livello di significatività impostato. Non ci sono differenze significative tra le variabili.", style = "color: rgb(243,156,18)"))
+                                                      )
                                                     )
                                                   )
-                                                )
+                                                ) #end of fluidrow post-hoc
                                               )
                                             )
                                           ) #end of tabpanel più gruppi
