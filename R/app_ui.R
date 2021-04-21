@@ -842,6 +842,7 @@ app_ui <- function(request) {
                                       #Test Anova
                                       conditionalPanel(condition = "input.boxmorfotest == 'tabpananovamorfo'",
                                         awesomeRadio("selectanovatest", "Tipo di test", choices = c("One-way ANOVA", "Two-way ANOVA")),
+
                                         conditionalPanel(condition = "input.selectanovatest == 'One-way ANOVA'",
                                           awesomeRadio("selectanovatest2", "Tipo di test", choices = c("ANOVA", "Kruskal-Wallis")),
                                         ),
@@ -1113,9 +1114,9 @@ app_ui <- function(request) {
                                                 column(6, box(width = NULL, title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapiroanova1"))),
                                                 
                                                 conditionalPanel(
-                                                  condition = "(output.shapanovamorfoui == 'distribuzione normale' && input.selectanovatest2 == 'ANOVA') || (output.shapanovamorfoui == 'distribuzione non normale' && input.selectanovatest2 == 'Kruskal-Wallis')",
+                                                  condition = "(output.shapanovamorfoui == 'distribuzione normale' && (input.selectanovatest2 == 'ANOVA' || input.selectanovatest2 == 'Kruskal-Wallis')) || (output.shapanovamorfoui == 'distribuzione non normale' && input.selectanovatest2 == 'Kruskal-Wallis')",
                                                 
-                                                conditionalPanel(condition = "input.selectanovatest2 != 'Kruskal-Wallis'",
+                                                conditionalPanel(condition = "input.selectanovatest2 == 'ANOVA'",
                                                   column(6, box(width = NULL, title = strong("Test ANOVA"), status = "primary", verbatimTextOutput("anova1morfoprint")))
                                                 ),
                                                 conditionalPanel(condition = "input.selectanovatest2 == 'Kruskal-Wallis'",
@@ -1124,10 +1125,10 @@ app_ui <- function(request) {
                                                ),
                                                
                                                conditionalPanel(condition = "output.shapanovamorfoui == 'distribuzione non normale' && input.selectanovatest2 == 'ANOVA'",
-                                                 column(6, box(width = NULL, status = "warning", style = "text-align: justify;  text-align: center;", br(),
+                                                 column(6, box(width = NULL, title = strong("Test ANOVA"), status = "warning", style = "text-align: justify;  text-align: center;", 
                                                        tags$i(class = "fas fa-exclamation-triangle", style="font-size: 25px; color: rgb(243,156,18)"), 
                                                        h4(strong("La variabile numerica non segue la distribuzione normale. Scegli il test Kruskal-Wallis.", style = "color: rgb(243,156,18)")),
-                                                       br(),
+                                                       
                                                  ))
                                                )
                                               ),
@@ -1135,17 +1136,18 @@ app_ui <- function(request) {
                                               
                                               # selectanovatest2 = c("ANOVA", "Kruskal-Wallis")
                                               conditionalPanel(
-                                                condition = "(output.shapanovamorfoui == 'distribuzione normale' && input.selectanovatest2 == 'ANOVA') || (output.shapanovamorfoui == 'distribuzione non normale' && input.selectanovatest2 == 'Kruskal-Wallis')",
+                                                condition = "(output.shapanovamorfoui == 'distribuzione normale' && (input.selectanovatest2 == 'ANOVA' || input.selectanovatest2 == 'Kruskal-Wallis')) || (output.shapanovamorfoui == 'distribuzione non normale' && input.selectanovatest2 == 'Kruskal-Wallis')",
                                                 
                                                 fluidRow(
                                                   column(10,offset = 1,
                                                     box(width = NULL, title = strong("Post-hoc"), status = "primary", style = "text-align: justify;  text-align: center;",
                                                       conditionalPanel(condition = "output.signiftestmorfoui == 'significativo'",
                                                                      
-                                                        conditionalPanel(condition = "input.selectanovatest2 != 'Kruskal-Wallis'",
+                                                        conditionalPanel(condition = "input.selectanovatest2 == 'ANOVA'",
                                                           h4(strong("Tukey HSD"))), 
                                                         conditionalPanel(condition = "input.selectanovatest2 == 'Kruskal-Wallis'",
-                                                          h4(strong("Dunn Test"))), 
+                                                          h4(strong("Dunn Test")),
+                                                        ), 
                                                         plotly::plotlyOutput("posthocmorfograph")
                                                       ),
                                                       conditionalPanel(condition = "output.signiftestmorfoui == 'non significativo'",

@@ -1750,7 +1750,13 @@ app_server <- function( input, output, session ) {
     updateSelectInput(session, "anovacat2", choices = colnames(dplyr::select(datamorfoyeartest(), where(is.character), -c(Azienda, N_campionamento, starts_with("ID")))))
   })
   
-  
+  observe({
+    if(input$selectanovatest == "Two-way ANOVA"){
+      updateAwesomeRadio(session, "selectanovatest2", choices = "ANOVA", selected = "ANOVA")
+    }else{
+      updateAwesomeRadio(session, "selectanovatest2", choices = c("ANOVA", "Kruskal-Wallis"))
+    }
+  })
   
   #test normalità con shapiro test
   shapiroanova1data = reactive({
@@ -1792,7 +1798,7 @@ app_server <- function( input, output, session ) {
     req(datamorfoyeartest())
     var_numerica = datamorfoyeartest() %>% dplyr::pull(input$anovanum)
     var_categorica = datamorfoyeartest() %>% dplyr::pull(input$anovacat)
-    if(input$selectanovatest == "Two-way ANOVA"){
+    if(input$selectanovatest == "Two-way ANOVA" ){
       var_categorica1 = datamorfoyeartest() %>% dplyr::pull(input$anovacat)
       var_categorica2 = datamorfoyeartest() %>% dplyr::pull(input$anovacat2)
       if(input$anova2typemorfo == "Modello additivo"){
@@ -1852,9 +1858,7 @@ app_server <- function( input, output, session ) {
      } else{
        anova1morfo() %>% stats::TukeyHSD()
      }
-    } else{
-      NULL
-    }
+    } 
   })
   
   #mi serve perchè altrimenti quando passo da un file morfo all'altro mi si riduce la dimensione del grafico
@@ -1864,7 +1868,7 @@ app_server <- function( input, output, session ) {
   output$posthocmorfograph = plotly::renderPlotly({
     req(posthocmorfo())
     if(input$selectanovatest2 == "Kruskal-Wallis"){
-      data = as.data.frame(f$res) %>% dplyr::select("Comparison", "P.adj") %>% tibble::as_tibble() %>% 
+      data = as.data.frame(posthocmorfo()$res) %>% dplyr::select("Comparison", "P.adj") %>% tibble::as_tibble() %>% 
         tidyr::separate(Comparison, c("Cultivar_2", "Cultivar_1"), sep = " - " )
     } else{
       #trasformo in df, prendo solo la colonna di p.adj, prendo i rownames e trasformo in tibble
