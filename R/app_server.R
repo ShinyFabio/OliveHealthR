@@ -32,6 +32,7 @@
 #' @importFrom cluster pam clara
 #' @importFrom gridExtra grid.arrange
 #' @importFrom calendR calendR
+#' @importFrom FSA dunnTest
 #' @noRd
 app_server <- function( input, output, session ) {
   # List the first level callModules here
