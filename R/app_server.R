@@ -1881,8 +1881,8 @@ app_server <- function( input, output, session ) {
     data = data %>% dplyr::mutate(p_value = case_when(round(P.adj, digits = 4) > input$pvalanovamorfo ~ "non significativo",
                                                     round(P.adj, digits = 4) <= input$pvalanovamorfo ~ "significativo"))
     
-    temp = ggplot2::ggplot(data, aes_string(x= "Cultivar_1", y = "Cultivar_2", fill = "p_value")) + geom_tile(colour = "black") + 
-      theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) 
+    temp = ggplot2::ggplot(data, aes_string(x = "Cultivar_1", y = "Cultivar_2", fill = "p_value")) + geom_tile(colour = "black") + 
+      theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + scale_fill_manual(values = c("significativo" = "#f8766d", "non significativo" = "#00bfc4"))
     plotly::ggplotly(temp, width = cdata$output_posthocmorfograph_width, height = cdata$output_posthocmorfograph_height)
   })
 
