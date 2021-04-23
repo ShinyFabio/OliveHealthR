@@ -677,8 +677,69 @@ app_ui <- function(request) {
                                 
                               ),
                               
+                              ###### Tab Cromatografia ###########
                               
-                              tabItem(tabName = "ancromasub"),
+                              tabItem(
+                                tabName = "ancromasub",
+                                sidebarLayout(
+                                  sidebarPanel(width = 2,
+                                    
+                                    radioGroupButtons("selfilecromatph", "Seleziona i polifenoli da analizzare", 
+                                      choiceValues = list("foglie", "drupe", "olio"), #, "posa", "sansa"
+                                      choiceNames = list(
+                                        paste(shiny::icon("leaf",  style='font-size:16px;'), HTML("<b style=font-size:16px>&nbsp;Foglie</b>")),
+                                        paste(tags$img(src = "www/olive_icon2.png", height = "22px", width = "22px"), HTML("<b style=font-size:16px>&nbsp;Drupe</b>")),
+                                        paste(tags$img(src = "www/olive_oil.png", height = "22px", width = "22px"), HTML("<b style=font-size:16px>&nbsp;Olio</b>"))
+                                        #paste(tags$img(src = "www/posa.png", height = "22px", width = "22px"), HTML("<b style=font-size:16px>&nbsp;Posa</b>")),
+                                        #paste(tags$img(src = "www/sansa3.png", height = "23px", width = "23px"), HTML("<b style=font-size:16px>&nbsp;Sansa</b>"))
+                                        ),
+                                      direction = "vertical", justified = TRUE, status = "primary"
+                                    ),
+                                    
+                                  ), #end of sidebarpanel
+                                  
+                                  mainPanel(width = 10,
+                                    fluidPage(
+                                      fluidRow(
+                                        column(4, 
+                                          fluidRow(
+                                            column(6,
+                                              box(width = NULL, status = "primary",
+                                                radioGroupButtons(inputId = "campcromatph", label = "Numero campionamento",  choices = c("1" = "1_campionamento", "2" = "2_campionamento"),
+                                                  individual = TRUE, checkIcon = list(yes = tags$i(class = "fa fa-circle", style = "color: steelblue"), no = tags$i(class = "fa fa-circle-o", style = "color: steelblue")))
+                                              )
+                                            ),
+                                            
+                                            column(6, box(width=NULL, status = "primary", 
+                                              selectInput("selyearcromatph", "Seleziona l'anno", choices = "", multiple = FALSE))
+                                            )
+                                          ), 
+                                               
+                                          fluidRow(column(12, box(width=NULL, status = "primary", DT::DTOutput("prov3"))))
+                                        ),
+                                        conditionalPanel(condition = "input.prov3_rows_selected == 0",
+                                          p(strong(h4("Per favore seleziona un'azienda dalla tabella", align = "center")))
+                                        ),
+                                        
+                                        conditionalPanel(condition = "input.prov3_rows_selected != 0",
+                                          column(8, 
+                                            fluidRow(
+                                              box(width=NULL, status = "primary", title = "Cromatogramma", align= "center", uiOutput("phcromat"))
+                                            ),
+                                            fluidRow(
+                                              box(width=NULL, status = "primary", title = "Polifenoli",align = "center", 
+                                              
+                                              #inserire qui i dati numerici dei polifenoli
+                                                      
+                                              )
+                                            )
+                                          )
+                                        )
+                                      ) #end of fluidRow
+                                    )
+                                  ) #end of mainpanel
+                                ) #end of sidebarlayout
+                              ), 
                               
                               
                               

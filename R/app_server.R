@@ -1019,7 +1019,7 @@ app_server <- function( input, output, session ) {
   
 
   
-  #################### MAPPA POLIFENOLI ###########################################
+  #################### Mappa Polifenoli ###########################################
   
 
   observeEvent(datapolif(), {
@@ -1039,7 +1039,7 @@ app_server <- function( input, output, session ) {
   
   
   
-  ############# AGGIUNGERE SECONDA MAPPA POLIFENOLI########
+  ############# SECONDA MAPPA POLIFENOLI
   
 
   observeEvent(datapolif(), {
@@ -1057,6 +1057,35 @@ app_server <- function( input, output, session ) {
     make_tmap(data =  datamap, dotlegend = column)
   })
   
+  
+  ################# CROMATOGRAMMI ################
+  
+  
+  #crea la tabella
+  output$prov3 = DT::renderDT(dplyr::select(data(), c("Azienda", "Codice_azienda")), selection = "single", server = FALSE, rownames = FALSE, options = list("pageLength" = 15))
+  
+  
+  #aggiorna il selectinput "selyearfoto" in base agli anni presenti e seleziono
+  observeEvent(datapolif(), {
+    updateSelectInput(session, "selyearcromatph", choices = row.names(table(dplyr::select(datapolif(), "Anno"))))
+  })
+  
+  
+  #####selezionare la riga dell'azienda cromatogramma drupe
+  selprovcromat = reactive({
+    req(input$prov3_rows_selected)
+    nroww=input$prov3_rows_selected
+    x = dplyr::select(data(), "Codice_azienda")
+    z = paste("www/cromatogrammi", input$selyearcromatph, input$selfilecromatph, input$campcromatph, sep = "/") #selyearfoto e campfoto
+    paste(z, x[nroww,], sep = "/")
+  })
+  
+  
+  #foto cromatogramma drupe
+  output$phcromat = renderUI({
+    croma = paste0(selprovcromat(),".jpg")
+    tags$img(src = croma)
+  })
   
   
   
