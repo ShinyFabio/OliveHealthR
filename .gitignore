@@ -4,3 +4,6 @@
 .httr-oauth
 .DS_Store
 inst/doc
+inst/app/www/cromatogrammi
+inst/app/www/foto_drupe_foglie
+inst/app/www/morfometria

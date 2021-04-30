@@ -778,7 +778,7 @@ app_ui <- function(request) {
                                     #boxplot e barplot
                                     conditionalPanel(
                                       condition = "input.boxmorfograph == 'tabpanboxmorfo' || input.boxmorfograph == 'tabpanbarmorfo'",
-                                      selectInput("selectxmorfobb", "Seleziona la colonna X", choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale"), multiple = FALSE),
+                                      selectInput("selectxmorfobb", "Seleziona la colonna X", choices = "", multiple = FALSE),
                                       selectInput("selectymorfobb", "Seleziona la colonna Y", choices = "", multiple = FALSE),
                                       selectInput("selectfillmorfobb", "Colonna da usare come riempimento", choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale"), multiple = FALSE)
                                     ),
@@ -897,6 +897,8 @@ app_ui <- function(request) {
                                         selectInput("corrtest1", "Variabile dipendente", choices = "", multiple = FALSE),
                                         selectInput("corrtest2", "Fattore esplicativo", choices = "", multiple = FALSE),
                                         awesomeRadio("selectcorrtest", "Tipo di test", choices = c("Pearson" = "pearson", "Kendall" = "kendall", "Spearman" = "spearman")),
+                                        hr(),
+                                        selectInput("corrtestfill", "Colonna riempimento", choices = "", multiple = FALSE)
                                         
                                       ),
                                       
@@ -1028,6 +1030,20 @@ app_ui <- function(request) {
                                       #pca
                                       tabPanel(tagList(shiny::icon("chart-line"), HTML("&nbsp;PCA")), value = "tabpcamor",
                                             tabsetPanel(
+                                              
+                                              tabPanel("Biplot",
+                                                       br(),
+                                                       fluidPage(
+                                                         fluidRow(
+                                                           column(4, box(width = NULL, status = "primary",
+                                                                         selectInput("colbiplotmorfo", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Provincia", "Cultivar_principale", "Areale")))),
+                                                           column(3, box(width = NULL, status = "primary",
+                                                                         awesomeCheckboxGroup(inputId = "shpbiplotmorfo", label = "Aggiungi geometria", choices = "Provincia", inline = TRUE)
+                                                           ))
+                                                           
+                                                         ),
+                                                         fluidRow(plotly::plotlyOutput("biplotmorfo", height = "500px")))
+                                              ),
 
                                               tabPanel("Screeplot",
                                                 br(),
@@ -1037,35 +1053,23 @@ app_ui <- function(request) {
                                               tabPanel("Loadings",
                                                 br(),
                                                 fluidPage(
-                                                fluidRow(column(4, box(width = NULL, status = "primary",
+                                                  fluidRow(column(4, box(width = NULL, status = "primary",
                                                                        uiOutput("sliderpcmorfo")))),
-                                                fluidRow(plotly::plotlyOutput("loadingsmorfo")))),
-
-                                              tabPanel("Biplot",
-                                                br(),
-                                                fluidPage(
-                                                fluidRow(
-                                                  column(4, box(width = NULL, status = "primary",
-                                                                selectInput("colbiplotmorfo", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Provincia", "Cultivar_principale", "Areale")))),
-                                                  column(3, box(width = NULL, status = "primary",
-                                                                awesomeCheckboxGroup(inputId = "shpbiplotmorfo", label = "Aggiungi geometria", choices = "Provincia", inline = TRUE)
-                                                                ))
-                                                  
+                                                  fluidRow(plotly::plotlyOutput("loadingsmorfo")))
                                                 ),
-                                                fluidRow(plotly::plotlyOutput("biplotmorfo", height = "500px")))
-                                              ),
+
 
                                               tabPanel("Plot 3D",
                                                        br(),
                                                        fluidPage(
-                                                       fluidRow(
-                                                         column(4, box(width = NULL, status = "primary",
+                                                         fluidRow(
+                                                           column(4, box(width = NULL, status = "primary",
                                                                        selectInput("col3dmorfo", "Seleziona colonna riempimento", choices = c("Provincia", "Cultivar_principale", "Areale"))))
-                                                       ),
-                                                       fluidRow(plotly::plotlyOutput("pca3dmorfo", height = "500px")))
+                                                         ), 
+                                                         fluidRow(plotly::plotlyOutput("pca3dmorfo", height = "500px")))
                                               )
                                             )
-
+                                            
                                       ), #end of tabpanel PCA
 
                                       

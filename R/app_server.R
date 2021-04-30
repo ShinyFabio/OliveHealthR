@@ -1249,7 +1249,9 @@ app_server <- function( input, output, session ) {
   observeEvent(datamorfo(), {
     #boxplot e barplot
     updateSelectInput(session, "selectymorfobb", choices=colnames(dplyr::select(datamorfo(), where(is.double) & -dplyr::any_of(c("Anno", "ID_oliva")))))
-
+    updateSelectInput(session, "selectxmorfobb", choices=colnames(dplyr::select(datamorfo(), where(is.character) & -dplyr::any_of(c("N_campionamento", "ID_foglia")))))
+    
+    
     #mappa 1
     updateSelectInput(session, "mapxmorfomap1", choices=c(colnames(dplyr::select(datamorfo(), -paste(nfoglieoliveold()))),paste(nfoglieolivenew())))
     updateSelectInput(session, "selyearmorfomap1", choices = row.names(table(dplyr::select(datamorfo(), "Anno"))))
@@ -1270,7 +1272,7 @@ app_server <- function( input, output, session ) {
     x = Olv_select_col(data = datamorfo(), input = input$selectxmorfobb)
     y =  Olv_select_col(data = datamorfo(), input = input$selectymorfobb)
     fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfobb)
-    summ = datamorfo() %>% dplyr::group_by(Codice_azienda, Provincia, Azienda, Cultivar_principale, Anno, N_campionamento) %>% 
+    summ = datamorfo() %>% dplyr::group_by(Codice_azienda, dplyr::across(c(colnames(x), colnames(fill)))) %>%
       dplyr::summarise(across(where(is.double), mean , na.rm = TRUE), n = dplyr::n()) %>%
       dplyr::rename(!! paste(nfoglieolivenew()) := n) %>% dplyr::select(!starts_with("ID"))
     temp = ggplot(data = summ, mapping = aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"), 
@@ -1418,7 +1420,7 @@ app_server <- function( input, output, session ) {
     temp2 = round(stats::cor(temp, use = "na.or.complete"),1)
     par(xpd = TRUE)
     
-    ggcorrplot::ggcorrplot(temp2, hc.order = TRUE, type = "lower", outline.col = "white", show.diag = TRUE) %>% plotly::ggplotly()
+    ggcorrplot::ggcorrplot(temp2, hc.order = TRUE, type = "lower", outline.col = "white", show.diag = FALSE) %>% plotly::ggplotly()
   })
   
   
@@ -1593,15 +1595,14 @@ app_server <- function( input, output, session ) {
   output$plotclustermorfo = renderPlot({
     req(dataclustmorfo())
     if(input$selclustmethod == "Partizionale"){
-    if(input$selclusthmorfo == "K-means"){
-      clust = stats::kmeans(dataclustmorfo(), centers = input$selnumclustmorfo, nstart = 25)
-      
-    } else if (input$selclusthmorfo == "PAM"){
-      clust = cluster::pam(dataclustmorfo(), k = input$selnumclustmorfo)
-    } else {
-      clust = cluster::clara(dataclustmorfo(), k = input$selnumclustmorfo)
-    }
-    factoextra::fviz_cluster(clust, data = dataclustmorfo(), ellipse.type = "convex", palette = "jco", ggtheme = theme_minimal())
+      if(input$selclusthmorfo == "K-means"){
+        clust = stats::kmeans(dataclustmorfo(), centers = input$selnumclustmorfo, nstart = 25)
+      } else if (input$selclusthmorfo == "PAM"){
+        clust = cluster::pam(dataclustmorfo(), k = input$selnumclustmorfo)
+      } else {
+        clust = cluster::clara(dataclustmorfo(), k = input$selnumclustmorfo)
+      }
+      factoextra::fviz_cluster(clust, data = dataclustmorfo(), ellipse.type = "convex", palette = "jco", ggtheme = theme_minimal())
     } else {
       hcluster = factoextra::eclust(dataclustmorfo(), "hclust", hc_method = input$selhclustmeth, k = input$selnumclustmorfo)
       p1 = factoextra::fviz_dend(hcluster, palette = "jco", rect = TRUE, show_labels = FALSE)
@@ -1724,10 +1725,13 @@ app_server <- function( input, output, session ) {
 
   ######################### correlation test ____________________________
   
-  #aggiorna il selectinput "selvarttest" in base ai double presenti
+  #aggiorna il selectinput in base ai double presenti
   observeEvent(datamorfoyeartest(), {
     updateSelectInput(session, "corrtest1", choices = colnames(dplyr::select(datamorfoyeartest(), where(is.double), -Anno, -starts_with("ID"))))
     updateSelectInput(session, "corrtest2", choices = colnames(dplyr::select(datamorfoyeartest(), where(is.double), -Anno, -starts_with("ID"))))
+    
+    updateSelectInput(session, "corrtestfill", choices = colnames(dplyr::select(datamorfoyeartest(), where(is.character))))
+    
   })
   
   #test normalità con shapiro test
@@ -1764,9 +1768,10 @@ app_server <- function( input, output, session ) {
     req(datamorfoyeartest())
     x = Olv_select_col(data = datamorfoyeartest(), input = input$corrtest1)
     y =  Olv_select_col(data = datamorfoyeartest(), input = input$corrtest2)
+    fill = Olv_select_col(data = datamorfoyeartest(), input = input$corrtestfill)
     temp = ggplot(data = datamorfoyeartest(), 
                   mapping = aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"))) + 
-      geom_point() + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + geom_smooth(method=lm)
+      geom_point(mapping = aes_string(color = paste0("`",colnames(fill), "`"))) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + geom_smooth(method=lm)
     plotly::ggplotly(temp) 
   })
   
@@ -1923,8 +1928,8 @@ app_server <- function( input, output, session ) {
     req(datamorfomap())
     
     datamap = datamorfomap() %>% dplyr::filter(Anno == input$selyearmorfomap1) %>% dplyr::filter(N_campionamento == input$nummorfomap1)
-    
-    datam = datamap %>% dplyr::group_by(Codice_azienda, Provincia, Azienda, Cultivar_principale, N_campionamento) %>%
+    column2 = Olv_select_col(data = datamap, input = input$mapxmorfomap1)
+    datam = datamap %>% dplyr::group_by(Codice_azienda, dplyr::across(colnames(column2))) %>%
       dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE), n= dplyr::n()) %>% 
       dplyr::rename(!! paste(nfoglieolivenew()) := n) %>% select(!starts_with("ID"))
     #qui devo mettere per forza provincia, azienda etc perchè summarizzando per valori "double" tutto il resto
@@ -1940,8 +1945,8 @@ app_server <- function( input, output, session ) {
     req(datamorfomap())
     
     datamap = datamorfomap() %>% dplyr::filter(Anno == input$selyearmorfomap2) %>% dplyr::filter(N_campionamento == input$nummorfomap2)
-    
-    datam = datamap %>% dplyr::group_by(Codice_azienda, Provincia, Azienda, Cultivar_principale) %>% 
+    column2 = Olv_select_col(data = datamap, input = input$mapxmorfomap2)
+    datam = datamap %>% dplyr::group_by(Codice_azienda, dplyr::across(colnames(column2))) %>% 
       dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE), n = dplyr::n()) %>% 
       dplyr::rename(!! paste(nfoglieolivenew()) := n) %>% select(!starts_with("ID"))
     datasel = dplyr::select(datam, !starts_with("UTM"))
