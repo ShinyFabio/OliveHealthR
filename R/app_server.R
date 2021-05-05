@@ -1249,8 +1249,10 @@ app_server <- function( input, output, session ) {
   observeEvent(datamorfo(), {
     #boxplot e barplot
     updateSelectInput(session, "selectymorfobb", choices=colnames(dplyr::select(datamorfo(), where(is.double) & -dplyr::any_of(c("Anno", "ID_oliva")))))
-    updateSelectInput(session, "selectxmorfobb", choices=colnames(dplyr::select(datamorfo(), where(is.character) & -dplyr::any_of(c("N_campionamento", "ID_foglia")))))
+
     
+    #grafici IOC
+    updateSelectInput(session, "selectfillmorfoioc", choices = colnames(dplyr::select(datamorfo(), ends_with("(IOC)"))))
     
     #mappa 1
     updateSelectInput(session, "mapxmorfomap1", choices=c(colnames(dplyr::select(datamorfo(), -paste(nfoglieoliveold()))),paste(nfoglieolivenew())))
@@ -1275,7 +1277,8 @@ app_server <- function( input, output, session ) {
     summ = datamorfo() %>% dplyr::group_by(Codice_azienda, dplyr::across(c(colnames(x), colnames(fill)))) %>%
       dplyr::summarise(across(where(is.double), mean , na.rm = TRUE), n = dplyr::n()) %>%
       dplyr::rename(!! paste(nfoglieolivenew()) := n) %>% dplyr::select(!starts_with("ID"))
-    temp = ggplot(data = summ, mapping = aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"), 
+    
+    temp = ggplot(data = summ, mapping = aes_string(x = colnames(x), y = paste0("`",colnames(y), "`"), 
                                                    fill = paste0("`",colnames(fill),"`"))) + geom_col() + 
       ggplot2::stat_summary(data = datamorfo(), geom = "errorbar", fun.data = mean_se) +
       theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
@@ -1288,11 +1291,10 @@ app_server <- function( input, output, session ) {
 
   output$boxmorfo = renderPlotly({
     req(datamorfo())
-    x = Olv_select_col(data = datamorfo(), input = input$selectxmorfobb)
     y =  Olv_select_col(data = datamorfo(), input = input$selectymorfobb)
     fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfobb)
     temp = ggplot(data = datamorfo(), 
-                  mapping = aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"), fill = paste0("`",colnames(fill),"`"))) + 
+                  mapping = aes_string(x = input$selectxmorfobb, y = paste0("`",colnames(y), "`"), fill = paste0("`",colnames(fill),"`"))) + 
     geom_boxplot() + geom_jitter(width = 0.3) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
     plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
   })
@@ -1333,6 +1335,30 @@ app_server <- function( input, output, session ) {
     plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
   })
   
+  
+  
+  # Grafici IOC
+  
+  output$iocmorfo = renderPlotly({
+    req(datamorfo())
+    fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfoioc)
+    if(input$selplotioc == "2"){
+      if(input$iocselfreq == "Frequenza assoluta"){
+        temp = ggplot(data = datamorfo(), mapping = aes_string(x = input$selectxmorfoioc, fill = paste0("`",colnames(fill),"`"))) + 
+          geom_bar(stat = "count") + scale_y_continuous(breaks = scales::pretty_breaks()) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+      } else{
+        temp = ggplot(data = datamorfo(), mapping = aes_string(x = input$selectxmorfoioc, fill = paste0("`",colnames(fill),"`"))) + 
+          geom_bar(stat = "count", position = "fill") + scale_y_continuous(breaks = scales::pretty_breaks()) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+      }
+      plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
+    } else{
+     
+      datamorfo() %>% plotly::plot_ly(labels = ~base::get(colnames(fill)), type= "pie", textposition = 'inside', textinfo = 'label+value',
+                                       marker = list(colors = colors,line = list(color = '#FFFFFF', width = 1)), 
+                                       showlegend = TRUE) %>% plotly::layout(title = paste("Frequenza assoluta di ", colnames(fill)))
+    }
+  })
+    
   
   #### Heatmap morfo ####
   
@@ -1769,13 +1795,59 @@ app_server <- function( input, output, session ) {
     x = Olv_select_col(data = datamorfoyeartest(), input = input$corrtest1)
     y =  Olv_select_col(data = datamorfoyeartest(), input = input$corrtest2)
     fill = Olv_select_col(data = datamorfoyeartest(), input = input$corrtestfill)
-    temp = ggplot(data = datamorfoyeartest(), 
+    
+    #voglio un singol fit (linea della regressione lineare) o più fit?
+    if(input$numfitcorrtest == FALSE){
+      temp = ggplot(data = datamorfoyeartest(), 
                   mapping = aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"))) + 
-      geom_point(mapping = aes_string(color = paste0("`",colnames(fill), "`"))) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + geom_smooth(method=lm)
+      geom_point(mapping = aes_string(color = paste0("`",colnames(fill), "`"))) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + 
+      geom_smooth(method = lm, mapping = aes_string(fill = paste0("`",colnames(fill), "`")))
+    } else{
+    temp = ggplot(data = datamorfoyeartest(),
+                  mapping = aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"))) +
+      geom_point(mapping = aes_string(color = paste0("`",colnames(fill), "`"))) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + 
+      geom_smooth(method=lm)
+
+    }
+   
     plotly::ggplotly(temp) 
   })
   
   
+  
+  ########################## TEST INDIPENDENZA CHI QUADRO E FISHER _________
+  
+  observeEvent(datamorfo(), {
+    #IOC
+    updateSelectInput(session, "chisqtest2", choices = colnames(dplyr::select(datamorfo(), ends_with("(IOC)"))))
+    
+  })
+  
+  #tabella contingenza
+  output$contingtablemorfo = renderTable({
+    req(datamorfo())
+
+    x = datamorfo() %>% dplyr::pull(input$chisqtest1)
+    ioc = datamorfo() %>% dplyr::pull(input$chisqtest2)
+    as.data.frame.matrix(table(x, ioc))
+  }, striped=TRUE, bordered = TRUE,rownames = T)
+  
+  
+  #test indipendenza
+  
+  output$chisqmorfoprint = renderPrint({
+    req(datamorfo())
+    x = datamorfo() %>% dplyr::pull(input$chisqtest1)
+    ioc = datamorfo() %>% dplyr::pull(input$chisqtest2)
+    if(input$selectchisqtest == "Test d'indipendenza Chi-quadro"){
+      stats::chisq.test(table(x, ioc), simulate.p.value = input$simulatechisq)
+    } else{
+      stats::fisher.test(table(x, ioc), simulate.p.value = input$simulatechisq)
+    }
+    
+  })
+  
+
   
   ############################# ANOVA ____________
   #aggiorna il selectinput "selvarttest" in base ai double presenti

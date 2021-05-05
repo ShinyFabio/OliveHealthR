@@ -778,9 +778,10 @@ app_ui <- function(request) {
                                     #boxplot e barplot
                                     conditionalPanel(
                                       condition = "input.boxmorfograph == 'tabpanboxmorfo' || input.boxmorfograph == 'tabpanbarmorfo'",
-                                      selectInput("selectxmorfobb", "Seleziona la colonna X", choices = "", multiple = FALSE),
+                                      selectInput("selectxmorfobb", "Seleziona la colonna X", choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale"), multiple = FALSE),
                                       selectInput("selectymorfobb", "Seleziona la colonna Y", choices = "", multiple = FALSE),
                                       selectInput("selectfillmorfobb", "Colonna da usare come riempimento", choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale"), multiple = FALSE)
+
                                     ),
                                     
                                     #scatterplot
@@ -795,6 +796,18 @@ app_ui <- function(request) {
                                       selectInput("selectymorfoscatt", "Seleziona la colonna Y", choices = "", multiple = FALSE),
                                       selectInput("selectfillmorfoscatt", "Colonna da usare come riempimento", choices = "", multiple = FALSE)
                                      ),
+                                    
+                                    #IOC
+                                    conditionalPanel(
+                                      condition = "input.boxmorfograph == 'tabpaniocmorfo'",
+                                      radioButtons("selplotioc", label = h4("Tipo di grafico"), choices = list("Grafico a torta" = 1, "Grafico a barre" = 2), selected = 2),
+                                      selectInput("selectfillmorfoioc", "Misura IOC", choices = "", multiple = FALSE),
+                                      conditionalPanel(condition = "input.selplotioc == 2",
+                                        selectInput("selectxmorfoioc", "Seleziona la colonna X", choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale"), multiple = FALSE),
+                                        awesomeRadio("iocselfreq", "Frequenza", choices = c("Frequenza assoluta", "Frequenza relativa"))
+                                      )
+                                     
+                                    ),
                                     
                                     # HEATMAP
                                     conditionalPanel(
@@ -898,7 +911,18 @@ app_ui <- function(request) {
                                         selectInput("corrtest2", "Fattore esplicativo", choices = "", multiple = FALSE),
                                         awesomeRadio("selectcorrtest", "Tipo di test", choices = c("Pearson" = "pearson", "Kendall" = "kendall", "Spearman" = "spearman")),
                                         hr(),
-                                        selectInput("corrtestfill", "Colonna riempimento", choices = "", multiple = FALSE)
+                                        selectInput("corrtestfill", "Colonna riempimento", choices = "", multiple = FALSE),
+                                        awesomeCheckbox("numfitcorrtest", "Singolo fit", value = TRUE)
+                                        
+                                      ),
+                                      
+                                      #Test indipendenza
+                                      conditionalPanel(
+                                        condition = "input.boxmorfotest == 'tabpanchisqtestmorfo'",
+                                        selectInput("chisqtest1", "Variabile descrittiva", choices = c("Codice_azienda", "Provincia", "Cultivar_principale"), multiple = FALSE, selected = "Cultivar_principale"),
+                                        selectInput("chisqtest2", "Variabile categorica", choices = "", multiple = FALSE),
+                                        awesomeRadio("selectchisqtest", "Tipo di test", choices = c("Test esatto di Fisher", "Test d'indipendenza Chi-quadro")),
+                                        awesomeCheckbox("simulatechisq", "Simulazione p-value (Monte Carlo)", value = TRUE)
                                         
                                       ),
                                       
@@ -1014,6 +1038,10 @@ app_ui <- function(request) {
                                           
                                           tabPanel("Scatter plot", value = "tabpanscattmorfo",
                                                    plotly::plotlyOutput("scattmorfo")
+                                                   ),
+                                          
+                                          tabPanel("IOC", value = "tabpaniocmorfo",
+                                                   plotly::plotlyOutput("iocmorfo")
                                                    ),
                                           
                                           tabPanel("Heatmap", value = "tabpanheatmorfo",
@@ -1147,6 +1175,8 @@ app_ui <- function(request) {
                                           ), #end of tabpanel conf 2 gruppi
                                           
                                           
+                                          
+                                          # Test di correlazione
                                           tabPanel("Test correlazione", value = "tabpancorrtestmorfo",
                                             br(), 
                                             fluidPage(
@@ -1169,6 +1199,18 @@ app_ui <- function(request) {
                                           ), #end of tabpanel
                                           
                                           
+                                          tabPanel("Test d'indipendenza", value = "tabpanchisqtestmorfo",
+                                            br(),
+                                            fluidPage(
+                                              fluidRow(
+                                                column(5, box(width = NULL, title = strong("Tabella di contingenza"), status = "primary", tableOutput("contingtablemorfo"))),
+                                                column(6, box(width = NULL, title = strong("Test"), status = "primary", verbatimTextOutput("chisqmorfoprint")))
+                                              )
+                                            )
+                                            ),
+                                          
+                                          
+                                          # Confronto tra più gruppi
                                           tabPanel("Confronto tra più gruppi", value = "tabpananovamorfo",
                                             fluidPage(
                                               fluidRow(
