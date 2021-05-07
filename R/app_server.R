@@ -22,6 +22,7 @@
 #' @importFrom readr read_delim locale parse_factor
 #' @importFrom ComplexHeatmap Heatmap HeatmapAnnotation draw
 #' @importFrom ggcorrplot ggcorrplot
+#' @importFrom corrplot corrplot
 #' @importFrom DT renderDT datatable formatRound
 #' @importFrom grDevices rainbow hcl.colors
 #' @importFrom dendextend color_branches
@@ -1253,6 +1254,7 @@ app_server <- function( input, output, session ) {
     
     #grafici IOC
     updateSelectInput(session, "selectfillmorfoioc", choices = colnames(dplyr::select(datamorfo(), ends_with("(IOC)"))))
+    updateSelectInput(session, "selectfillmorfoioc2", choices = colnames(dplyr::select(datamorfo(), ends_with("(IOC)"))))
     
     #mappa 1
     updateSelectInput(session, "mapxmorfomap1", choices=c(colnames(dplyr::select(datamorfo(), -paste(nfoglieoliveold()))),paste(nfoglieolivenew())))
@@ -1359,6 +1361,27 @@ app_server <- function( input, output, session ) {
     }
   })
     
+  
+  #secondo grafico IOC
+  output$iocmorfo2 = renderPlotly({
+    req(datamorfo())
+    fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfoioc2)
+    if(input$selplotioc2 == "2"){
+      if(input$iocselfreq2 == "Frequenza assoluta"){
+        temp = ggplot(data = datamorfo(), mapping = aes_string(x = input$selectxmorfoioc2, fill = paste0("`",colnames(fill),"`"))) + 
+          geom_bar(stat = "count") + scale_y_continuous(breaks = scales::pretty_breaks()) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+      } else{
+        temp = ggplot(data = datamorfo(), mapping = aes_string(x = input$selectxmorfoioc2, fill = paste0("`",colnames(fill),"`"))) + 
+          geom_bar(stat = "count", position = "fill") + scale_y_continuous(breaks = scales::pretty_breaks()) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+      }
+      plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
+    } else{
+      
+      datamorfo() %>% plotly::plot_ly(labels = ~base::get(colnames(fill)), type= "pie", textposition = 'inside', textinfo = 'label+value',
+                                      marker = list(colors = colors,line = list(color = '#FFFFFF', width = 1)), 
+                                      showlegend = TRUE) %>% plotly::layout(title = paste("Frequenza assoluta di ", colnames(fill)))
+    }
+  })
   
   #### Heatmap morfo ####
   
@@ -1572,7 +1595,7 @@ app_server <- function( input, output, session ) {
     updateSelectInput(session, "selyearclustmorfo", choices = row.names(table(dplyr::select(datamorfo(), Anno))))
     updateSelectInput(session, "numclustmorfo", choices = row.names(table(dplyr::select(datamorfo(), "N_campionamento"))))
   })
-
+  
   dataclustmorfo = reactive({
     req(datamorfo())
     #filtro in base agli anni presenti e scelgo anche il num campionamento
@@ -1801,12 +1824,12 @@ app_server <- function( input, output, session ) {
       temp = ggplot(data = datamorfoyeartest(), 
                   mapping = aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"))) + 
       geom_point(mapping = aes_string(color = paste0("`",colnames(fill), "`"))) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + 
-      geom_smooth(method = lm, mapping = aes_string(fill = paste0("`",colnames(fill), "`")))
+      geom_smooth(method = lm, mapping = aes_string(fill = paste0("`",colnames(fill), "`")), se = input$selsecorrtest)
     } else{
     temp = ggplot(data = datamorfoyeartest(),
                   mapping = aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"))) +
       geom_point(mapping = aes_string(color = paste0("`",colnames(fill), "`"))) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + 
-      geom_smooth(method=lm)
+      geom_smooth(method=lm, se = input$selsecorrtest)
 
     }
    
@@ -1821,31 +1844,74 @@ app_server <- function( input, output, session ) {
     #IOC
     updateSelectInput(session, "chisqtest2", choices = colnames(dplyr::select(datamorfo(), ends_with("(IOC)"))))
     
+    #filtro
+    updateSelectInput(session, "chisqtestfilt", choices = row.names(table(dplyr::select(datamorfo(), "Cultivar_principale"))))
+  })
+  
+  #data filtered or not
+  datachisqmorfo = reactive({
+    if(!is.null(input$chisqtestfilt)){
+      datamorfo() %>% dplyr::filter(Cultivar_principale %in% input$chisqtestfilt)
+    }else{
+      datamorfo()
+    }
   })
   
   #tabella contingenza
   output$contingtablemorfo = renderTable({
-    req(datamorfo())
+    req(datachisqmorfo())
 
-    x = datamorfo() %>% dplyr::pull(input$chisqtest1)
-    ioc = datamorfo() %>% dplyr::pull(input$chisqtest2)
+    x = datachisqmorfo() %>% dplyr::pull(input$chisqtest1)
+    ioc = datachisqmorfo() %>% dplyr::pull(input$chisqtest2)
     as.data.frame.matrix(table(x, ioc))
   }, striped=TRUE, bordered = TRUE,rownames = T)
   
   
   #test indipendenza
   
-  output$chisqmorfoprint = renderPrint({
-    req(datamorfo())
-    x = datamorfo() %>% dplyr::pull(input$chisqtest1)
-    ioc = datamorfo() %>% dplyr::pull(input$chisqtest2)
+  chisqmorfo = reactive({
+    req(datachisqmorfo())
+    x = datachisqmorfo() %>% dplyr::pull(input$chisqtest1)
+    ioc = datachisqmorfo() %>% dplyr::pull(input$chisqtest2)
     if(input$selectchisqtest == "Test d'indipendenza Chi-quadro"){
       stats::chisq.test(table(x, ioc), simulate.p.value = input$simulatechisq)
     } else{
       stats::fisher.test(table(x, ioc), simulate.p.value = input$simulatechisq)
     }
-    
   })
+  
+
+  
+  #output per l'ui
+  signiftestchisqmorfo = reactive({
+    if(chisqmorfo()$p.value < input$pvalchisqmorfo){
+      "significativo"
+    } else{
+      "non significativo"
+    }
+  })
+  
+
+  output$signiftestchisqmorfoui = reactive({
+    signiftestchisqmorfo()
+  })
+  outputOptions(output, 'signiftestchisqmorfoui', suspendWhenHidden = FALSE)
+  
+
+  output$chisqmorfoprint = renderPrint({
+    chisqmorfo()
+    })
+
+  
+  #corrplot dei residui di chi-square
+
+  output$plotresidchisq = renderPlot({
+    if(input$selectchisqtest == "Test d'indipendenza Chi-quadro"){
+      corrplot::corrplot(t(chisqmorfo()$residuals), is.cor = FALSE)
+    }
+
+  })
+
   
 
   
