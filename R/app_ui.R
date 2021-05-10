@@ -1157,7 +1157,7 @@ app_ui <- function(request) {
                                           tabsetPanel(id = "boxmorfotest",
                                             
                                             # Test di correlazione
-                                            tabPanel("Test correlazione", value = "tabpancorrtestmorfo",
+                                            tabPanel("Test di correlazione", value = "tabpancorrtestmorfo",
                                                      br(), 
                                                      fluidPage(
                                                        fluidRow(
@@ -1298,7 +1298,7 @@ app_ui <- function(request) {
                                                     conditionalPanel(condition = "output.signiftestchisqmorfoui == 'non significativo'",
                                                       box(width = NULL, status = "warning", style = "text-align: justify;  text-align: center;",
                                                         tags$i(class = "fas fa-exclamation-triangle", style="font-size: 25px; color: rgb(243,156,18)"), 
-                                                        h4(strong("Il p-value è maggiore del livello di significatività impostato. Non ci sono differenze significative tra le variabili.", style = "color: rgb(243,156,18)"))
+                                                        h4(strong("Il p-value è maggiore del livello di significatività impostato. Le variabili sono indipendenti.", style = "color: rgb(243,156,18)"))
                                                       )
                                                     )
                                                   ) #end of fluidrow grafico

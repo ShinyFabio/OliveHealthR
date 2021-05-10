@@ -875,12 +875,14 @@ app_server <- function( input, output, session ) {
       add_annot = input$selectannot)
   })
   
+  #dtheatsorted ha le seguenti colonne: Codice_azienda, N_campionamento, Anno, i vari polifenoli individuali 
+  #e input$selectannot (che può essere Provincia, Areale o Cultivar_principale)
 
   
-  #creo slider per colonna
+  #creo slider per colonna. Qui praticamente rimango solo con i vari polifenoli individuali
   output$sliderheatcol <- renderUI({
     req(dtheatsorted())
-    len = dtheatsorted() %>% dplyr::select(-Anno, - N_campionamento,  -Codice_azienda, -Cultivar_principale, -input$selectannot)
+    len = dtheatsorted() %>% dplyr::select(where(is.double), -Anno)
     sliderInput("slidercolheat", "Numero cluster:", min=2, max=length(len), value=2, step = 1)
   })
   
@@ -1418,11 +1420,11 @@ app_server <- function( input, output, session ) {
       add_annot = input$selectannotmorfo)
   })
 
-  
+
   #creo slider per colonna
   output$sliderheatcolmorfo <- renderUI({
     req(dtheatsortedmorfo())
-    len = dtheatsortedmorfo() %>% dplyr::select(-Anno, - N_campionamento,  -Codice_azienda, -input$selectannotmorfo)
+    len = dtheatsortedmorfo() %>% dplyr::select(where(is.double), -Anno)
     sliderInput("slidercolheatmorfo", "Numero cluster:", min=2, max=length(len), value=2, step = 1)
   })
   
@@ -1907,7 +1909,7 @@ app_server <- function( input, output, session ) {
 
   output$plotresidchisq = renderPlot({
     if(input$selectchisqtest == "Test d'indipendenza Chi-quadro"){
-      corrplot::corrplot(t(chisqmorfo()$residuals), is.cor = FALSE)
+      corrplot::corrplot(t(chisqmorfo()$residuals), is.cor = FALSE, mar = c(1, 1, 1, 1), tl.srt = 45, title = "Corrplot dei residui",cl.lim = c(-max(abs(chisqmorfo()$residuals)), max(abs(chisqmorfo()$residuals))))
     }
 
   })
