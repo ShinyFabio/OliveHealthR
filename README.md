@@ -17,15 +17,15 @@ polyphenols) on samples such as leaves, drupes and oil.
 
 ## Installation
 
-1.  Install devtools if not already installed.
+1.  Install Rtools from this link:
+
+    <https://cran.r-project.org/bin/windows/Rtools>
+
+2.  Install devtools if not already installed.
 
 ``` r
 install.packages("devtools")
 ```
-
-2.  Install Rtools from this link:
-
-    <https://cran.r-project.org/bin/windows/Rtools>
 
 3.  Now you can install OliveHealthR from
     [GitHub](https://github.com/ShinyFabio/OliveHealthR2) with:
@@ -36,7 +36,14 @@ devtools::install_github("ShinyFabio/OliveHealthR2")
 
 Be sure that your R version is at least 4.0.0.
 
-### Ubuntu (tested on 18.04)
+4.  When installation is completed, launch this code if you want to
+    download all the olives photos (this step is optional):
+
+``` r
+OliveHealthR::download_photo()
+```
+
+### Ubuntu (tested on 18.04) (TESTED ON AN OLIVEHEALTHR OLD VERSION. IT MAY NOT WORK.)
 
 If your OS is Ubuntu you have to perform some additional steps. In
 command line run these lines:
