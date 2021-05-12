@@ -17,27 +17,37 @@ polyphenols) on samples such as leaves, drupes and oil.
 
 ## Installation
 
-1.  Install Rtools from this link:
+1.  Install R. For Windows use this link:
+
+    <https://cran.r-project.org/bin/windows/base/>
+
+2.  Install RStudio from this link. Choose your OS.
+
+    <https://www.rstudio.com/products/rstudio/download/#download>
+
+3.  Install Rtools from this link:
 
     <https://cran.r-project.org/bin/windows/Rtools>
 
-2.  Install devtools if not already installed.
+4.  Install devtools if not already installed. Click yes if R asks you
+    something.
 
 ``` r
 install.packages("devtools")
 ```
 
-3.  Now you can install OliveHealthR from
+5.  Now you can install OliveHealthR from
     [GitHub](https://github.com/ShinyFabio/OliveHealthR2) with:
 
 ``` r
 devtools::install_github("ShinyFabio/OliveHealthR2")
 ```
 
-Be sure that your R version is at least 4.0.0.
+Be sure that your R version is at least 4.0.0. Click yes if R asks you
+something.
 
-4.  When installation is completed, launch this code if you want to
-    download all the olives photos (this step is optional):
+6.  When installation is completed, you can launch this code if you want
+    to download all the olives photos (this step is optional):
 
 ``` r
 OliveHealthR::download_photo()
@@ -61,8 +71,8 @@ sudo apt install libgdal-dev                                                  #f
 To launch the app use this code
 
 ``` r
-library(OliveHealthR2)
-OliveHealthR2::run_OliveHealthR()
+library(OliveHealthR)
+OliveHealthR::run_OliveHealthR()
 ```
 
 ## How to use
