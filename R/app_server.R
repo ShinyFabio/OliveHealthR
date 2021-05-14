@@ -24,7 +24,7 @@
 #' @importFrom ggcorrplot ggcorrplot
 #' @importFrom corrplot corrplot
 #' @importFrom DT renderDT datatable formatRound
-#' @importFrom grDevices rainbow hcl.colors
+#' @importFrom grDevices rainbow hcl.colors colorRampPalette
 #' @importFrom dendextend color_branches
 #' @importFrom sf st_as_sf st_crs
 #' @importFrom VIM aggr
@@ -1909,7 +1909,8 @@ app_server <- function( input, output, session ) {
 
   output$plotresidchisq = renderPlot({
     if(input$selectchisqtest == "Test d'indipendenza Chi-quadro"){
-      corrplot::corrplot(t(chisqmorfo()$residuals), is.cor = FALSE, mar = c(1, 1, 1, 1), tl.srt = 45, title = "Corrplot dei residui",cl.lim = c(-max(abs(chisqmorfo()$residuals)), max(abs(chisqmorfo()$residuals))))
+      col2 = grDevices::colorRampPalette(c("#053061", "#2166AC", "#4393C3", "#92C5DE", "#D1E5F0", "#FFFFFF", "#FDDBC7", "#F4A582", "#D6604D", "#B2182B", "#67001F"))
+      corrplot::corrplot(t(chisqmorfo()$residuals), is.cor = FALSE, mar = c(1, 1, 1, 1), col = col2(200), tl.srt = 45, title = "Corrplot dei residui",cl.lim = c(-max(abs(chisqmorfo()$residuals)), max(abs(chisqmorfo()$residuals))))
     }
 
   })
