@@ -92,6 +92,8 @@ app_ui <- function(request) {
                                                      
                                           #scegli se header
                                           checkboxInput("header", "Header", TRUE),
+                                          radioButtons("decim", "Decimale", choices = c("Virgola" = ",", "Punto" = "."), selected = ","),
+                                          
                                           hr(), 
                                                      
                                           #carica il file
@@ -109,7 +111,8 @@ app_ui <- function(request) {
                                             
                                             conditionalPanel(condition = "input.tipofile == 1",
                                               fileInput("drupeinput", "Campionamento drupe e foglie (.csv)"),
-                                              fileInput("olioinput", "Campionamento olio (.csv)")),
+                                              fileInput("olioinput", "Campionamento olio (.csv)"),
+                                              fileInput("assagginput", "Assaggi sensoriali (.csv)")),
                                                                       
                                             conditionalPanel(condition = "input.tipofile == 2",
                                               fileInput("polifinput", "File dati polifenoli (.csv)")),
@@ -311,8 +314,7 @@ app_ui <- function(request) {
                                     )
                                   ),
                                   
-                                  tabPanel(
-                                    tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")),
+                                  tabPanel(tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")),
                                     sidebarLayout(
                                       sidebarPanel(
                                         width = 3,
@@ -350,7 +352,95 @@ app_ui <- function(request) {
                                 )
                               ),
                               
-                              tabItem(tabName = "assaggsub"),
+                              
+                              ###### Assaggi sensoriali ########
+                              tabItem(tabName = "assaggsub",
+                                tabBox(width = 12,
+                                  #tabella
+                                  tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")),
+                                    fluidPage(
+                                      box(width = NULL, status = "primary", style = "overflow-x: scroll;",
+                                          DT::DTOutput("tableassaggischeda")),
+                                    )
+                                  ),
+                                  
+                                  #grafici
+                                  tabPanel(tagList(shiny::icon("chart-bar"), HTML("&nbsp;Grafici")),
+                                    sidebarLayout(
+                                      sidebarPanel(width = 2,
+                                        selectInput("selectxassaggi", "Seleziona la colonna X", choices = "", multiple = FALSE),
+                                        selectInput("selectyassaggi", "Seleziona la colonna Y", choices = "", multiple = FALSE)
+                                      ),
+                                      
+                                      mainPanel(width = 10,
+                                        tabsetPanel(
+                                          tabPanel("Scatter plot",
+                                            br(),
+                                            box(width=NULL, status = "primary",
+                                              fluidRow(
+                                                column(3, selectInput("selyearscatterassagg", "Seleziona l'anno", choices = "", multiple = FALSE)),
+                                                column(3, selectInput("selectfillassaggi", "Colonna da usare come riempimento", choices = "", multiple = FALSE))
+                                              )),
+                                            
+                                            plotly::plotlyOutput("scattplotassagg")
+                                          ), 
+                                                  
+                                          
+                                          tabPanel("Barplot",
+                                            fluidRow(
+                                              column(width = 10, br(), box(width=NULL, status = "primary", plotly::plotlyOutput("barplotassagg")))
+                                            )
+                                          )#end of tabpanel
+                                        )#end of tabset
+                                      )#end of mainpanel
+                                    )#end of sidebarlayout
+                                  ), 
+                                  
+                                  
+                                  #spiderplot
+                                  tabPanel(tagList(shiny::icon("images"), HTML("&nbsp;Allegati")),
+                                    
+                                    fluidPage(
+                                      fluidRow(
+                                        column(width=4, 
+                                               fluidRow(
+                                                 column(6, box(width=NULL, status = "primary", 
+                                                               selectInput("selyearallegatph", "Seleziona l'anno", choices = "", multiple = FALSE))
+                                                 )
+                                               ),
+                                               
+                                               fluidRow(column(12, box(width=NULL, status = "primary", DT::DTOutput("dtallegato"))))
+                                        ),
+                                        
+                                        column(width = 8,
+                                               
+                                               column(width = 6, offset = 3,
+                                                      conditionalPanel(condition = "input.dtallegato_rows_selected == 0",
+                                                                       box(width = NULL, background = "yellow", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 27px"), h4(strong("Seleziona un'azienda dalla tabella"), style = "color: white"), style = "text-align: justify;  text-align: center;"),
+                                                      ),
+                                                      
+                                                      # conditionalPanel(condition = "input.dtfotomorfo_rows_selected != 0 && input.campfotomorfo == '1_campionamento'",
+                                                      #                  box(width = NULL, background = "yellow", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 27px"), h4(strong("Nessuna foto in archivio. I dati sulla morfometria riguardano solamente il secondo campionamento."), style = "color: white"), style = "text-align: justify;  text-align: center;"),
+                                                      # )
+                                               ),
+                                               
+                                               conditionalPanel(condition = "input.dtallegato_rows_selected != 0",
+                                                 uiOutput("phallegati")
+                                               )
+                                        )
+                                      ) #end of fluidRow
+                                    )
+                                    
+                                  ),
+                                  
+                                  #mappa
+                                  tabPanel(
+                                    tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")),
+                                    
+                                    )
+                                  
+                                )
+                              ), 
                               
                               
                               

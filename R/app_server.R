@@ -85,7 +85,7 @@ app_server <- function( input, output, session ) {
   #carica il file drupe come .csv
   drupe = reactive({
     req(input$drupeinput)
-    x = readr::read_delim(input$drupeinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(date_format = "%d/%m/%Y", encoding = "windows-1252"))
+    x = readr::read_delim(input$drupeinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, date_format = "%d/%m/%Y", encoding = "windows-1252"))
     x$Indice_maturazione = factor(x$Indice_maturazione, levels = c(0:8), ordered = TRUE)
     x$Fase_fenologica = factor(x$Fase_fenologica, levels = c(51, 55, 59, 61, 65, 69, 71, 75, 79, 81, 85, 89), ordered = TRUE)
     return(x)
@@ -94,18 +94,26 @@ app_server <- function( input, output, session ) {
   #file olio
   oliocamp = reactive({
     req(input$olioinput)
-    x = readr::read_delim(input$olioinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(date_format = "%d/%m/%Y", encoding = "windows-1252"))
+    x = readr::read_delim(input$olioinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, date_format = "%d/%m/%Y", encoding = "windows-1252"))
     x$Olio = factor(x$Olio, levels = c("SI", "NO"), ordered = FALSE)
     x$Sansa  = factor(x$Sansa, levels = c("SI", "NO"), ordered = FALSE)
     return(x)
   })
   
   
+  #file assaggi
+  assaggi = reactive({
+    req(input$assagginput)
+    x = readr::read_delim(input$assagginput$datapath, na = "", delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, date_format = "%d/%m/%Y", encoding = "windows-1252"))
+    x$Anno = as.character(x$Anno)
+    return(x)
+  })
+  
   
   #carico il file polifenoli come .csv
   polif = reactive({
     req(input$polifinput)
-    x = readr::read_delim(input$polifinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = ",", encoding = "windows-1252"))
+    x = readr::read_delim(input$polifinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
     x$Presenza_larve = readr::parse_factor(as.character(x$Presenza_larve), levels = c("0","1","2"), ordered = TRUE)
     return(x)
   })
@@ -116,25 +124,25 @@ app_server <- function( input, output, session ) {
   #file foglie
   morfoleaf = reactive({
     req(input$morfoleafinput)
-    readr::read_delim(input$morfoleafinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = ",", encoding = "windows-1252"))
+    readr::read_delim(input$morfoleafinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
   })
   
   #file morfometria drupe
   morfodrupe = reactive({
     req(input$morfodrupeinput)
-    readr::read_delim(input$morfodrupeinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = ",", encoding = "windows-1252"))
+    readr::read_delim(input$morfodrupeinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
   })
   
   #file morfometria endocarpo
   morfoendo = reactive({
     req(input$morfoendoinput)
-    readr::read_delim(input$morfoendoinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = ",", encoding = "windows-1252"))
+    readr::read_delim(input$morfoendoinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
   })
   
   #file rapporti drupe endocarpo
   morforatio = reactive({
     req(input$morforatioinput)
-    readr::read_delim(input$morforatioinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = ",", encoding = "windows-1252"))
+    readr::read_delim(input$morforatioinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
   })
   
   
@@ -567,6 +575,131 @@ app_server <- function( input, output, session ) {
     
   })
 
+  
+  
+  ########### Assaggi sensoriali ############
+  
+  ########## Tabella
+  output$tableassaggischeda = renderDT({
+    req(assaggi())
+    assaggi()
+  }, options = list("pageLength" = 15))
+  
+  
+  ########## Grafici
+  
+  #fare il join di data con assaggi (questo lo uso solo per gli allegati)
+  assaggidataph = reactive({
+    req(assaggi())
+    x = dplyr::inner_join(x = data(), y = assaggi(), by = "Codice_azienda")
+  })
+  
+  
+  #e unisco codice_azienda con tipo olio
+  assaggidatamap = reactive({
+    req(assaggidataph())
+    assaggidataph() %>% tidyr::unite(col = Codice_azienda, Codice_azienda, Tipo_olio, sep = "_", remove = TRUE)
+  })
+  
+  #rimuovere colonne coordinate
+  dataassaggi = reactive({
+    req(assaggidatamap())
+    assaggidatamap() %>% dplyr::select(!starts_with("UTM"))
+  })
+  
+  
+  observeEvent(dataassaggi(), {
+    updateSelectInput(session, "selectxassaggi", choices=colnames(dataassaggi()))
+    updateSelectInput(session, "selectyassaggi", choices=colnames(dplyr::select(dataassaggi(), where(is.double))))
+    updateSelectInput(session, "selectfillassaggi", choices=colnames(dataassaggi()))
+  })
+  
+  
+  #selezionare colonna X da plottare
+  xcolassaggi = reactive({
+    Olv_select_col(data = dataassaggi(), input = input$selectxassaggi)
+  })  
+  
+  ###selezionare colonna Y da plottare
+  ycolassaggi = reactive({
+    Olv_select_col(data = dataassaggi(), input = input$selectyassaggi)
+  }) 
+  
+  ###selezionare colonna per il riempimento
+  fillcolassaggi = reactive({
+    Olv_select_col(data = dataassaggi(), input = input$selectfillassaggi)
+  }) 
+  
+
+  
+  #aggiorna il selectinput, "selyearscatter" in base agli anni presenti e filtra
+  observeEvent(dataassaggi(), {
+    updateSelectInput(session, "selyearscatterassagg", choices = row.names(table(dplyr::select(dataassaggi(), "Anno"))))
+  })
+  dtassaggiyear = reactive({
+    dataassaggi() %>% dplyr::filter(Anno == input$selyearscatterassagg)
+  })
+  
+  
+
+  ###grafico classico (scatter plot)   
+  output$scattplotassagg = plotly::renderPlotly({
+    temp = ggplot(data = dtassaggiyear()) +
+      geom_count(mapping = aes_string(x = colnames(xcolassaggi()), y = colnames(ycolassaggi()), colour = colnames(fillcolassaggi()))) +
+      scale_size_continuous(range = c(3,9)) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fillcolassaggi()))))
+  })
+  
+  
+  
+  ## Barplot 
+
+  ###grafico a barre
+  output$barplotassagg = plotly::renderPlotly({
+    temp2=ggplot(data=dtassaggiyear()) + 
+      geom_col(mapping = aes_string(x = colnames(xcolassaggi()), y = colnames(ycolassaggi()), fill = "Anno"), position = position_dodge2(preserve = "single")) + 
+      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank())
+    plotly::ggplotly(temp2)
+  })
+  
+  
+  
+  ############## Foto Allegati
+  #crea la tabella
+  output$dtallegato = DT::renderDT(dplyr::select(assaggidataph(), c("Azienda", "Codice_azienda", "Tipo_olio")), selection = "single", server = FALSE, rownames = FALSE, options = list("pageLength" = 15))
+  
+  
+  #aggiorna il selectinput "selyearfoto" in base agli anni presenti e seleziono
+  observeEvent(assaggidataph(), {
+    updateSelectInput(session, "selyearallegatph", choices = row.names(table(dplyr::select(dataassaggi(), "Anno"))))
+  })
+  
+  
+  #####selezionare la riga dell'azienda cromatogramma drupe
+  selprovallegat = reactive({
+    req(input$dtallegato_rows_selected)
+    nroww=input$dtallegato_rows_selected
+    x = dplyr::select(dataassaggi(), "Codice_azienda")
+    z = paste("www/assaggi", input$selyearallegatph, sep = "/") #selyearfoto e campfoto
+    paste(z, x[nroww,], sep = "/")
+  })
+  
+
+  #foto cromatogramma allegat
+  output$phallegati = renderUI({
+    allegato = paste0(selprovallegat(),".jpg")
+    
+    ######### ATTENZIONE!!!! PER FAR FUNZIONARE IL PACCHETTO DEVO TOGLIERE "inst" QUI SOTTO 
+    existpath = paste(base::system.file(package = "OliveHealthR"), "inst/app", allegato, sep = "/")
+    
+    if(file.exists(existpath)){
+      tags$img(src = allegato, width = "75%", height = "75%")
+    }else{
+      box(width = NULL, background = "yellow", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 27px"), h4(strong("Nessuna foto in archivio."), style = "color: white"), style = "text-align: justify;  text-align: center;")
+    }
+      
+  })
+  
   
   
   ##########################POLIFENOLI##############################################
