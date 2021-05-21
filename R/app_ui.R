@@ -106,7 +106,7 @@ app_ui <- function(request) {
                                             fileInput("desc1", "File descrizione .csv (opzionale)"),
                                             hr(),
                                             tags$h3("File con dati"), 
-                                            radioButtons("tipofile", label = "Tipo di file", choices = list("Schede campionamento" = 1, "Polifenoli" = 2, "Morfometria" = 3),
+                                            radioButtons("tipofile", label = "Tipo di file", choices = list("Schede campionamento" = 1, "Polifenoli" = 2, "Morfometria" = 3, "Polifenoli LCxLC" = 4),
                                                          selected = 1),
                                             
                                             conditionalPanel(condition = "input.tipofile == 1",
@@ -122,6 +122,14 @@ app_ui <- function(request) {
                                               fileInput("morfodrupeinput", "File morfometria drupe 3D (.csv)"),
                                               fileInput("morfoendoinput", "File morfometria endocarpo 3D (.csv)"),
                                               fileInput("morforatioinput", "File rapporti drupe endocarpo (.csv)")
+                                            ),
+                                            
+                                            conditionalPanel(condition = "input.tipofile == 4",
+                                              fileInput("lcpoldrupeinput", "File polifenoli drupe LCxLC (.csv)"),
+                                              fileInput("lcpolfoglieinput", "File polifenoli foglie LCxLC (.csv)"),
+                                              fileInput("lcpololiinput", "File polifenoli oli LCxLC (.csv)"),
+                                              fileInput("lcpolposainput", "File polifenoli posa LCxLC (.csv)"),
+                                              fileInput("lcpolsansainput", "File polifenoli sansa LCxLC (.csv)")
                                             )
                                           )
                                         ),
@@ -265,40 +273,11 @@ app_ui <- function(request) {
                                   
                                   
                                   tabPanel(tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")),
-                                    #qui la mappa
-                                    sidebarLayout(
-                                      sidebarPanel(width = 3,
-                                        div(actionButton("update2map", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:160%'), align = "center"),
-                                        conditionalPanel(condition = "input.update2map != 0",
-                                          hr(),
-                                          selectInput("select2map", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
-                                          selectInput("selyear", "Seleziona l'anno", choices = "", multiple = FALSE),
-                                          selectInput("num", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE),
-                                          br(),
-                                          hr(),
-                                          br(),
-                                          div(actionButton("addmap2", label = "Aggiungi seconda mappa"), align = "center"),
-                                        ),
-                                        conditionalPanel(condition = ("input.addmap2 != 0"),
-                                          br(),
-                                          selectInput("select3map", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
-                                          selectInput("selyear2", "Seleziona l'anno", choices = "", multiple = FALSE),  
-                                          selectInput("num2map", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)
-                                        )
-                                      ),
-                                      
-                                      mainPanel(
-                                        conditionalPanel(condition = ("input.update2map != 0"),
-                                          tmapOutput("map2")),
-                                        conditionalPanel(condition = ("input.addmap2 != 0"),
-                                          hr(),
-                                          tmapOutput("map3"))
-                                      )
-                                    ) #end of sidebarlayout
+                                    mod_render_map_ui("modulo_mappa_datadrupe")
                                   ) #end of tabpanel mappa drupe foglie
                                   
+                                  
                                 ) #end of tabBox
-                                
                               ), #end of tabitem drupe foglie
                               
                               
@@ -434,14 +413,16 @@ app_ui <- function(request) {
                                   ),
                                   
                                   #mappa
-                                  tabPanel(
-                                    tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")),
-                                    
-                                    )
+                                  tabPanel(tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")),
+                                    mod_render_map_ui("modulo_mappa_assaggi")
+                                    ) #end of tabpanel mappa assaggi
                                   
-                                )
-                              ), 
+
+                                ) #end of tabBox
+                              ), #end of tabItem
                               
+                            
+                          
                               
                               
                               ##### TabItem Analisi Laboratorio #####
@@ -730,41 +711,9 @@ app_ui <- function(request) {
                               ), #end of tabitem "inpolsub"
                               
                               
-                              
+                              #mappa polifenoli
                               tabItem(tabName = "mappapoli",
-                                sidebarLayout(
-                                  sidebarPanel(width = 3,
-                                    div(actionButton("upmappol", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:160%'), align = "center"),
-                                    conditionalPanel(condition = "input.upmappol != 0",
-                                      hr(),
-                                      selectInput("mapxpol", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
-                                      selectInput("selyearpol", "Seleziona l'anno", choices = "", multiple = FALSE),
-                                      selectInput("numpol", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE),
-                                      br(),
-                                      hr(),
-                                      br(), 
-                                      div(actionButton("addmappol2", label = "Aggiungi seconda mappa"), align = "center"),
-                                    ),
-                                    conditionalPanel(condition = "input.addmappol2 != 0",
-                                      br(), 
-                                      selectInput("mapxpol2", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
-                                      selectInput("selyearpol2", "Seleziona l'anno", choices = "", multiple = FALSE),  
-                                      selectInput("numpol2", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)
-                                    )
-                                  ), 
-                                  
-                                  mainPanel(width = 9,
-                                    conditionalPanel(condition = ("input.upmappol != 0"),
-                                      tmapOutput("mappol")
-                                    ),
-
-                                    conditionalPanel(condition = ("input.addmappol2 != 0"),
-                                      hr(),
-                                      tmapOutput("mappol2")
-                                    )
-                                  )
-                                ) #end of sidebarlayout
-                                
+                                mod_render_map_ui("modulo_mappa_polifenoli")
                               ),
                               
                               ###### Tab Cromatografia ###########

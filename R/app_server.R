@@ -249,6 +249,12 @@ app_server <- function( input, output, session ) {
   })
   
 
+  #crea la colonna anno
+  dtdrupanno = reactive({
+    req(datadrupemap())
+    datadrupemap() %>% dplyr::mutate(Anno = lubridate::year(Data_campionamento)) #cambiato datadrupe
+  })
+  
   ##########  Grafici datadrupe  #########
   
 
@@ -341,55 +347,8 @@ app_server <- function( input, output, session ) {
   
   #### mappa (datadrupe)##
   
-  observeEvent(drupe(), {
-    updateSelectInput(session, "select2map", choices = colnames(drupe()))
-  })
-  
-  #crea la colonna anno 
-  dtdrupanno = reactive({
-    req(datadrupemap())
-    datadrupemap() %>% dplyr::mutate(Anno = lubridate::year(Data_campionamento)) #cambiato datadrupe
-  })
-  
-  
-  #aggiorna il selectinput "selyear" in base agli anni presenti
-  observeEvent(dtdrupanno(), {
-    updateSelectInput(session, "selyear", choices = row.names(table(dplyr::select(dtdrupanno(), "Anno"))))
-  })
-  
 
-  #stampo mappa2
-  output$map2 = renderTmap({
-    req(dtdrupanno())
-    #filtra in base all'anno selezionato e il campionamento
-    datamap = dtdrupanno() %>% dplyr::filter(Anno == input$selyear) %>% dplyr::filter(N_campionamento == input$num)
-    colmap = Olv_select_col(data = drupe(), input = input$select2map)
-    make_tmap(data = datamap, dotlegend = colmap)
-  })
-  
-  
-  #### seconda mappa
-  
-
-  observeEvent(drupe(), {
-    updateSelectInput(session, "select3map", choices = colnames(drupe()))
-  })
-  
-  #aggiorna il selectinput "selyear" in base agli anni presenti
-  observeEvent(dtdrupanno(), {
-    updateSelectInput(session, "selyear2", choices = row.names(table(dplyr::select(dtdrupanno(), "Anno"))))
-  })
-  
-
-  output$map3 = renderTmap({
-    req(drupe())
-    req(dtdrupanno())
-    datamap = dtdrupanno() %>% dplyr::filter(Anno == input$selyear2) %>% dplyr::filter(N_campionamento == input$num2map)
-    colmap = Olv_select_col(data = drupe(), input = input$select3map)
-    make_tmap(data = datamap, dotlegend = colmap)
-  })
-  
-
+  mod_render_map_server("modulo_mappa_datadrupe", datamap = datadrupemap, datacol = drupe, extract_year = TRUE, extract_ncamp = TRUE)
   
   
   ################# Foto campioni ############
@@ -699,6 +658,13 @@ app_server <- function( input, output, session ) {
     }
       
   })
+  
+  
+  
+  ######## mappa allegati
+  
+  mod_render_map_server("modulo_mappa_assaggi", datamap = assaggidatamap, datacol = assaggi, extract_year = FALSE, extract_ncamp = FALSE)
+  
   
   
   
@@ -1158,41 +1124,10 @@ app_server <- function( input, output, session ) {
   #################### Mappa Polifenoli ###########################################
   
 
-  observeEvent(datapolif(), {
-    updateSelectInput(session, "mapxpol", choices = colnames(datapolif()))
-    updateSelectInput(session, "selyearpol", choices = row.names(table(dplyr::select(datapolif(), "Anno"))))
-  })
+  mod_render_map_server("modulo_mappa_polifenoli", datamap = datapolifmap, datacol = datapolif, extract_year = FALSE, extract_ncamp = TRUE)
   
-  
-  #stampa mappa
-  output$mappol = renderTmap({
-    req(datapolif())
-    req(datapolifmap())
-    column = Olv_select_col(data = datapolif(), input = input$mapxpol)
-    datamap = datapolifmap() %>% dplyr::filter(Anno == input$selyearpol) %>% dplyr::filter(N_campionamento == input$numpol)
-    make_tmap(data = datamap, dotlegend = column)
-  })
-  
-  
-  
-  ############# SECONDA MAPPA POLIFENOLI
   
 
-  observeEvent(datapolif(), {
-    updateSelectInput(session, "mapxpol2", choices = colnames(datapolif()))
-    updateSelectInput(session, "selyearpol2", choices = row.names(table(dplyr::select(datapolif(), "Anno"))))
-  })
-  
-  
-  #stampa mappa 2
-  output$mappol2 = renderTmap({
-    req(datapolif())
-    req(datapolifmap())
-    datamap = datapolifmap() %>% dplyr::filter(Anno == input$selyearpol2) %>% dplyr::filter(N_campionamento == input$numpol2)
-    column = Olv_select_col(data = datapolif(), input = input$mapxpol2)
-    make_tmap(data =  datamap, dotlegend = column)
-  })
-  
   
   ################# CROMATOGRAMMI ################
   

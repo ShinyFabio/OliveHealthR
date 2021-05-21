@@ -1,6 +1,6 @@
 #' Render an UI for NA values.
 #'
-#' @description A shiny Module that render an UI interface with informations about NA. It renders a valuebox with the count of NA and if there are any NA, it renders also a button that if clicked will show a VIM plot.
+#' @description A shiny Module that renders an UI interface with informations about NA. It renders a valuebox with the count of NA and if there are any NA, it renders also a button that if clicked will show a VIM plot.
 #'
 #'
 #'
@@ -94,6 +94,6 @@ mod_render_NAbox_server <- function(id, data){
 # mod_render_NAbox_ui("nome-modulo")
     
 ## To be copied in the server
-# Module_Server("nome-modulo", data = nadatamorfo) #non usare () in data o non funziona
+# mod_render_NAbox_server("nome-modulo", data = nadatamorfo) #non usare () in data o non funziona
 
  
