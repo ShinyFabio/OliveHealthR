@@ -13,7 +13,7 @@
 #' @import ggfortify
 #' @import htmltools
 #' @import scales
-#' @importFrom tidyr unite starts_with separate
+#' @importFrom tidyr unite starts_with separate gather
 #' @importFrom tibble column_to_rownames rownames_to_column
 #' @importFrom grid gpar
 #' @importFrom sp SpatialPointsDataFrame CRS
@@ -568,33 +568,21 @@ app_server <- function( input, output, session ) {
   
   
   observeEvent(dataassaggi(), {
-    updateSelectInput(session, "selectxassaggi", choices=colnames(dataassaggi()))
-    updateSelectInput(session, "selectyassaggi", choices=colnames(dplyr::select(dataassaggi(), where(is.double))))
+    #scatterplot
+    updateSelectInput(session, "selectxassaggiscatt", choices=colnames(dataassaggi()))
+    updateSelectInput(session, "selectyassaggiscatt", choices=colnames(dplyr::select(dataassaggi(), where(is.double))))
     updateSelectInput(session, "selectfillassaggi", choices=colnames(dataassaggi()))
+    updateSelectInput(session, "selyearscatterassagg", choices = row.names(table(dplyr::select(dataassaggi(), "Anno"))))
+    
+    #barplot
+    updateSelectInput(session, "selectxassaggibar", choices=colnames(dataassaggi()))
+    updateSelectInput(session, "selectyassaggibar", choices=colnames(dplyr::select(dataassaggi(), where(is.double))))
+    updateSelectInput(session, "selyearbarassagg", choices = row.names(table(dplyr::select(dataassaggi(), "Anno"))))
   })
   
-  
-  #selezionare colonna X da plottare
-  xcolassaggi = reactive({
-    Olv_select_col(data = dataassaggi(), input = input$selectxassaggi)
-  })  
-  
-  ###selezionare colonna Y da plottare
-  ycolassaggi = reactive({
-    Olv_select_col(data = dataassaggi(), input = input$selectyassaggi)
-  }) 
-  
-  ###selezionare colonna per il riempimento
-  fillcolassaggi = reactive({
-    Olv_select_col(data = dataassaggi(), input = input$selectfillassaggi)
-  }) 
   
 
   
-  #aggiorna il selectinput, "selyearscatter" in base agli anni presenti e filtra
-  observeEvent(dataassaggi(), {
-    updateSelectInput(session, "selyearscatterassagg", choices = row.names(table(dplyr::select(dataassaggi(), "Anno"))))
-  })
   dtassaggiyear = reactive({
     dataassaggi() %>% dplyr::filter(Anno == input$selyearscatterassagg)
   })
@@ -603,10 +591,13 @@ app_server <- function( input, output, session ) {
 
   ###grafico classico (scatter plot)   
   output$scattplotassagg = plotly::renderPlotly({
+    x = Olv_select_col(data = dataassaggi(), input = input$selectxassaggiscatt)
+    y = Olv_select_col(data = dataassaggi(), input = input$selectyassaggiscatt)
+    fill = Olv_select_col(data = dataassaggi(), input = input$selectfillassaggi)
     temp = ggplot(data = dtassaggiyear()) +
-      geom_count(mapping = aes_string(x = colnames(xcolassaggi()), y = colnames(ycolassaggi()), colour = colnames(fillcolassaggi()))) +
+      geom_count(mapping = aes_string(x = colnames(x), y = colnames(y), colour = colnames(fill))) +
       scale_size_continuous(range = c(3,9)) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
-    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fillcolassaggi()))))
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
   })
   
   
@@ -615,9 +606,23 @@ app_server <- function( input, output, session ) {
 
   ###grafico a barre
   output$barplotassagg = plotly::renderPlotly({
-    temp2=ggplot(data=dtassaggiyear()) + 
-      geom_col(mapping = aes_string(x = colnames(xcolassaggi()), y = colnames(ycolassaggi()), fill = "Anno"), position = position_dodge2(preserve = "single")) + 
-      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank())
+    x = Olv_select_col(data = dataassaggi(), input = input$selectxassaggibar)
+    y = Olv_select_col(data = dataassaggi(), input = input$selectyassaggibar)
+    # QUI HO CAMBIATO dataassaggiyear() con dataassaggi(). Bisogna fare un test con altri anni.
+    if(input$barplotassaggi == "Affiancato"){
+     temp2=ggplot(data=dataassaggi()) + 
+      geom_col(mapping = aes_string(x = colnames(x), y = colnames(y), fill = "Anno"), position = position_dodge2(preserve = "single")) + 
+      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) 
+    }else{
+      #assaggiuniti = dtassaggiyear() %>% dplyr::select(-starts_with("CVR"), -Presenza_difetti)
+      assaggiyear = dataassaggi() %>% dplyr::filter(Anno == input$selyearbarassagg)
+      gatherassaggi = tidyr::gather(assaggiyear, Mediana_misura, Valore, c(Mediana_fruttato, Mediana_amaro, Mediana_piccante), factor_key=TRUE)
+      temp2 = ggplot(data = gatherassaggi) + 
+        geom_col(mapping = aes_string(x = "Codice_azienda", y = "Valore", fill = "Mediana_misura"), position = position_stack() ) + 
+        theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank())
+      
+    }
+    
     plotly::ggplotly(temp2)
   })
   
@@ -692,6 +697,12 @@ app_server <- function( input, output, session ) {
   #data polifenoli totali
   datapoltot= reactive({
     dplyr::select(datapolif(), c("Codice_azienda", "Azienda", "Anno", "N_campionamento", "Cultivar_principale", "Polifenoli_tot", "Presenza_larve"))
+  })
+  
+  #data polifenoli totali per mappa
+  datapoltotmap = reactive({
+    dplyr::select(datapolifmap(), c("Codice_azienda", "Azienda", "Anno", "N_campionamento", "Cultivar_principale", "Polifenoli_tot", "Presenza_larve", "UTM_33T_E", "UTM_33T_N"))
+    
   })
   
   #aggiusto i data eliminando tutte le colonne non numeriche
@@ -826,6 +837,50 @@ app_server <- function( input, output, session ) {
   
   
   
+  #################### Mappa Polifenoli totali ###########################################
+  
+  
+  #mod_render_map_server("modulo_mappa_polifenoli", datamap = datapolifmap / datapolindmap, datacol =  datapolind, extract_year = FALSE, extract_ncamp = TRUE)
+  
+  
+  
+  
+  observeEvent(datapoltot(), {
+    updateSelectInput(session, "colpoltotmap1", choices = colnames(datapoltot()))
+    updateSelectInput(session, "colpoltotmap2", choices = colnames(datapoltot()))
+  })
+  
+  
+  
+  
+  #aggiorna il selectinput "selyear" in base agli anni presenti
+  observeEvent(datapoltotmap(), {
+    updateSelectInput(session, "yearpoltotmap1", choices = row.names(table(dplyr::select(datapoltotmap(), Anno))))
+    updateSelectInput(session, "yearpoltotmap2", choices = row.names(table(dplyr::select(datapoltotmap(), Anno))))
+    
+  })
+  
+  
+  #stampo mappa
+  output$poltotmap1 = renderTmap({
+    req(datapoltotmap())
+    #filtra in base all'anno selezionato e il campionamento
+    datamap = datapoltotmap() %>% dplyr::filter(Anno == input$yearpoltotmap1) %>% dplyr::filter(N_campionamento == input$numpoltotmap1)
+    colmap = Olv_select_col(data = datapoltot(), input = input$colpoltotmap1)
+    make_tmap(data = datamap, dotlegend = colmap)
+  })
+  
+  
+  #### seconda mappa
+  
+  output$poltotmap2 = renderTmap({
+    req(datapoltotmap())
+    #filtra in base all'anno selezionato e il campionamento
+    datamap = datapoltotmap() %>% dplyr::filter(Anno == input$yearpoltotmap2) %>% dplyr::filter(N_campionamento == input$numpoltotmap2)
+    colmap = Olv_select_col(data = datapoltot(), input = input$colpoltotmap2)
+    make_tmap(data = datamap, dotlegend = colmap)
+  })
+  
   
   ##################################POLIFENOLI INDIVIDUALI##############################
   
@@ -833,6 +888,11 @@ app_server <- function( input, output, session ) {
   #data polifenoli individuali
   datapolind = reactive({
     dplyr::select(datapolif(), !c("Polifenoli_tot", "Presenza_larve"))
+  })
+  
+  #data polifenoli individuali per mappa
+  datapolindmap = reactive({
+    dplyr::select(datapolifmap(), !c("Polifenoli_tot", "Presenza_larve"))
   })
   
   #aggiusto i data eliminando tutte le colonne non numeriche
@@ -1121,12 +1181,49 @@ app_server <- function( input, output, session ) {
   
 
   
-  #################### Mappa Polifenoli ###########################################
+  #################### Mappa Polifenoli individuali ###########################################
   
 
-  mod_render_map_server("modulo_mappa_polifenoli", datamap = datapolifmap, datacol = datapolif, extract_year = FALSE, extract_ncamp = TRUE)
+  #mod_render_map_server("modulo_mappa_polifenoli", datamap = datapolifmap / datapolindmap, datacol =  datapolind, extract_year = FALSE, extract_ncamp = TRUE)
   
   
+  
+  
+  observeEvent(datapolind(), {
+    updateSelectInput(session, "colpolindmap1", choices = colnames(datapolind()))
+    updateSelectInput(session, "colpolindmap2", choices = colnames(datapolind()))
+  })
+  
+  
+
+  
+  #aggiorna il selectinput "selyear" in base agli anni presenti
+  observeEvent(datapolindmap(), {
+    updateSelectInput(session, "yearpolindmap1", choices = row.names(table(dplyr::select(datapolindmap(), Anno))))
+    updateSelectInput(session, "yearpolindmap2", choices = row.names(table(dplyr::select(datapolindmap(), Anno))))
+    
+  })
+  
+  
+  #stampo mappa
+  output$polindmap1 = renderTmap({
+    req(datapolindmap())
+    #filtra in base all'anno selezionato e il campionamento
+    datamap = datapolindmap() %>% dplyr::filter(Anno == input$yearpolindmap1) %>% dplyr::filter(N_campionamento == input$numpolindmap1)
+    colmap = Olv_select_col(data = datapolind(), input = input$colpolindmap1)
+    make_tmap(data = datamap, dotlegend = colmap)
+  })
+  
+  
+  #### seconda mappa
+  
+  output$polindmap2 = renderTmap({
+    req(datapolindmap())
+    #filtra in base all'anno selezionato e il campionamento
+    datamap = datapolindmap() %>% dplyr::filter(Anno == input$yearpolindmap2) %>% dplyr::filter(N_campionamento == input$numpolindmap2)
+    colmap = Olv_select_col(data = datapolind(), input = input$colpolindmap2)
+    make_tmap(data = datamap, dotlegend = colmap)
+  })
 
   
   ################# CROMATOGRAMMI ################
@@ -1147,7 +1244,7 @@ app_server <- function( input, output, session ) {
     req(input$prov3_rows_selected)
     nroww=input$prov3_rows_selected
     x = dplyr::select(data(), "Codice_azienda")
-    z = paste("www/cromatogrammi", input$selyearcromatph, input$selfilecromatph, input$campcromatph, sep = "/") #selyearfoto e campfoto
+    z = paste("www/cromatogrammi", input$selyearcromatph, input$selfilepolind, input$campcromatph, sep = "/") #selyearfoto e campfoto
     paste(z, x[nroww,], sep = "/")
   })
   
