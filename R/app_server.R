@@ -119,6 +119,33 @@ app_server <- function( input, output, session ) {
   })
   
   
+  ##### Carico i file polifenoli LCxLC ___________
+  lcpolfoglie = reactive({
+    req(input$lcpolfoglieinput)
+    readr::read_delim(input$lcpolfoglieinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
+  })
+  
+  lcpoldrupe = reactive({
+    req(input$lcpoldrupeinput)
+    readr::read_delim(input$lcpoldrupeinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
+  })
+  
+  lcpololio = reactive({
+    req(input$lcpololioinput)
+    readr::read_delim(input$lcpololioinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
+  })
+  
+  lcpolposa = reactive({
+    req(input$lcpolposainput)
+    readr::read_delim(input$lcpolposainput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
+  })
+  
+  lcpolsansa = reactive({
+    req(input$lcpolsansainput)
+    readr::read_delim(input$lcpolsansainput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
+  })
+  
+  
   #carico i file morfometria
   
   #file foglie
@@ -1226,7 +1253,7 @@ app_server <- function( input, output, session ) {
   })
 
   
-  ################# CROMATOGRAMMI ################
+  ################# Cromatogrammi polifenoli individuali ################
   
   
   #crea la tabella
@@ -1256,6 +1283,43 @@ app_server <- function( input, output, session ) {
   })
   
   
+  
+  #################  POLIFENOLI LCxLC ###################
+  
+  #scegli i dati in base alla selezione
+  
+  datalcxlc = reactive({
+    req(data())
+    if(input$selfilepollc == "foglie"){
+      tempdata = lcpolfoglie()
+    } else if(input$selfilepollc == "drupe"){
+      tempdata = lcpoldrupe()
+    } else if(input$selfilepollc == "olio"){
+      tempdata = lcpololio()
+    } else if (input$selfilepollc == "posa"){
+      tempdata = lcpolposa()
+    }else{
+      tempdata = lcpolsansa()
+    }
+    
+    #z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale)
+    #x = dplyr::left_join(x = z, y = tempdata, by = "Codice_azienda")
+    #return(x)
+    return(tempdata)
+  })
+  
+  output$dtlcxlc = renderDT({
+    req(datalcxlc())
+    if(input$dttypelc == "Wide"){
+      datalcxlc()
+    }else{
+      #trasformo in long e sposto codice_azienda in prima posizione
+      temp = datalcxlc() %>% tidyr::gather(Codice_azienda, Valore, colnames(datalcxlc()[,6:length(datalcxlc())])) %>% dplyr::select(Codice_azienda, everything())
+      #ora divido il codice azienda nelle varie info (codice e Id). Id verrà poi diviso in n_camp rem ("_") e Estrazione
+      temp = temp %>% tidyr::separate(Codice_azienda, into = c("Codice_azienda", "ID"), sep = 5)
+      temp %>% tidyr::separate(ID, into = c("rem", "N_campionamento", "Estrazione"), sep = "_") %>% dplyr::select(-rem)
+    }
+  })
   
   #################### MORFOMETRIA ############################
   

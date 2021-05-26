@@ -126,7 +126,7 @@ app_ui <- function(request) {
                                             conditionalPanel(condition = "input.tipofile == 4",
                                               fileInput("lcpoldrupeinput", "File polifenoli drupe LCxLC (.csv)"),
                                               fileInput("lcpolfoglieinput", "File polifenoli foglie LCxLC (.csv)"),
-                                              fileInput("lcpololiinput", "File polifenoli oli LCxLC (.csv)"),
+                                              fileInput("lcpololioinput", "File polifenoli oli LCxLC (.csv)"),
                                               fileInput("lcpolposainput", "File polifenoli posa LCxLC (.csv)"),
                                               fileInput("lcpolsansainput", "File polifenoli sansa LCxLC (.csv)")
                                             )
@@ -833,8 +833,7 @@ app_ui <- function(request) {
                               
                            
                               ####### Tab polifenoli LCxLC ##########
-                              tabItem(
-                                tabName = "lcpolsub",
+                              tabItem(tabName = "lcpolsub",
                                 
                                 sidebarLayout(
                                   sidebarPanel(width = 2,
@@ -851,21 +850,34 @@ app_ui <- function(request) {
                                     hr(),
                                     
                                     # Tabella
+                                    conditionalPanel(condition = "input.tabboxlcxlc == 'tabdtlc'",
+                                      awesomeRadio("dttypelc", "Tipo di visualizzazione", choices = c("Wide", "Long"))
+                                      )                                    
+                                    
+                                    
                                     
                                     
                                     
                                     
                                   ), #end of sidebarpanel
                                   
-                                  mainPanel(
-                                    width=10,
-                                    
+                                  mainPanel(width=10,
+                                    tabBox(id = "tabboxlcxlc", width=NULL,
+                                      tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")), value = "tabdtlc",
+                                                    #fluidPage(
+                                                      #fluidRow(
+                                                        box(width = NULL, status = "primary", style = "overflow-x: scroll;",
+                                                                   DT::DTOutput("dtlcxlc"))
+                                                       # ),
+                                                      
+                                                   # )
+                                      )
+                                    )
                                   )
-                                  )
-                                               
-                                
-                                
-                                ), #end of tabitem "lcpolsub"
+                                  
+                                  
+                                )
+                              ), #end of tabitem "lcpolsub"
                             
 
                               ##### Tab morfometria #####
