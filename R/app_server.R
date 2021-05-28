@@ -34,6 +34,7 @@
 #' @importFrom gridExtra grid.arrange
 #' @importFrom calendR calendR
 #' @importFrom FSA dunnTest
+#' @importFrom fmsb radarchart
 #' @noRd
 app_server <- function( input, output, session ) {
   # List the first level callModules here
@@ -602,26 +603,25 @@ app_server <- function( input, output, session ) {
     updateSelectInput(session, "selyearscatterassagg", choices = row.names(table(dplyr::select(dataassaggi(), "Anno"))))
     
     #barplot
-    updateSelectInput(session, "selectxassaggibar", choices=colnames(dataassaggi()))
-    updateSelectInput(session, "selectyassaggibar", choices=colnames(dplyr::select(dataassaggi(), where(is.double))))
     updateSelectInput(session, "selyearbarassagg", choices = row.names(table(dplyr::select(dataassaggi(), "Anno"))))
-  })
-  
-  
-
-  
-  dtassaggiyear = reactive({
-    dataassaggi() %>% dplyr::filter(Anno == input$selyearscatterassagg)
+    
+    #spider plot
+    updateSelectInput(session, "selyearspiderassaggi", choices = row.names(table(dplyr::select(dataassaggi(), "Anno"))))
+    updateSelectInput(session, "selcodspiderassaggi1", choices = row.names(table(dplyr::select(dataassaggi(), "Codice_azienda"))))
+    updateSelectInput(session, "selcodspiderassaggi2", choices = row.names(table(dplyr::select(dataassaggi(), "Codice_azienda"))))
+    
+    
   })
   
   
 
   ###grafico classico (scatter plot)   
   output$scattplotassagg = plotly::renderPlotly({
+    dtassaggiyear = dataassaggi() %>% dplyr::filter(Anno == input$selyearscatterassagg)
     x = Olv_select_col(data = dataassaggi(), input = input$selectxassaggiscatt)
     y = Olv_select_col(data = dataassaggi(), input = input$selectyassaggiscatt)
     fill = Olv_select_col(data = dataassaggi(), input = input$selectfillassaggi)
-    temp = ggplot(data = dtassaggiyear()) +
+    temp = ggplot(data = dtassaggiyear) +
       geom_count(mapping = aes_string(x = colnames(x), y = colnames(y), colour = colnames(fill))) +
       scale_size_continuous(range = c(3,9)) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
     plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
@@ -635,24 +635,46 @@ app_server <- function( input, output, session ) {
   output$barplotassagg = plotly::renderPlotly({
     x = Olv_select_col(data = dataassaggi(), input = input$selectxassaggibar)
     y = Olv_select_col(data = dataassaggi(), input = input$selectyassaggibar)
-    # QUI HO CAMBIATO dataassaggiyear() con dataassaggi(). Bisogna fare un test con altri anni.
+    assaggiyear = dataassaggi() %>% dplyr::filter(Anno == input$selyearbarassagg)
+    gatherassaggi = tidyr::gather(assaggiyear, Mediana_misura, Valore, c(Mediana_fruttato, Mediana_amaro, Mediana_piccante), factor_key=TRUE)
+    
     if(input$barplotassaggi == "Affiancato"){
-     temp2=ggplot(data=dataassaggi()) + 
-      geom_col(mapping = aes_string(x = colnames(x), y = colnames(y), fill = "Anno"), position = position_dodge2(preserve = "single")) + 
+     temp2=ggplot(data=gatherassaggi) + 
+      geom_col(mapping = aes_string(x = "Codice_azienda", y = "Valore", fill = "Mediana_misura"), position = position_dodge()) + 
       theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) 
     }else{
       #assaggiuniti = dtassaggiyear() %>% dplyr::select(-starts_with("CVR"), -Presenza_difetti)
-      assaggiyear = dataassaggi() %>% dplyr::filter(Anno == input$selyearbarassagg)
-      gatherassaggi = tidyr::gather(assaggiyear, Mediana_misura, Valore, c(Mediana_fruttato, Mediana_amaro, Mediana_piccante), factor_key=TRUE)
       temp2 = ggplot(data = gatherassaggi) + 
         geom_col(mapping = aes_string(x = "Codice_azienda", y = "Valore", fill = "Mediana_misura"), position = position_stack() ) + 
         theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank())
-      
     }
-    
     plotly::ggplotly(temp2)
   })
   
+  
+  # Spider plot
+  output$assaggispider = renderPlot({
+    #seleziono anno, prendo solo cod.az e mediana e cod diventa rownames
+    radardata = dataassaggi() %>% dplyr::filter(Anno == input$selyearspiderassaggi) %>% 
+      dplyr::select(Codice_azienda, starts_with("Mediana")) %>% column_to_rownames("Codice_azienda")
+    #creo righe max e min
+    max_min = data.frame(Mediana_fruttato = c(0,10), Mediana_amaro = c(0,10), Mediana_piccante = c(0,10))
+    rownames(max_min) <- c("Max", "Min")
+    #unisco maxmin con radardata
+    radardatamm = rbind(max_min, radardata)
+    
+    if(input$addcodspiderassaggi == FALSE){
+     create_beautiful_radarchart(radardatamm[c("Max", "Min", input$selcodspiderassaggi1),], 
+                                caxislabels = c(0, 2, 4, 6, 8, 10), 
+                                color = grDevices::hcl.colors(2, palette = "Dynamic")) 
+    } else{
+      create_beautiful_radarchart(radardatamm[c("Max", "Min", input$selcodspiderassaggi1, input$selcodspiderassaggi2),], 
+                                  caxislabels = c(0, 2, 4, 6, 8, 10), 
+                                  color = grDevices::hcl.colors(2, palette = "Dynamic")) 
+    }
+      
+    
+  }, width = 800, height = 600)
   
   
   ############## Foto Allegati
@@ -1211,19 +1233,13 @@ app_server <- function( input, output, session ) {
   #################### Mappa Polifenoli individuali ###########################################
   
 
-  #mod_render_map_server("modulo_mappa_polifenoli", datamap = datapolifmap / datapolindmap, datacol =  datapolind, extract_year = FALSE, extract_ncamp = TRUE)
-  
-  
-  
-  
+
   observeEvent(datapolind(), {
     updateSelectInput(session, "colpolindmap1", choices = colnames(datapolind()))
     updateSelectInput(session, "colpolindmap2", choices = colnames(datapolind()))
   })
   
-  
 
-  
   #aggiorna il selectinput "selyear" in base agli anni presenti
   observeEvent(datapolindmap(), {
     updateSelectInput(session, "yearpolindmap1", choices = row.names(table(dplyr::select(datapolindmap(), Anno))))
@@ -1308,18 +1324,75 @@ app_server <- function( input, output, session ) {
     return(tempdata)
   })
   
-  output$dtlcxlc = renderDT({
+  #data long
+  datalclong = reactive({
     req(datalcxlc())
+    temp = datalcxlc() %>% tidyr::gather(Codice_azienda, Quanitificazione, colnames(datalcxlc()[,6:length(datalcxlc())])) %>% dplyr::select(Codice_azienda, everything())
+    #ora divido il codice azienda nelle varie info (codice e Id). Id verrà poi diviso in n_camp rem ("_") e Estrazione
+    temp = temp %>% tidyr::separate(Codice_azienda, into = c("Codice_azienda", "ID"), sep = 5)
+    temp %>% tidyr::separate(ID, into = c("rem", "N_campionamento", "Estrazione"), sep = "_") %>% dplyr::select(-rem)
+  })
+  
+  
+  output$dtlcxlc = renderDT({
+    req(datalclong())
     if(input$dttypelc == "Wide"){
       datalcxlc()
     }else{
-      #trasformo in long e sposto codice_azienda in prima posizione
-      temp = datalcxlc() %>% tidyr::gather(Codice_azienda, Valore, colnames(datalcxlc()[,6:length(datalcxlc())])) %>% dplyr::select(Codice_azienda, everything())
-      #ora divido il codice azienda nelle varie info (codice e Id). Id verrà poi diviso in n_camp rem ("_") e Estrazione
-      temp = temp %>% tidyr::separate(Codice_azienda, into = c("Codice_azienda", "ID"), sep = 5)
-      temp %>% tidyr::separate(ID, into = c("rem", "N_campionamento", "Estrazione"), sep = "_") %>% dplyr::select(-rem)
+      datalclong()
     }
   })
+  
+  
+  
+  ######### Foto LCxLC
+  
+  #modifico i dati per poter avere qualcosa tipo "AV_01_EXT, AV_02, AV_06_DR" etc.
+  
+  dataphlcmod = reactive({
+    z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale)
+    x = dplyr::left_join(x = z, y = datalclong(), by = "Codice_azienda")
+    
+    xsumm = x %>% dplyr::group_by(Codice_azienda, Azienda, Estrazione) %>% 
+      dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = T)) 
+    
+    xsumm$Estrazione[is.na(xsumm$Estrazione)] = ""
+    y = tidyr::unite(xsumm, col = Codice_azienda, Codice_azienda, Estrazione, sep = "_", remove = TRUE)
+    for(i in seq(1:length(y$Codice_azienda))){
+      if(nchar(y$Codice_azienda[i]) == 6){
+        y$Codice_azienda[i] = substring(y$Codice_azienda[i],1,5)
+      }
+    }
+    y %>% dplyr::ungroup()
+  })
+  
+  #crea la tabella
+  output$dtfotolc = DT::renderDT({
+    dplyr::select(dataphlcmod(), c("Azienda", "Codice_azienda"))
+    }, selection = "single", server = FALSE, rownames = FALSE)
+  
+  
+
+  #foto cromatogramma drupe
+  output$phcromatlc = renderUI({
+    req(input$dtfotolc_rows_selected)
+    nroww=input$dtfotolc_rows_selected
+    cod = dplyr::select(dataphlcmod(), "Codice_azienda")
+    path = paste("www/cromatogrammi_LCxLC/2020", input$selfilepollc, input$ncampcromatlc, cod[nroww,], sep = "/")
+    croma = paste0(path,".png")
+    
+    ######### ATTENZIONE!!!! PER FAR FUNZIONARE IL PACCHETTO DEVO TOGLIERE "inst" QUI SOTTO 
+    existpath = paste(base::system.file(package = "OliveHealthR"), "inst/app", croma, sep = "/")
+    
+    if(file.exists(existpath)){
+      tags$img(src = croma)
+    }else{
+      box(width = NULL, background = "yellow", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 27px"), h4(strong("Nessuna foto in archivio."), style = "color: white"), style = "text-align: justify;  text-align: center;")
+    }
+    
+  })
+  
+
   
   #################### MORFOMETRIA ############################
   
@@ -1413,15 +1486,7 @@ app_server <- function( input, output, session ) {
   })
   
   
-  #####selezionare la riga dell'azienda    
-  selprovmorfo = reactive({
-    req(input$dtfotomorfo_rows_selected)
-    nroww=input$dtfotomorfo_rows_selected
-    x= dplyr::select(data(), "Codice_azienda")
-    paste("www/morfometria", input$selyearfotomorfo, input$selfilemorfo, x[nroww,], sep = "/")
-    #qui ho eliminato la parte del campionamento perchè la morfometria c'è solo su R2
-  })
-  
+
   
   #foto 
   output$phmorfo = renderUI({

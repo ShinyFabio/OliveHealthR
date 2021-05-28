@@ -32,7 +32,8 @@ Imports:
     gridExtra,
     calendR,
     FSA,
-    corrplot
+    corrplot,
+    fmsb
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1

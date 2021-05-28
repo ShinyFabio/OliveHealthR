@@ -369,16 +369,9 @@ app_ui <- function(request) {
                                       
                                       tabPanel("Barplot",
                                         sidebarLayout(
-                                          sidebarPanel(
-                                            width = 2,
+                                          sidebarPanel(width = 2,
                                             awesomeRadio("barplotassaggi", "Tipo di barplot", choices = c("Affiancato", "Impilato")),
-                                            conditionalPanel(condition = "input.barplotassaggi == 'Affiancato'",
-                                              selectInput("selectxassaggibar", "Seleziona la colonna X", choices = "", multiple = FALSE),
-                                              selectInput("selectyassaggibar", "Seleziona la colonna Y", choices = "", multiple = FALSE),
-                                            ),
-                                            conditionalPanel(condition = "input.barplotassaggi == 'Impilato'",
-                                              selectInput("selyearbarassagg", "Seleziona l'anno", choices = "", multiple = FALSE)
-                                            )
+                                            selectInput("selyearbarassagg", "Seleziona l'anno", choices = "", multiple = FALSE),
                                           ),
                                           
                                           mainPanel(width = 10,
@@ -386,7 +379,24 @@ app_ui <- function(request) {
                                             plotly::plotlyOutput("barplotassagg")
                                           )
                                         )
-                                      ) #end of tabpanel barplot
+                                      ), #end of tabpanel barplot
+                                      
+                                      tabPanel("Spiderplot",
+                                        sidebarLayout(
+                                          sidebarPanel(width = 2,
+                                            selectInput("selyearspiderassaggi", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                            selectInput("selcodspiderassaggi1", "Seleziona un'azienda", choices = "", multiple = FALSE),
+                                            awesomeCheckbox("addcodspiderassaggi", "Aggiungi seconda azienda", value = FALSE),
+                                            conditionalPanel(condition = "input.addcodspiderassaggi == true",
+                                              selectInput("selcodspiderassaggi2", "Seleziona un'azienda", choices = "", multiple = FALSE)
+                                            )
+                                          ),
+                                          
+                                          mainPanel(width = 10,
+                                            div(plotOutput("assaggispider", width = "100%",height = "600px"), align = "center"),
+                                          )
+                                        )
+                                      ) #end of tabpanel spiderplot
                                       
                                       
                                     ) #end of tabsetpanel
@@ -770,8 +780,7 @@ app_ui <- function(request) {
                                       
                                       
                                       #tab galleria (ovvero i cromatogrammi)
-                                      tabPanel(
-                                        tagList(shiny::icon("images"), HTML("&nbsp;Galleria")), value = "tabpolindcroma",
+                                      tabPanel(tagList(shiny::icon("images"), HTML("&nbsp;Galleria")), value = "tabpolindcroma",
                                         fluidPage(
                                           fluidRow(
                                             column(4, 
@@ -863,14 +872,50 @@ app_ui <- function(request) {
                                   
                                   mainPanel(width=10,
                                     tabBox(id = "tabboxlcxlc", width=NULL,
+                                           
                                       tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")), value = "tabdtlc",
-                                                    #fluidPage(
-                                                      #fluidRow(
                                                         box(width = NULL, status = "primary", style = "overflow-x: scroll;",
                                                                    DT::DTOutput("dtlcxlc"))
-                                                       # ),
-                                                      
-                                                   # )
+                                      ),
+                                      
+                                      
+                                      #galleria
+                                      tabPanel(tagList(shiny::icon("images"), HTML("&nbsp;Galleria")), value = "tablccroma",
+                                               fluidPage(
+                                                 fluidRow(
+                                                   column(4, 
+                                                          fluidRow(
+                                                            column(6,
+                                                                   box(width = NULL, status = "primary",
+                                                                       radioGroupButtons("ncampcromatlc", "Numero campionamento",  choices = c("1" = "1_campionamento", "2" = "2_campionamento"),
+                                                                                         individual = TRUE, checkIcon = list(yes = tags$i(class = "fa fa-circle", style = "color: steelblue"), no = tags$i(class = "fa fa-circle-o", style = "color: steelblue")))
+                                                                   )
+                                                            )
+                                                          ), 
+                                                          
+                                                          fluidRow(column(12, box(width=NULL, status = "primary", DT::DTOutput("dtfotolc"))))
+                                                   ),
+                                                   conditionalPanel(condition = "input.dtfotolc_rows_selected == 0",
+                                                                    p(strong(h4("Per favore seleziona un'azienda dalla tabella", align = "center")))
+                                                   ),
+                                                   
+                                                   conditionalPanel(condition = "input.dtfotolc_rows_selected != 0",
+                                                                    column(8, 
+                                                                           fluidRow(
+                                                                             box(width=NULL, status = "primary", title = "Cromatogramma", align= "center", uiOutput("phcromatlc"))
+                                                                           ),
+                                                                           fluidRow(
+                                                                             box(width=NULL, status = "primary", title = "Polifenoli",align = "center", 
+                                                                                 
+                                                                                 #inserire qui i dati numerici dei polifenoli
+                                                                                 
+                                                                             )
+                                                                           )
+                                                                    )
+                                                   )
+                                                 ) #end of fluidRow
+                                               )
+                                        
                                       )
                                     )
                                   )
