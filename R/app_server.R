@@ -703,7 +703,7 @@ app_server <- function( input, output, session ) {
     allegato = paste0(selprovallegat(),".jpg")
     
     ######### ATTENZIONE!!!! PER FAR FUNZIONARE IL PACCHETTO DEVO TOGLIERE "inst" QUI SOTTO 
-    existpath = paste(base::system.file(package = "OliveHealthR"), "inst/app", allegato, sep = "/")
+    existpath = paste(base::system.file(package = "OliveHealthR"), "app", allegato, sep = "/")
     
     if(file.exists(existpath)){
       tags$img(src = existpath, width = "75%", height = "75%")
