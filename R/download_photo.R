@@ -21,7 +21,7 @@ download_photo = function(url = "http://bioinfo.na.iac.cnr.it/olivehealth/foto_d
   temp = tempfile()
   dir.create(file.path(base::system.file(package = "OliveHealthR"), "inst/app"), showWarnings = FALSE)
   destpath = base::system.file(package = "OliveHealthR")
-  destpath = paste0(destpath, "inst/app/www")
+  destpath = paste(destpath, "inst/app/www", sep = "/")
   utils::download.file(url, temp, cacheOK = FALSE, mode = "wb")
   utils::unzip(zipfile = temp, exdir = destpath)
 }

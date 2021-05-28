@@ -706,7 +706,7 @@ app_server <- function( input, output, session ) {
     existpath = paste(base::system.file(package = "OliveHealthR"), "inst/app", allegato, sep = "/")
     
     if(file.exists(existpath)){
-      tags$img(src = allegato, width = "75%", height = "75%")
+      tags$img(src = existpath, width = "75%", height = "75%")
     }else{
       box(width = NULL, background = "yellow", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 27px"), h4(strong("Nessuna foto in archivio."), style = "color: white"), style = "text-align: justify;  text-align: center;")
     }
@@ -1385,7 +1385,7 @@ app_server <- function( input, output, session ) {
     existpath = paste(base::system.file(package = "OliveHealthR"), "inst/app", croma, sep = "/")
     
     if(file.exists(existpath)){
-      tags$img(src = croma)
+      tags$img(src = existpath)
     }else{
       box(width = NULL, background = "yellow", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 27px"), h4(strong("Nessuna foto in archivio."), style = "color: white"), style = "text-align: justify;  text-align: center;")
     }
