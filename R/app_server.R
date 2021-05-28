@@ -705,7 +705,7 @@ app_server <- function( input, output, session ) {
     ######### ATTENZIONE!!!! PER FAR FUNZIONARE IL PACCHETTO DEVO TOGLIERE "inst" QUI SOTTO 
     #existpath = paste(base::system.file(package = "OliveHealthR"), "app", allegato, sep = "/")
     
-    if(file.exists(allegato)){
+    if(file.exists(file.path(allegato))){
       tags$img(src = allegato, width = "75%", height = "75%")
     }else{
       box(width = NULL, background = "yellow", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 27px"), h4(strong("Nessuna foto in archivio."), style = "color: white"), style = "text-align: justify;  text-align: center;")
