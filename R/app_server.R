@@ -35,6 +35,7 @@
 #' @importFrom calendR calendR
 #' @importFrom FSA dunnTest
 #' @importFrom fmsb radarchart
+#' @importFrom janitor remove_empty
 #' @noRd
 app_server <- function( input, output, session ) {
   # List the first level callModules here
@@ -67,7 +68,8 @@ app_server <- function( input, output, session ) {
   #carica il file come .csv
   data = reactive({
     req(input$file1)
-    readr::read_delim(input$file1$datapath, delim = input$delim, col_names = input$header, na = "", local = readr::locale(encoding = "windows-1252")) 
+    readr::read_delim(input$file1$datapath, delim = input$delim, col_names = input$header, na = "", local = readr::locale(encoding = "windows-1252")) %>%
+      janitor::remove_empty("rows")
   })
   
   
@@ -76,7 +78,8 @@ app_server <- function( input, output, session ) {
   descri2 = reactive({
     req(input$desc1)
     req(data())
-    temp = readr::read_delim(input$desc1$datapath, delim = input$delim, col_names = input$header, local = readr::locale(encoding = "windows-1252"))
+    temp = readr::read_delim(input$desc1$datapath, delim = input$delim, col_names = input$header, local = readr::locale(encoding = "windows-1252")) %>%
+      janitor::remove_empty("rows")
     temp2 = data() %>% dplyr::select(Codice_azienda, Azienda)
     dplyr::inner_join(x = temp, y = temp2, by = "Codice_azienda")
   })
@@ -86,7 +89,8 @@ app_server <- function( input, output, session ) {
   #carica il file drupe come .csv
   drupe = reactive({
     req(input$drupeinput)
-    x = readr::read_delim(input$drupeinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, date_format = "%d/%m/%Y", encoding = "windows-1252"))
+    x = readr::read_delim(input$drupeinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, date_format = "%d/%m/%Y", encoding = "windows-1252")) %>%
+      janitor::remove_empty("rows")
     x$Indice_maturazione = factor(x$Indice_maturazione, levels = c(0:8), ordered = TRUE)
     x$Fase_fenologica = factor(x$Fase_fenologica, levels = c(51, 55, 59, 61, 65, 69, 71, 75, 79, 81, 85, 89), ordered = TRUE)
     return(x)
@@ -95,7 +99,8 @@ app_server <- function( input, output, session ) {
   #file olio
   oliocamp = reactive({
     req(input$olioinput)
-    x = readr::read_delim(input$olioinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, date_format = "%d/%m/%Y", encoding = "windows-1252"))
+    x = readr::read_delim(input$olioinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, date_format = "%d/%m/%Y", encoding = "windows-1252")) %>% 
+      janitor::remove_empty("rows")
     x$Olio = factor(x$Olio, levels = c("SI", "NO"), ordered = FALSE)
     x$Sansa  = factor(x$Sansa, levels = c("SI", "NO"), ordered = FALSE)
     return(x)
@@ -105,7 +110,8 @@ app_server <- function( input, output, session ) {
   #file assaggi
   assaggi = reactive({
     req(input$assagginput)
-    x = readr::read_delim(input$assagginput$datapath, na = "", delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, date_format = "%d/%m/%Y", encoding = "windows-1252"))
+    x = readr::read_delim(input$assagginput$datapath, na = "", delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, date_format = "%d/%m/%Y", encoding = "windows-1252")) %>%
+      janitor::remove_empty("rows")
     x$Anno = as.character(x$Anno)
     return(x)
   })
@@ -114,7 +120,8 @@ app_server <- function( input, output, session ) {
   #carico il file polifenoli come .csv
   polif = reactive({
     req(input$polifinput)
-    x = readr::read_delim(input$polifinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
+    x = readr::read_delim(input$polifinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>% 
+      janitor::remove_empty("rows")
     x$Presenza_larve = readr::parse_factor(as.character(x$Presenza_larve), levels = c("0","1","2"), ordered = TRUE)
     return(x)
   })
@@ -123,27 +130,32 @@ app_server <- function( input, output, session ) {
   ##### Carico i file polifenoli LCxLC ___________
   lcpolfoglie = reactive({
     req(input$lcpolfoglieinput)
-    readr::read_delim(input$lcpolfoglieinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
+    readr::read_delim(input$lcpolfoglieinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>% 
+      janitor::remove_empty("rows")
   })
   
   lcpoldrupe = reactive({
     req(input$lcpoldrupeinput)
-    readr::read_delim(input$lcpoldrupeinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
+    readr::read_delim(input$lcpoldrupeinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>% 
+      janitor::remove_empty("rows")
   })
   
   lcpololio = reactive({
     req(input$lcpololioinput)
-    readr::read_delim(input$lcpololioinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
+    readr::read_delim(input$lcpololioinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>% 
+      janitor::remove_empty("rows")
   })
   
   lcpolposa = reactive({
     req(input$lcpolposainput)
-    readr::read_delim(input$lcpolposainput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
+    readr::read_delim(input$lcpolposainput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>% 
+      janitor::remove_empty("rows")
   })
   
   lcpolsansa = reactive({
     req(input$lcpolsansainput)
-    readr::read_delim(input$lcpolsansainput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
+    readr::read_delim(input$lcpolsansainput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>%
+      janitor::remove_empty("rows")
   })
   
   
@@ -152,25 +164,29 @@ app_server <- function( input, output, session ) {
   #file foglie
   morfoleaf = reactive({
     req(input$morfoleafinput)
-    readr::read_delim(input$morfoleafinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
+    readr::read_delim(input$morfoleafinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>%
+      janitor::remove_empty("rows")
   })
   
   #file morfometria drupe
   morfodrupe = reactive({
     req(input$morfodrupeinput)
-    readr::read_delim(input$morfodrupeinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
+    readr::read_delim(input$morfodrupeinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>%
+      janitor::remove_empty("rows")
   })
   
   #file morfometria endocarpo
   morfoendo = reactive({
     req(input$morfoendoinput)
-    readr::read_delim(input$morfoendoinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
+    readr::read_delim(input$morfoendoinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>%
+      janitor::remove_empty("rows")
   })
   
   #file rapporti drupe endocarpo
   morforatio = reactive({
     req(input$morforatioinput)
-    readr::read_delim(input$morforatioinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252"))
+    readr::read_delim(input$morforatioinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>%
+      janitor::remove_empty("rows")
   })
   
   
@@ -688,29 +704,16 @@ app_server <- function( input, output, session ) {
   })
   
   
-  #####selezionare la riga dell'azienda cromatogramma drupe
-  selprovallegat = reactive({
+
+  #foto cromatogramma allegat
+  output$phallegati = renderUI({
     req(input$dtallegato_rows_selected)
     nroww=input$dtallegato_rows_selected
     x = dplyr::select(dataassaggi(), "Codice_azienda")
     z = paste("www/assaggi", input$selyearallegatph, sep = "/") #selyearfoto e campfoto
-    paste(z, x[nroww,], sep = "/")
-  })
-  
-
-  #foto cromatogramma allegat
-  output$phallegati = renderUI({
-    allegato = paste0(selprovallegat(),".jpg")
-    
-    ######### ATTENZIONE!!!! PER FAR FUNZIONARE IL PACCHETTO DEVO TOGLIERE "inst" QUI SOTTO 
-    #existpath = paste(base::system.file(package = "OliveHealthR"), "app", allegato, sep = "/")
-    
-    #if(file.exists(file.path(allegato))){
-      tags$img(src = allegato, width = "75%", height = "75%")
-    #}else{
-     # box(width = NULL, background = "yellow", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 27px"), h4(strong("Nessuna foto in archivio."), style = "color: white"), style = "text-align: justify;  text-align: center;")
-    #}
-      
+    selallegat = paste(z, x[nroww,], sep = "/")
+    allegato = paste0(selallegat,".jpg")
+    tags$img(src = allegato, width = "75%", height = "75%")
   })
   
   
@@ -1317,20 +1320,20 @@ app_server <- function( input, output, session ) {
     }else{
       tempdata = lcpolsansa()
     }
-    
-    #z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale)
-    #x = dplyr::left_join(x = z, y = tempdata, by = "Codice_azienda")
-    #return(x)
+    #aggiungo lo zero se il numero è una cifra
+    tempdata$PEAK = formatC(tempdata$PEAK,
+                           width = 2,
+                           flag = "0")
     return(tempdata)
   })
   
   #data long
   datalclong = reactive({
     req(datalcxlc())
-    temp = datalcxlc() %>% tidyr::gather(Codice_azienda, Quanitificazione, colnames(datalcxlc()[,6:length(datalcxlc())])) %>% dplyr::select(Codice_azienda, everything())
+    temp = datalcxlc() %>% tidyr::gather(Codice_azienda, Quantificazione, colnames(datalcxlc()[,6:length(datalcxlc())])) %>% dplyr::select(Codice_azienda, everything())
     #ora divido il codice azienda nelle varie info (codice e Id). Id verrà poi diviso in n_camp rem ("_") e Estrazione
     temp = temp %>% tidyr::separate(Codice_azienda, into = c("Codice_azienda", "ID"), sep = 5)
-    temp %>% tidyr::separate(ID, into = c("rem", "N_campionamento", "Estrazione"), sep = "_") %>% dplyr::select(-rem)
+    temp %>% tidyr::separate(ID, into = c("rem", "N_campionamento", "Estrazione"), sep = "_", fill = "right") %>% dplyr::select(-rem)
   })
   
   
@@ -1344,31 +1347,44 @@ app_server <- function( input, output, session ) {
   })
   
   
-  
-  ######### Foto LCxLC
-  
-  #modifico i dati per poter avere qualcosa tipo "AV_01_EXT, AV_02, AV_06_DR" etc.
-  
-  dataphlcmod = reactive({
-    z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale)
-    x = dplyr::left_join(x = z, y = datalclong(), by = "Codice_azienda")
+  ###### data wide con polifenoli sulle colonne
+  lcwidepolif = reactive({
+    temp = datalcxlc() %>% tidyr::gather(Codice_azienda, Quantificazione, colnames(datalcxlc()[,6:length(datalcxlc())])) %>% 
+      dplyr::select(Codice_azienda, everything())
+    #creo una seconda colonna PEAK2
+    lclong_test = dplyr::select(temp,-c(3:4,6)) %>% dplyr::mutate(PEAK2 = "Peak") %>% 
+      tidyr::unite(col = Compounds, PEAK2, PEAK, Compounds, sep = "_", remove = TRUE)
     
-    xsumm = x %>% dplyr::group_by(Codice_azienda, Azienda, Estrazione) %>% 
-      dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = T)) 
+    #trasformo in wide con i polifenoli sulle colonne e codice_azienda sulle righe
+    lcwidecompound = tidyr::pivot_wider(data = lclong_test, names_from = Compounds, values_from = Quantificazione)
     
-    xsumm$Estrazione[is.na(xsumm$Estrazione)] = ""
-    y = tidyr::unite(xsumm, col = Codice_azienda, Codice_azienda, Estrazione, sep = "_", remove = TRUE)
-    for(i in seq(1:length(y$Codice_azienda))){
-      if(nchar(y$Codice_azienda[i]) == 6){
-        y$Codice_azienda[i] = substring(y$Codice_azienda[i],1,5)
+    #codice azienda da SA_01_EXT_R2 deve diventare SA_01_EXT || R2
+    lcpolifazienda = lcwidecompound %>% tidyr::separate(Codice_azienda, into = c("Codice_azienda", "ID"), sep = 5) %>% 
+      tidyr::separate(ID, into = c("rem", "N_campionamento", "Estrazione"), sep = "_", fill = "right") %>% dplyr::select(-rem)
+    
+    #ora join con data() per aggiungere cultivar e azienda
+    z = data() %>% dplyr::select(Codice_azienda, Azienda, Cultivar_principale)
+    lcpolifazienda = dplyr::right_join(x = z, y = lcpolifazienda, by = "Codice_azienda")
+    
+    #gli NA in Estrazione diventano ""
+    lcpolifazienda$Estrazione[is.na(lcpolifazienda$Estrazione)] = ""
+    
+    #unisco codice_azienda con estrazione
+    lcpolifazienda2 = tidyr::unite(lcpolifazienda, col = Codice_azienda, Codice_azienda, Estrazione, sep = "_", remove = TRUE)
+    #e se estrazione è vuoto invece di avere SA_01_ tolgo il "_" finale.
+    for(i in seq(1:length(lcpolifazienda2$Codice_azienda))){
+      if(nchar(lcpolifazienda2$Codice_azienda[i]) == 6){
+        lcpolifazienda2$Codice_azienda[i] = substring(lcpolifazienda2$Codice_azienda[i],1,5)
       }
     }
-    y %>% dplyr::ungroup()
+    return(lcpolifazienda2)
   })
   
+ 
   #crea la tabella
   output$dtfotolc = DT::renderDT({
-    dplyr::select(dataphlcmod(), c("Azienda", "Codice_azienda"))
+    ncamp = ifelse(input$ncampcromatlc == "1_campionamento", "R1", "R2")
+    lcwidepolif() %>% filter(N_campionamento == ncamp) %>% dplyr::select(c("Azienda", "Codice_azienda"))
     }, selection = "single", server = FALSE, rownames = FALSE)
   
   
@@ -1377,22 +1393,122 @@ app_server <- function( input, output, session ) {
   output$phcromatlc = renderUI({
     req(input$dtfotolc_rows_selected)
     nroww=input$dtfotolc_rows_selected
-    cod = dplyr::select(dataphlcmod(), "Codice_azienda")
+    ncamp = ifelse(input$ncampcromatlc == "1_campionamento", "R1", "R2")
+    
+    cod = lcwidepolif() %>% filter(N_campionamento == ncamp) %>% dplyr::select("Codice_azienda")
     path = paste("www/cromatogrammi_LCxLC/2020", input$selfilepollc, input$ncampcromatlc, cod[nroww,], sep = "/")
     croma = paste0(path,".png")
-    
-    ######### ATTENZIONE!!!! PER FAR FUNZIONARE IL PACCHETTO DEVO TOGLIERE "inst" QUI SOTTO 
-    #existpath = paste(base::system.file(package = "OliveHealthR"), "inst/app", croma, sep = "/")
-    
-    if(file.exists(croma)){
-      tags$img(src = croma)
+    tags$img(src = croma, style="width: 800px")
+
+  })
+  
+  #crea la tabella dei polifenoli dell'azienda selezionata
+  output$poliffotolc = DT::renderDT({
+    req(input$dtfotolc_rows_selected)
+    nroww=input$dtfotolc_rows_selected
+    ncamp = ifelse(input$ncampcromatlc == "1_campionamento", "R1", "R2")
+    #prendo un'azienda filtro e tolgo le colonne in più. Se è vuota, NULL
+    cod = dplyr::filter(lcwidepolif(), N_campionamento == ncamp) 
+    cod = cod[nroww,] %>%  dplyr::select(-c(1:4)) 
+    hhh = tidyr::pivot_longer(cod, cols = starts_with("Peak"), names_to = "Compounds", values_to = "Quantizzazione (mg/Kg)")
+    h2 = hhh %>% tidyr::separate(Compounds, into = c("Peak", "Compounds"), sep = 8)
+    h2 %>% tidyr::separate(Peak, into = c("rem", "Peak"), sep = "_") %>% dplyr::select(-1)
+  })
+  
+  
+  
+  ####### Grafici LCxLC######
+  
+  #data da usara per i grafici. 
+  #Se per azienda, avrò un'azienda, la colonna compound e la colonna quantizzazione.
+  #Se per polifenolo, avrò la colonna Codice_azienda con tutte le aziende e una colonna di un polifenolo (es.Peak_1_Acid_gallic)
+  
+  
+  observeEvent(lcwidepolif(), {
+    updateSelectInput(session, "lcselaziendascatt", choices = unique(lcwidepolif()$Codice_azienda))
+    updateSelectInput(session, "lcselpolifscatt", choices = colnames(dplyr::select(lcwidepolif(), starts_with("Peak"))))
+  })
+  
+  #questo mi serve per aggiornare il ncamp in base alla selezione
+  datalcgraphcamp = reactive({
+    req(lcwidepolif())
+    if(input$lcdatatypescatt == "Azienda"){
+      lcwidepolif() %>% dplyr::filter(Codice_azienda == input$lcselaziendascatt)
     }else{
-      box(width = NULL, background = "yellow", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 27px"), h4(strong("Nessuna foto in archivio."), style = "color: white"), style = "text-align: justify;  text-align: center;")
+      lcwidepolif()
+    }
+  })
+  
+  observeEvent(datalcgraphcamp(), {
+    updateSelectInput(session, "numscattlc", choices = unique(datalcgraphcamp()$N_campionamento))
+  })
+  
+  
+  datalcgraph = reactive({
+    
+    datancamp = datalcgraphcamp() %>% dplyr::filter(N_campionamento == input$numscattlc)
+
+    if(input$lcdatatypescatt == "Azienda"){
+      datancamp = tidyr::gather(datancamp, Compounds, Quantificazione, colnames(dplyr::select(datancamp, starts_with("Peak"))))
+      if(input$logscattlc == TRUE){
+        #qui faccio il logaritmo di quantificazione. Se il valore è -1 (<LOQ) lo trasformo in 0.5 così non esce errore
+        #e il log diventa un numero negativo, altrimenti aggiungo +1 (così se il valore è 0 diventa 1 e il logaritmo
+        #non esce -inf ma esce 0). Nota: log(0) = inf e log(-1) errore.
+        datancamp = datancamp %>% dplyr::mutate(Quantificazione = log(ifelse(Quantificazione == -1, 0.5, Quantificazione+1)))
+      }
+      datancamp = datancamp %>% dplyr::mutate(Presenza = dplyr::case_when(
+        Quantificazione == 0 ~ "Assente",
+        Quantificazione < 0 ~ "<LOQ",
+        Quantificazione > 0 ~ "Presente"
+      ))
+    }else{
+      datancamp = datancamp %>% dplyr::select(Codice_azienda, input$lcselpolifscatt)
+      datancamp = datancamp %>% dplyr::mutate(Presenza = dplyr::case_when(
+        input$lcselpolifscatt == 0 ~ "Assente",
+        input$lcselpolifscatt < 0 ~ "<LOQ",
+        input$lcselpolifscatt > 0 ~ "Presente"
+      ))
+    }
+    datancamp$Presenza = factor(datancamp$Presenza, levels = c("<LOQ", "Assente", "Presente"), ordered = FALSE)
+    datancamp
+  })
+  
+  
+  
+  #scatterplot
+  output$scatterlc = renderPlotly({
+    if(input$lcdatatypescatt == "Azienda"){
+      temp = ggplot(data = datalcgraph()) + 
+        geom_count(mapping = aes_string(x = "Compounds", y = "Quantificazione", shape = "Presenza"), color = grDevices::hcl.colors(length(na.omit(datalcgraph()$Quantificazione)), palette = "Dynamic")) + 
+        scale_shape_manual(values=c(10, 1, 16),drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) + 
+        theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + ylab("Quantificazione (mg/Kg)")
+      plotly::ggplotly(temp)  
+    }else{
+     temp = ggplot(data = datalcgraph()) + 
+      geom_count(mapping = aes_string(x = "Codice_azienda", y = input$lcselpolifscatt, shape = "Presenza"),color = grDevices::hcl.colors(length(datalcgraph()$Codice_azienda), palette = "Dynamic")) + 
+       scale_shape_manual(values=c(10, 1, 16),drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) + 
+       theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + ylab(paste(input$lcselpolifscatt, "(mg/Kg)"))
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "Codice_azienda"))) 
     }
     
   })
   
-
+  
+  #barplot
+  output$barplotlc = renderPlotly({
+    if(input$lcdatatypescatt == "Azienda"){
+    temp = ggplot(data=datalcgraph()) + 
+      geom_col(mapping = aes_string(x = "Compounds", y = "Quantificazione", fill = "Presenza")) + 
+      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab("Quantificazione (mg/Kg)")
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "N_campionamento")))
+    }else{
+      temp = ggplot(data=datalcgraph()) + 
+      geom_col(mapping = aes_string(x = "Codice_azienda", y = input$lcselpolifscatt, fill = "Presenza")) + 
+      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(paste(input$lcselpolifscatt, "(mg/Kg)"))
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "N_campionamento")))
+    }
+    
+  })
   
   #################### MORFOMETRIA ############################
   

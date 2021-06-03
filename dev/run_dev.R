@@ -5,11 +5,11 @@ options(golem.app.prod = FALSE) # TRUE = production mode, FALSE = development mo
 golem::detach_all_attached()
 # rm(list=ls(all.names = TRUE))
 
+setwd("C:/Users/fabio/Desktop/OliveHealthR")
+
 # Document and reload your package
 golem::document_and_reload()
 
-
-#setwd("C:/Users/fabio/Desktop/OliveHealthR")
 
 # Run the application
 run_OliveHealthR()

@@ -134,7 +134,7 @@ app_ui <- function(request) {
                                         ),
                                         
                                         mainPanel(width = 10,
-                                              tabsetPanel(id = "tab2",
+                                              tabsetPanel(
                                                           tabPanel(title = "Tabella",
                                                                    box(width = NULL, status = "primary", style = "overflow-x: scroll;",
                                                                        DT::DTOutput("content")
@@ -861,10 +861,30 @@ app_ui <- function(request) {
                                     # Tabella
                                     conditionalPanel(condition = "input.tabboxlcxlc == 'tabdtlc'",
                                       awesomeRadio("dttypelc", "Tipo di visualizzazione", choices = c("Wide", "Long"))
-                                      )                                    
+                                      ),                                    
                                     
-                                    
-                                    
+                                    #Grafici
+                                    conditionalPanel(
+                                      condition = "input.tabboxlcxlc == 'tabgraphlc'",
+                                      h4(strong("Impostazioni grafici")),
+                                      
+                                      #scatterplot e barplot
+                                      conditionalPanel(condition = "input.boxlcgraph == 'tabpanscattlc' || input.boxlcgraph == tabpanbarlc'",
+                                        awesomeRadio("lcdatatypescatt", "Filtra i dati per:", choices = c("Azienda", "Polifenolo")),
+                                        conditionalPanel(
+                                          condition = "input.lcdatatypescatt == 'Azienda'",
+                                          selectInput("lcselaziendascatt", "Scegli l'azienda", choices = ""),
+                                          awesomeCheckbox("logscattlc", "Scala logaritmica", value = TRUE)
+                                        ),
+                                        conditionalPanel(
+                                          condition = "input.lcdatatypescatt == 'Polifenolo'",
+                                          selectInput("lcselpolifscatt", "Scegli il polifenolo", choices = "")
+                                        ),
+                                        selectInput("numscattlc", "Scegli il numero di campionamento", choices = ""),
+                                      ), 
+                                      
+                                      
+                                    ) #end of conditionalpanel grafici
                                     
                                     
                                     
@@ -878,8 +898,8 @@ app_ui <- function(request) {
                                                                    DT::DTOutput("dtlcxlc"))
                                       ),
                                       
-                                      
-                                      #galleria
+
+                                      ### Galleria
                                       tabPanel(tagList(shiny::icon("images"), HTML("&nbsp;Galleria")), value = "tablccroma",
                                                fluidPage(
                                                  fluidRow(
@@ -887,8 +907,8 @@ app_ui <- function(request) {
                                                           fluidRow(
                                                             column(6,
                                                                    box(width = NULL, status = "primary",
-                                                                       radioGroupButtons("ncampcromatlc", "Numero campionamento",  choices = c("1" = "1_campionamento", "2" = "2_campionamento"),
-                                                                                         individual = TRUE, checkIcon = list(yes = tags$i(class = "fa fa-circle", style = "color: steelblue"), no = tags$i(class = "fa fa-circle-o", style = "color: steelblue")))
+                                                                     radioGroupButtons("ncampcromatlc", "Numero campionamento",  choices = c("1" = "1_campionamento", "2" = "2_campionamento"),
+                                                                                       individual = TRUE, checkIcon = list(yes = tags$i(class = "fa fa-circle", style = "color: steelblue"), no = tags$i(class = "fa fa-circle-o", style = "color: steelblue")))
                                                                    )
                                                             )
                                                           ), 
@@ -901,25 +921,44 @@ app_ui <- function(request) {
                                                    
                                                    conditionalPanel(condition = "input.dtfotolc_rows_selected != 0",
                                                                     column(8, 
-                                                                           fluidRow(
-                                                                             box(width=NULL, status = "primary", title = "Cromatogramma", align= "center", uiOutput("phcromatlc"))
-                                                                           ),
-                                                                           fluidRow(
-                                                                             box(width=NULL, status = "primary", title = "Polifenoli",align = "center", 
-                                                                                 
-                                                                                 #inserire qui i dati numerici dei polifenoli
-                                                                                 
-                                                                             )
-                                                                           )
+                                                                      fluidRow(
+                                                                        box(width=NULL, status = "primary", title = "Cromatogramma", align= "center", uiOutput("phcromatlc"))
+                                                                      ),
+                                                                      fluidRow(
+                                                                        box(width=NULL, status = "primary", title = "Polifenoli",align = "center", 
+                                                                            DTOutput("poliffotolc"))
+                                                                      )
                                                                     )
                                                    )
                                                  ) #end of fluidRow
                                                )
-                                        
-                                      )
-                                    )
-                                  )
-                                  
+                                      ), #end of tabpanel Galleria
+                                      
+                                      
+                                      ##### Grafici
+                                      tabPanel(tagList(shiny::icon("chart-bar"), HTML("&nbsp;Grafici")), value = "tabgraphlc",
+                                        tabsetPanel(id = "boxlcgraph",
+                                          
+                                          tabPanel("Scatter plot", value = "tabpanscattlc",
+                                                   plotly::plotlyOutput("scatterlc")
+                                          ),
+                                          
+                                          #barplot
+                                          tabPanel("Barplot", value = "tabpanbarlc",
+                                                   plotly::plotlyOutput("barplotlc")
+                                          )
+                                          
+                                          
+                                          
+                                        )
+                                            
+                                        ) # end of tabpanel grafici
+                                      
+                                      
+                                      
+                                      
+                                    ) #end of tabbox
+                                  ) #end of mainpanel
                                   
                                 )
                               ), #end of tabitem "lcpolsub"
@@ -954,8 +993,7 @@ app_ui <- function(request) {
                                     
 
                                     # Grafici
-                                    conditionalPanel(
-                                      condition = "input.tabboxmorfo  == 'tabpanmorfograph'",
+                                    conditionalPanel(condition = "input.tabboxmorfo  == 'tabpanmorfograph'",
                                     h4(strong("Impostazioni grafici")),
                                     #boxplot e barplot
                                     conditionalPanel(
@@ -1138,7 +1176,6 @@ app_ui <- function(request) {
                                         )
                                       ),
                                       
-
                                     ),
 
                                     # Mappa

@@ -1,6 +1,6 @@
 #' Select column from a dataframe
 #' 
-#' @description Save the name of a column dataframe using an input from the UI. Can be for example from a \code{selectInput()}.
+#' @description Pick a column from a dataframe using an input from the UI. Can be for example from a \code{selectInput()}.
 #'
 #' @import shiny
 #' 

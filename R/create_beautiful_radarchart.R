@@ -6,7 +6,7 @@
 #' @param data A dataframe with 3 or 4 rows and some column (columns will be the variables in the spider plot). 
 #' The rows must contain a row with maximum values and a row with mininum values, plus one or two rows with a "Codice_azienda".
 #' @param caxislabels Range of values inside the spider plot (eg. caxislabels = c(0, 2, 5, 7, 10)).
-#' @color Function that provides colors to the plot. For example color = grDevices::hcl.colors(2, palette = "Dynamic").
+#' @param color Function that provides colors to the plot. For example color = grDevices::hcl.colors(2, palette = "Dynamic").
 #' 
 #' 
 #' @importFrom fmsb radarchart

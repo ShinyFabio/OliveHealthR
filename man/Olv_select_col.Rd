@@ -12,7 +12,7 @@ Olv_select_col(data, input)
 \item{input}{the input from the ui (e.g. the input from a \code{selectInput()}) in the form of \code{input$...}.}
 }
 \description{
-Save the name of a column dataframe using an input from the UI. Can be for example from a \code{selectInput()}.
+Pick a column from a dataframe using an input from the UI. Can be for example from a \code{selectInput()}.
 }
 \examples{
 \dontrun{
