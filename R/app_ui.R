@@ -869,7 +869,7 @@ app_ui <- function(request) {
                                       h4(strong("Impostazioni grafici")),
                                       
                                       #scatterplot e barplot
-                                      conditionalPanel(condition = "input.boxlcgraph == 'tabpanscattlc' || input.boxlcgraph == tabpanbarlc'",
+                                      conditionalPanel(condition = "input.boxlcgraph == 'tabpanscattlc' || input.boxlcgraph == 'tabpanbarlc'",
                                         awesomeRadio("lcdatatypescatt", "Filtra i dati per:", choices = c("Azienda", "Polifenolo")),
                                         conditionalPanel(
                                           condition = "input.lcdatatypescatt == 'Azienda'",
