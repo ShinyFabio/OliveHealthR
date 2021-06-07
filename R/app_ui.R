@@ -864,8 +864,7 @@ app_ui <- function(request) {
                                       ),                                    
                                     
                                     #Grafici
-                                    conditionalPanel(
-                                      condition = "input.tabboxlcxlc == 'tabgraphlc'",
+                                    conditionalPanel(condition = "input.tabboxlcxlc == 'tabgraphlc'",
                                       h4(strong("Impostazioni grafici")),
                                       
                                       #scatterplot e barplot
@@ -884,7 +883,16 @@ app_ui <- function(request) {
                                       ), 
                                       
                                       
-                                    ) #end of conditionalpanel grafici
+                                    ), #end of conditionalpanel grafici
+                                    
+                                    # PCA 
+                                    conditionalPanel(condition = "input.tabboxlcxlc == 'tabpcalc'",
+                                      #selectInput("selyearpca", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                      selectInput("numcamppcalc", "Scegli il numero di campionamento", choices = "", multiple = FALSE),
+                                      awesomeCheckbox("scalepcalc", "Scala i dati", value = FALSE)
+                                      
+                                    )
+                                    
                                     
                                     
                                     
@@ -940,20 +948,62 @@ app_ui <- function(request) {
                                         tabsetPanel(id = "boxlcgraph",
                                           
                                           tabPanel("Scatter plot", value = "tabpanscattlc",
-                                                   plotly::plotlyOutput("scatterlc")
+                                                   plotly::plotlyOutput("scatterlc", height = "550px")
                                           ),
                                           
                                           #barplot
                                           tabPanel("Barplot", value = "tabpanbarlc",
-                                                   plotly::plotlyOutput("barplotlc")
+                                                   plotly::plotlyOutput("barplotlc", height = "550px")
                                           )
                                           
                                           
                                           
                                         )
                                             
-                                        ) # end of tabpanel grafici
+                                        ), # end of tabpanel grafici
                                       
+                                      
+                                      ###### PCA
+                                      tabPanel(tagList(shiny::icon("chart-line"), HTML("&nbsp;PCA")), value = "tabpcalc",
+                                               tabsetPanel(
+                                                 
+                                                 tabPanel("Screeplot",
+                                                          br(),
+                                                          plotly::plotlyOutput("screeplotlc", width = "75%")         
+                                                 ),
+                                                 
+                                                 
+                                                 tabPanel("Loadings",
+                                                          br(),
+                                                          fluidRow(column(4, box(width = NULL, status = "primary", uiOutput("sliderpclc")))),
+                                                          fluidRow(plotly::plotlyOutput("loadingslc", height = "550px"))
+                                                 ),
+                                                 
+                                                 
+                                                 tabPanel("Biplot",
+                                                          br(),
+                                                          fluidRow(
+                                                            column(4, box(width = NULL, status = "primary", 
+                                                                          selectInput("colbiplotlc", "Seleziona colonna riempimento", choices = c("Cultivar_principale", "Areale", "Provincia")))),
+                                                            column(4, box(width = NULL, status = "primary",
+                                                                          awesomeCheckboxGroup("shpbiplotlc", "Aggiungi geometria", choices = "Provincia", inline = TRUE)
+                                                            ))
+                                                          ),
+                                                          fluidRow(plotly::plotlyOutput("biplotlc", height = "500px"))
+                                                 ),
+                                                 
+                                                 
+                                                 tabPanel("Plot 3D",
+                                                          br(),
+                                                          fluidRow(
+                                                            column(4, box(width = NULL, status = "primary", 
+                                                                          selectInput("col3dlc", "Seleziona colonna riempimento", choices = c("Provincia", "Cultivar_principale", "Areale"))))
+                                                          ),
+                                                          fluidRow(plotly::plotlyOutput("pca3dlc", height = "500px"))
+                                                 )
+                                                 
+                                               ) #end of tabsetpanel
+                                      ) #end of tabpanel PCA
                                       
                                       
                                       

@@ -13,7 +13,7 @@
 #' @import ggfortify
 #' @import htmltools
 #' @import scales
-#' @importFrom tidyr unite starts_with separate gather
+#' @importFrom tidyr unite starts_with separate gather drop_na
 #' @importFrom tibble column_to_rownames rownames_to_column
 #' @importFrom grid gpar
 #' @importFrom sp SpatialPointsDataFrame CRS
@@ -1348,6 +1348,7 @@ app_server <- function( input, output, session ) {
   
   
   ###### data wide con polifenoli sulle colonne
+  ###### File del tipo Codice_azienda | Cultivar_principale | Azienda | N_campionamento | Peak_01.. | Peak_02_... 
   lcwidepolif = reactive({
     temp = datalcxlc() %>% tidyr::gather(Codice_azienda, Quantificazione, colnames(datalcxlc()[,6:length(datalcxlc())])) %>% 
       dplyr::select(Codice_azienda, everything())
@@ -1363,7 +1364,7 @@ app_server <- function( input, output, session ) {
       tidyr::separate(ID, into = c("rem", "N_campionamento", "Estrazione"), sep = "_", fill = "right") %>% dplyr::select(-rem)
     
     #ora join con data() per aggiungere cultivar e azienda
-    z = data() %>% dplyr::select(Codice_azienda, Azienda, Cultivar_principale)
+    z = data() %>% dplyr::select(Codice_azienda, Azienda, Cultivar_principale, Provincia, Areale)   #qui ho aggiunto provincia e areale
     lcpolifazienda = dplyr::right_join(x = z, y = lcpolifazienda, by = "Codice_azienda")
     
     #gli NA in Estrazione diventano ""
@@ -1488,7 +1489,7 @@ app_server <- function( input, output, session ) {
       geom_count(mapping = aes_string(x = "Codice_azienda", y = input$lcselpolifscatt, shape = "Presenza"),color = grDevices::hcl.colors(length(datalcgraph()$Codice_azienda), palette = "Dynamic")) + 
        scale_shape_manual(values=c(10, 1, 16),drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) + 
        theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + ylab(paste(input$lcselpolifscatt, "(mg/Kg)"))
-    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "Codice_azienda"))) 
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "Codice_azienda")))
     }
     
   })
@@ -1509,6 +1510,99 @@ app_server <- function( input, output, session ) {
     }
     
   })
+  
+  
+  ############ PCA LCxLC ###############
+  
+  observeEvent(lcwidepolif(), {
+    updateSelectInput(session, "numcamppcalc", choices = unique(lcwidepolif()$N_campionamento))
+  })
+  
+
+  #rimuovo le righe di NA se ci sono. pcadatina mi servirà dopo per il semi_join con data().
+  pcadatiLC = reactive({
+    req(lcwidepolif())
+    #scelgo il num campionamento e faccio la pca stavolta con prcomp perchè ci sono più colonne che righe.
+    lcwidepolif() %>% dplyr::filter(N_campionamento == input$numcamppcalc) %>% 
+      dplyr::select(Codice_azienda, where(is.double)) %>% stats::na.exclude() %>%
+      as.data.frame() %>% tibble::column_to_rownames("Codice_azienda") %>% stats::prcomp(scale = input$scalepcalc) #-Anno e non c'è cor =...
+  })
+
+  
+
+  
+  #slider dinamico per la scelta delle pcs
+  output$sliderpclc <- renderUI({
+    req(pcadatiLC())
+    pca = pcadatiLC()
+    sliderInput("selpcslc", "Numero di Componenti Principali (PC)", min=1, max=length(pca$sdev), value=2, step = 1)
+  })
+  
+  
+  
+  ###plot loadings
+  output$loadingslc = plotly::renderPlotly({
+    req(pcadatiLC())
+    pca = pcadatiLC()
+    loadpca = as.data.frame(pca$rotation[, input$selpcslc]) #invece di loadings ci sono i rotation
+    loadpca = tibble::rownames_to_column(loadpca)
+    
+    pcasdev = as.data.frame(round(pca$sdev^2/sum(pca$sdev^2)*100, 2))
+    
+    colnames(loadpca) = c("Compounds", paste0("PC", input$selpcslc))
+    loadplot = ggplot(loadpca) + geom_col(aes(x = Compounds, y = loadpca[,2], fill = Compounds)) +
+      labs(y = paste0("PC", input$selpcslc, " ", "(", pcasdev[as.numeric(input$selpcslc), ], "%", ")"), title = "Loadings") + 
+      theme(axis.text.x = element_text(angle = 315, hjust = 0))
+    plotly::ggplotly(loadplot)
+  })
+  
+  ###screeplot
+  output$screeplotlc <- plotly::renderPlotly({
+    pca = pcadatiLC()
+    var = cumsum(100*pca$sdev^2/sum(pca$sdev^2)) 
+    var = as.data.frame(cbind(var)) %>% tibble::rownames_to_column()
+    colnames(var) = c("Componenti_principali", "Varianza_spiegata")
+    #non so perchè non ordina le componenti e devo farlo io
+    var$Componenti_principali = factor(var$Componenti_principali, levels = c(1:length(var$Componenti_principali)))
+    
+    
+    screegg = ggplot(var, aes(Componenti_principali,Varianza_spiegata)) +
+      geom_line(colour = "red", group = 1, linetype = "dashed", size = 1) + geom_point(size = 4, colour = "red") + 
+      labs(x = "Componenti principali", y = "Varianza spiegata (%)", title = "Screeplot") +
+      scale_y_continuous(limits = c(0, 100), breaks = c(seq(0, 100, by = 10)))
+    plotly::ggplotly(screegg)
+    
+  })
+  
+  
+  ###biplot
+  output$biplotlc = plotly::renderPlotly({
+    req(pcadatiLC())
+    #dato che a monte ho eliminato le righe dove non c'erano valori nei picchi (i double), faccio lo stesso qui con drop_na()
+    datilabel = lcwidepolif() %>% dplyr::filter(N_campionamento == input$numcamppcalc) %>% tidyr::drop_na(starts_with("Peak"))
+    temp = autoplot(pcadatiLC(), data = datilabel, shape = input$shpbiplotlc, colour = input$colbiplotlc, loadings = TRUE, loadings.colour = 'blue', 
+                    loadings.label = TRUE, loadings.label.size = 4, title = "Screeplot")
+    plotly::ggplotly(temp)
+  })
+  
+  
+  ### plot 3D
+  output$pca3dlc = plotly::renderPlotly({
+    req(pcadatiLC())
+    pc = pcadatiLC()
+    scoreind = pc$x #qui invece degli scores ci sono gli x
+    scoreindtb = scoreind %>% as.data.frame() %>% tibble::rownames_to_column("Codice_azienda") %>% tibble::as_tibble()
+    
+    #datilabel = lcwidepolif() %>% dplyr::filter(N_campionamento == input$numcamppcalc)
+    scoreindjoin = dplyr::left_join(x = scoreindtb, y = dplyr::select(lcwidepolif(), Codice_azienda, Provincia, Cultivar_principale, Areale), by = "Codice_azienda")
+    #invece di Comp.1, Comp.2 e Comp.3 qui ho PC1, PC2 e PC3
+    scoreindjoin %>% plotly::plot_ly(x = ~PC1, y = ~PC2, z= ~PC3, type = "scatter3d", mode = "markers", color = ~base::get(input$col3dlc))
+    
+  })
+  
+  
+  
+  
   
   #################### MORFOMETRIA ############################
   
