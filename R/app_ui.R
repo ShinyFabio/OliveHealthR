@@ -739,6 +739,19 @@ app_ui <- function(request) {
                                       tabPanel(tagList(shiny::icon("chart-line"), HTML("&nbsp;PCA")), value = "tabpolindpca",
                                         tabsetPanel(
                                           
+                                          tabPanel("Biplot",
+                                                   br(),
+                                                   fluidRow(
+                                                     column(4, box(width = NULL, status = "primary", 
+                                                                   selectInput("colbiplot", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Cultivar_principale", "Areale", "Provincia")))),
+                                                     column(4, box(width = NULL, status = "primary",
+                                                                   awesomeCheckboxGroup("shpbiplot", "Aggiungi geometria", choices = "Provincia", inline = TRUE)
+                                                     ))
+                                                   ),
+                                                   fluidRow(plotly::plotlyOutput("biplot", height = "500px"))
+                                          ),
+                                          
+                                          
                                           tabPanel("Screeplot",
                                             br(),
                                             plotly::plotlyOutput("screeplot", width = "75%")         
@@ -752,24 +765,11 @@ app_ui <- function(request) {
                                             ),
                                                              
 
-                                          tabPanel("Biplot",
-                                            br(),
-                                            fluidRow(
-                                              column(4, box(width = NULL, status = "primary", 
-                                                            selectInput("colbiplot", "Seleziona colonna riempimento", choices = c("Cultivar_principale", "Areale", "Provincia")))),
-                                              column(4, box(width = NULL, status = "primary",
-                                                            awesomeCheckboxGroup("shpbiplot", "Aggiungi geometria", choices = "Provincia", inline = TRUE)
-                                              ))
-                                            ),
-                                            fluidRow(plotly::plotlyOutput("biplot", height = "500px"))
-                                          ),
-                                                             
-                                          
                                           tabPanel("Plot 3D",
                                             br(),
                                             fluidRow(
                                               column(4, box(width = NULL, status = "primary", 
-                                                            selectInput("col3dind", "Seleziona colonna riempimento", choices = c("Provincia", "Cultivar_principale", "Areale"))))
+                                                            selectInput("col3dind", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Provincia", "Cultivar_principale", "Areale"))))
                                             ),
                                             fluidRow(plotly::plotlyOutput("pca3dpolind", height = "500px"))
                                           )
@@ -883,6 +883,52 @@ app_ui <- function(request) {
                                       ), 
                                       
                                       
+                                      # HEATMAP
+                                      conditionalPanel(
+                                        condition = "input.boxlcgraph == 'tabpanheatlc'",
+                                        
+                                        div(actionButton("updateheatlc", label = "Carica!", class = "btn btn-primary btn-lg", width = "140px", style='padding:5px; font-size:150%; font-weight: bold;'), align= "center"),
+                                        br(),
+                                        h4(strong("Dati")),
+                                        selectInput("numheatlc", "Scegli il numero di campionamento", choices = "", multiple = FALSE),
+                                        #selectInput("selyearheatmorfo", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                        h4(strong("Preprocessing")),
+                                        selectInput("selscaleheatlc", "Scala i dati:", choices = c("No" = "none", "Per riga" = "row", "Per colonna" = "column"), selected = "none"),
+                                        hr(),
+                                        h4(strong("Opzioni dendrogramma")),
+                                        
+                                        ###voglio il dendrograma su riga o colonna o entrambi?
+                                        h5(strong("Scegli dove mostrare il dendrogramma")),
+                                        fluidRow(
+                                          column(6, materialSwitch(inputId = "rowdendlc", label = "Riga",  value = TRUE, status = "primary", width = "90%")),
+                                          column(6, materialSwitch(inputId = "columndendlc", label = "Colonna",  value = TRUE, status = "primary", width = "90%"))
+                                        ),
+                                        selectInput("selectannotlc", "Colonna annotazione:", choices = c("Provincia", "Cultivar_principale")),
+                                        conditionalPanel(condition = "input.rowdendlc == 1 || input.columndendmorfo == 1",
+                                                         selectInput("seldistheatlc", "Funzione di distanza:", choices = c("euclidean", "maximum", "manhattan", "canberra", "minkowski"), selected = "euclidean"),
+                                                         selectInput("selhclustheatlc", "Metodo clustering:", choices = c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty", "median", "centroid"), selected = "complete"),
+                                        ),
+                                        
+                                        conditionalPanel(condition = "input.rowdendlc == 0",
+                                                         h5(strong("Ordinare i dati per annotazione?")),
+                                                         awesomeCheckbox("heatsortlc", label = "Ordina", value = TRUE)
+                                        ),
+                                        
+                                        conditionalPanel(condition = "input.rowdendlc == 1",
+                                                         hr(),
+                                                         h4(strong("Dendrogramma su riga")),
+                                                         sliderInput("sliderrowheatlc", "Numero cluster:", min = 2, max = 10, value = 2),
+                                        ),
+                                        
+                                        conditionalPanel(condition = "input.columndendlc == 1",
+                                                         hr(),
+                                                         h4(strong("Dendrogramma su colonna")),
+                                                         uiOutput("slidercolheatlc"),
+                                        )
+                                      )
+                                      
+                                      
+                                      
                                     ), #end of conditionalpanel grafici
                                     
                                     # PCA 
@@ -891,9 +937,10 @@ app_ui <- function(request) {
                                       selectInput("numcamppcalc", "Scegli il numero di campionamento", choices = "", multiple = FALSE),
                                       awesomeCheckbox("scalepcalc", "Scala i dati", value = FALSE)
                                       
-                                    )
+                                    ),
                                     
                                     
+
                                     
                                     
                                   ), #end of sidebarpanel
@@ -902,8 +949,9 @@ app_ui <- function(request) {
                                     tabBox(id = "tabboxlcxlc", width=NULL,
                                            
                                       tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")), value = "tabdtlc",
-                                                        box(width = NULL, status = "primary", style = "overflow-x: scroll;",
-                                                                   DT::DTOutput("dtlcxlc"))
+                                               box(width = NULL, status = "primary", style = "overflow-x: scroll;",
+                                                                   DT::DTOutput("dtlcxlc")),
+                                               mod_render_NAbox_ui("naboxlc")
                                       ),
                                       
 
@@ -954,6 +1002,11 @@ app_ui <- function(request) {
                                           #barplot
                                           tabPanel("Barplot", value = "tabpanbarlc",
                                                    plotly::plotlyOutput("barplotlc", height = "550px")
+                                          ),
+                                          
+                                          tabPanel("Heatmap", value = "tabpanheatlc",
+                                                   br(),
+                                                   htmlOutput("heatmap_outputlc")
                                           )
                                           
                                           
@@ -966,6 +1019,18 @@ app_ui <- function(request) {
                                       ###### PCA
                                       tabPanel(tagList(shiny::icon("chart-line"), HTML("&nbsp;PCA")), value = "tabpcalc",
                                                tabsetPanel(
+                                                 
+                                                 tabPanel("Biplot",
+                                                          br(),
+                                                          fluidRow(
+                                                            column(4, box(width = NULL, status = "primary", 
+                                                                          selectInput("colbiplotlc", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Cultivar_principale", "Areale", "Provincia")))),
+                                                            column(4, box(width = NULL, status = "primary",
+                                                                          awesomeCheckboxGroup("shpbiplotlc", "Aggiungi geometria", choices = "Provincia", inline = TRUE)
+                                                            ))
+                                                          ),
+                                                          fluidRow(plotly::plotlyOutput("biplotlc", height = "500px"))
+                                                 ),
                                                  
                                                  tabPanel("Screeplot",
                                                           br(),
@@ -980,24 +1045,12 @@ app_ui <- function(request) {
                                                  ),
                                                  
                                                  
-                                                 tabPanel("Biplot",
-                                                          br(),
-                                                          fluidRow(
-                                                            column(4, box(width = NULL, status = "primary", 
-                                                                          selectInput("colbiplotlc", "Seleziona colonna riempimento", choices = c("Cultivar_principale", "Areale", "Provincia")))),
-                                                            column(4, box(width = NULL, status = "primary",
-                                                                          awesomeCheckboxGroup("shpbiplotlc", "Aggiungi geometria", choices = "Provincia", inline = TRUE)
-                                                            ))
-                                                          ),
-                                                          fluidRow(plotly::plotlyOutput("biplotlc", height = "500px"))
-                                                 ),
-                                                 
                                                  
                                                  tabPanel("Plot 3D",
                                                           br(),
                                                           fluidRow(
                                                             column(4, box(width = NULL, status = "primary", 
-                                                                          selectInput("col3dlc", "Seleziona colonna riempimento", choices = c("Provincia", "Cultivar_principale", "Areale"))))
+                                                                          selectInput("col3dlc", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Provincia", "Cultivar_principale", "Areale"))))
                                                           ),
                                                           fluidRow(plotly::plotlyOutput("pca3dlc", height = "500px"))
                                                  )
@@ -1380,7 +1433,7 @@ app_ui <- function(request) {
                                                        fluidPage(
                                                          fluidRow(
                                                            column(4, box(width = NULL, status = "primary",
-                                                                       selectInput("col3dmorfo", "Seleziona colonna riempimento", choices = c("Provincia", "Cultivar_principale", "Areale"))))
+                                                                       selectInput("col3dmorfo", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Provincia", "Cultivar_principale", "Areale"))))
                                                          ), 
                                                          fluidRow(plotly::plotlyOutput("pca3dmorfo", height = "500px")))
                                               )

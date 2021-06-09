@@ -6,6 +6,7 @@
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #' @param data A simple dataframe with only <double> columns. You can use dplyr::select(where(is.double) & -Anno).
+#' @param margins Margins of the plot. The default is c(12,5,3,2) where c(bottom, left, right, up). Increase bottom if labels are cutted.
 #' 
 #' @noRd 
 #' @importFrom VIM aggr 
@@ -41,7 +42,7 @@ mod_render_NAbox_ui <- function(id){
       fluidRow(
         conditionalPanel(
           condition = "input.namorfobutt != 0",
-          plotOutput(ns("namorfoplot"))))
+          plotOutput(ns("namorfoplot"), height = "600px")))
     )
     
   )
@@ -53,7 +54,7 @@ mod_render_NAbox_ui <- function(id){
 #' @import shinydashboard
 #' @importFrom VIM aggr
 #' @noRd 
-mod_render_NAbox_server <- function(id, data){
+mod_render_NAbox_server <- function(id, data, text_size = 0.9, margins = c(12,5,3,2)){
   
   moduleServer(id,
                function(input, output, session){
@@ -77,17 +78,15 @@ mod_render_NAbox_server <- function(id, data){
 
                     output$namorfoplot = renderPlot({
                      if(sum(is.na(data()) > 0)){
-                       VIM::aggr(data(), cex.axis = .9, numbers = T, oma = c(12,5,3,2))
+                       VIM::aggr(data(), cex.axis = text_size, numbers = T, oma = margins)
                      }
-                   })
-
-                 
+                    })
+                    
+                    
                }
-                 
-                 )
-
-
-
+               
+  )
+  
 }
     
 ## To be copied in the UI

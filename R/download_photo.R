@@ -6,7 +6,7 @@
 #' 
 #' 
 #' 
-#' @param url Url where download the zip file. By default "http://bioinfo.na.iac.cnr.it/olivehealth/foto_drupe_foglie_20_21.zip".
+#' @param url Url where download the zip file. The default is "http://bioinfo.na.iac.cnr.it/olivehealth/foto_drupe_foglie_20_21.zip".
 #' 
 #' @export
 #' 

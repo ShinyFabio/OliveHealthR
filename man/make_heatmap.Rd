@@ -15,7 +15,10 @@ make_heatmap(
   dist_method,
   clust_method,
   col_lab,
-  unit_legend
+  unit_legend,
+  year_presence = TRUE,
+  col_label_size = 13.2,
+  bordi = c(2, 2, 2, 15)
 )
 }
 \arguments{
@@ -40,6 +43,10 @@ make_heatmap(
 \item{col_lab}{A label for the column (i.e. "Polifenoli" or "Misure").}
 
 \item{unit_legend}{An unit label for the legend. If data are scaled will be "Z-score" otherwise will be the input.}
+
+\item{year_presence}{Option for data without a year column. Default is TRUE (year column present).}
+
+\item{col_label_size}{Size of the column labels. By default col_label_size = 13.2.}
 }
 \description{
 This function render a Heatmap using ComplexHeatmap package.

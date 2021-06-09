@@ -765,7 +765,7 @@ app_server <- function( input, output, session ) {
   })
   
   #creo il modulo per i NA
-  mod_render_NAbox_server("naboxpoltot", data = nadatapoltot)
+  mod_render_NAbox_server("naboxpoltot", data = nadatapoltot, text_size = 1.1)
   
   #crea tabella polifenoli totali
   output$tablepoltot = DT::renderDT({
@@ -955,7 +955,7 @@ app_server <- function( input, output, session ) {
   })
   
   #creo il modulo per i NA
-  mod_render_NAbox_server("naboxpolind", data = nadatapolind)
+  mod_render_NAbox_server("naboxpolind", data = nadatapolind, text_size = 1.1)
   
   
   #crea tabella polifenoli individuali con l'unità di misura
@@ -1111,14 +1111,15 @@ app_server <- function( input, output, session ) {
       col_dend = input$columndend,
       col_nclust = input$slidercolheat,
       col_lab = "Polifenoli",
-      unit_legend = "ug/g"
+      unit_legend = "ug/g",
+      bordi = c(4,2,2,15)
     )
   })
   
 
   observeEvent(input$updateheat,{
     dataheat2 = dataheat()
-    InteractiveComplexHeatmap::InteractiveComplexHeatmapWidget(input, output, session, dataheat2, output_id = "heatmap_output", layout = "1|23", width1 = 650, height1 = 430)
+    InteractiveComplexHeatmap::InteractiveComplexHeatmapWidget(input, output, session, dataheat2, output_id = "heatmap_output", layout = "1|23", width1 = 850, height1 = 550)
   })
   
   
@@ -1347,8 +1348,27 @@ app_server <- function( input, output, session ) {
   })
   
   
+  #valutare i missing value
+  
+  #aggiusto i data eliminando tutte le colonne non numeriche
+  nadatalc = reactive({
+    req(datalcxlc())
+    if(input$dttypelc == "Wide"){
+      data = datalcxlc()
+    }else{
+      data = lcwidepolif()
+    }
+    data %>% dplyr::select(where(is.double))
+  })
+  
+
+  #creo il modulo per i NA
+  mod_render_NAbox_server("naboxlc", data = nadatalc, text_size = 0.8, margins = c(20,5,3,1))
+  
+  
+  
   ###### data wide con polifenoli sulle colonne
-  ###### File del tipo Codice_azienda | Cultivar_principale | Azienda | N_campionamento | Peak_01.. | Peak_02_... 
+  ###### File del tipo Codice_azienda | Cultivar_principale | Azienda | Areale | N_campionamento | Peak_01.. | Peak_02_... 
   lcwidepolif = reactive({
     temp = datalcxlc() %>% tidyr::gather(Codice_azienda, Quantificazione, colnames(datalcxlc()[,6:length(datalcxlc())])) %>% 
       dplyr::select(Codice_azienda, everything())
@@ -1465,9 +1485,9 @@ app_server <- function( input, output, session ) {
     }else{
       datancamp = datancamp %>% dplyr::select(Codice_azienda, input$lcselpolifscatt)
       datancamp = datancamp %>% dplyr::mutate(Presenza = dplyr::case_when(
-        input$lcselpolifscatt == 0 ~ "Assente",
-        input$lcselpolifscatt < 0 ~ "<LOQ",
-        input$lcselpolifscatt > 0 ~ "Presente"
+        dplyr::select(datancamp, input$lcselpolifscatt) == 0 ~ "Assente",
+        dplyr::select(datancamp, input$lcselpolifscatt) < 0 ~ "<LOQ",
+        dplyr::select(datancamp, input$lcselpolifscatt) > 0 ~ "Presente"
       ))
     }
     datancamp$Presenza = factor(datancamp$Presenza, levels = c("<LOQ", "Assente", "Presente"), ordered = FALSE)
@@ -1476,7 +1496,9 @@ app_server <- function( input, output, session ) {
   
   
   
-  #scatterplot
+  # Scatterplot
+  
+  #aggiungo na.omit() nei colori così se ci sono NA non li conta nella scelta dei colori e non da errore
   output$scatterlc = renderPlotly({
     if(input$lcdatatypescatt == "Azienda"){
       temp = ggplot(data = datalcgraph()) + 
@@ -1486,16 +1508,16 @@ app_server <- function( input, output, session ) {
       plotly::ggplotly(temp)  
     }else{
      temp = ggplot(data = datalcgraph()) + 
-      geom_count(mapping = aes_string(x = "Codice_azienda", y = input$lcselpolifscatt, shape = "Presenza"),color = grDevices::hcl.colors(length(datalcgraph()$Codice_azienda), palette = "Dynamic")) + 
+      geom_count(mapping = aes_string(x = "Codice_azienda", y = input$lcselpolifscatt, shape = "Presenza"),color = grDevices::hcl.colors(length(na.omit(dplyr::select(datalcgraph(),input$lcselpolifscatt))), palette = "Dynamic")) + 
        scale_shape_manual(values=c(10, 1, 16),drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) + 
        theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + ylab(paste(input$lcselpolifscatt, "(mg/Kg)"))
-    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "Codice_azienda")))
+    plotly::ggplotly(temp) #%>% plotly::layout(legend = list(title = list(text = "Codice_azienda")))
     }
     
   })
   
   
-  #barplot
+  # Barplot
   output$barplotlc = renderPlotly({
     if(input$lcdatatypescatt == "Azienda"){
     temp = ggplot(data=datalcgraph()) + 
@@ -1512,7 +1534,77 @@ app_server <- function( input, output, session ) {
   })
   
   
-  ############ PCA LCxLC ###############
+  
+  
+  ############# HEATMAP LCxLC
+  
+  #lcwidepolif() =  Codice_azienda | Cultivar_principale | Azienda | Provincia | Areale | N_campionamento | Peak_01.. | Peak_02_... 
+  
+  #aggiorna il selectinput , "selyearheatind" in base agli anni presenti
+  observeEvent(lcwidepolif(), {
+    #updateSelectInput(session, "selyearheatmorfo", choices = row.names(table(dplyr::select(datamorfo(), "Anno"))))
+    updateSelectInput(session, "numheatlc", choices = row.names(table(dplyr::select(lcwidepolif(), "N_campionamento"))))
+  })
+  
+  lcheatsorted = reactive({
+    #dato che qui codice_azienda è diverso, non posso usare sorderdata() ma devo farlo a mano.
+    #Filtro e tolgo Azienda e areale e poi faccio scegliere uno tra provincia e cultivar
+    dtfilterd = lcwidepolif() %>% dplyr::filter(N_campionamento == input$numheatlc) %>% dplyr::select(-c(Azienda, Areale))
+    if(input$selectannotlc == "Provincia"){
+      dtfilterd = dtfilterd %>% dplyr::select(-Cultivar_principale)
+    }else{
+      dtfilterd = dtfilterd %>% dplyr::select(-Provincia)
+    }
+    seletannota = input$selectannotlc
+    if(input$heatsortlc == TRUE){
+      dtfilterd[do.call(order, dtfilterd[as.character(seletannota[1])]), ]
+    } else{
+      return(dtfilterd)
+    }
+  })
+  
+  #lcheatsorted ha le seguenti colonne: Codice_azienda, N_campionamento, [Anno (non c'è qui)], i vari picchi 
+  #e input$selectannotlc (che può essere Provincia o Cultivar_principale).Ho eliminato year = "..."
+  #così di default è null e non filtra per anno
+  
+  
+  #creo slider per colonna. Qui praticamente rimango solo con i vari polifenoli individuali
+  output$slidercolheatlc <- renderUI({
+    req(lcheatsorted())
+    len = lcheatsorted() %>% dplyr::select(where(is.double)) #ho tolto "-Anno"
+    sliderInput("slidercolheatlc", "Numero cluster:", min=2, max=length(len), value=2, step = 1)
+  })
+  
+
+  
+  #creo l'heatmap
+  dataheatlc = reactive({
+    make_heatmap(
+      datasorted = lcheatsorted(),
+      add_annot = input$selectannotlc,
+      scale_data = input$selscaleheatlc,
+      dist_method = input$seldistheatlc,
+      clust_method = input$selhclustheatlc,
+      row_dend = input$rowdendlc,
+      row_nclust = input$sliderrowheatlc,
+      col_dend = input$columndendlc,
+      col_nclust = input$slidercolheatlc,
+      col_lab = "Compounds",
+      unit_legend = "mg/Kg",
+      year_presence = FALSE,
+      col_label_size = 11.5,
+      bordi = c(25,2,2,10)
+    )
+  })
+  
+  
+  observeEvent(input$updateheatlc,{
+    dataheat2 = dataheatlc()
+    InteractiveComplexHeatmap::InteractiveComplexHeatmapWidget(input, output, session, dataheat2, output_id = "heatmap_outputlc", layout = "1|23", width1 = 1150, height1 = 700)
+  })
+  
+  
+  ####################### PCA LCxLC #######################
   
   observeEvent(lcwidepolif(), {
     updateSelectInput(session, "numcamppcalc", choices = unique(lcwidepolif()$N_campionamento))
@@ -1945,14 +2037,16 @@ app_server <- function( input, output, session ) {
       row_nclust = input$sliderrowheatmorfo,
       col_dend = input$columndendmorfo,
       col_nclust = input$slidercolheatmorfo,
-      col_lab = "Misure"
+      col_lab = "Misure",
+      bordi = c(6,2,2,15)
+      
     )
   })
   
   
   observeEvent(input$updateheatmorfo,{
     dataheat2 = dataheatmorfo()
-    InteractiveComplexHeatmap::InteractiveComplexHeatmapWidget(input, output, session, dataheat2, output_id = "heatmap_outputmorfo", layout = "1|23", width1 = 750, height1 = 550)
+    InteractiveComplexHeatmap::InteractiveComplexHeatmapWidget(input, output, session, dataheat2, output_id = "heatmap_outputmorfo", layout = "1|23", width1 = 850, height1 = 600)
   })
   
 

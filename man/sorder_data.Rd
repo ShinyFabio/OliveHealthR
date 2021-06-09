@@ -4,20 +4,20 @@
 \alias{sorder_data}
 \title{Sort and order a dataframe to be used for the heatmap}
 \usage{
-sorder_data(data, data2, year, n_camp, heat_sort, add_annot)
+sorder_data(data, data2, year = NULL, n_camp, heat_sort, add_annot)
 }
 \arguments{
 \item{data}{The main dataframe with "Provincia" and other information columns (use data()).}
 
 \item{data2}{The second dataframe that has to be sorted and joined with data. (e.g. datapolind()). Data must has "Codice_azienda" and "Azienda" and nothing more (NO Provincia or Cultivar or ID_foglie). So only those 2 char columns and all double columns.}
 
-\item{year}{Data will be filtered by "Anno" (e.g. "2020").}
+\item{year}{Data will be filtered by "Anno" (e.g. "2020"). The default is NULL (data will not be filtered by year but only by n_camp).}
 
 \item{n_camp}{Data will be filtered by "N_campionamento" (e.g. "R2").}
 
 \item{heat_sort}{Option for ordering data (TRUE or FALSE).}
 
-\item{add_annot}{A column used for the annotation (e.g. "Provincia") if heat_sort = TRUE.}
+\item{add_annot}{A column used for the annotation (e.g. "Provincia").}
 }
 \description{
 Sort and/or order a dataframe to be used for the heatmap (will be the "datasorted" variable).

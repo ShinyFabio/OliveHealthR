@@ -7,7 +7,7 @@
 download_photo()
 }
 \arguments{
-\item{url}{Url where download the zip file. By default "http://bioinfo.na.iac.cnr.it/olivehealth/foto_drupe_foglie_20_21.zip".}
+\item{url}{Url where download the zip file. The default is "http://bioinfo.na.iac.cnr.it/olivehealth/foto_drupe_foglie_20_21.zip".}
 }
 \description{
 This function download photos from a link and copy them in the www folder. Data are uploaded on a CNR server.

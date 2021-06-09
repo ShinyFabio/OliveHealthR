@@ -5,7 +5,7 @@
 #' @param data A dataframe with the coordinates columns(UTM_33T_N and UTM_33T_E) and relatives infos.
 #' @param dotlegend An informative column used for the legend and for the mapping of the dots (e.g. "Polifenoli_totali" or "Azienda").
 #' @param shp A shapefile used for the background in the UTM 33T coordinate system. By default shp = campania (a shapefile saved in .rda format).
-#' @param palette A palette name from Color Brewer palettes. By default is NULL (means tmap decides which one to use).
+#' @param palette A palette name from Color Brewer palettes. The default is NULL (means tmap decides which one to use).
 #' 
 #' 
 #' @import tmap

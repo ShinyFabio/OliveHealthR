@@ -13,7 +13,7 @@ make_tmap(data, dotlegend, shp = campania, palette = NULL)
 
 \item{shp}{A shapefile used for the background in the UTM 33T coordinate system. By default shp = campania (a shapefile saved in .rda format).}
 
-\item{palette}{A palette name from Color Brewer palettes. By default is NULL (means tmap decides which one to use).}
+\item{palette}{A palette name from Color Brewer palettes. The default is NULL (means tmap decides which one to use).}
 }
 \description{
 This function render a tmap using a shapefile (campania) as background and a table with coordinates for the points.
