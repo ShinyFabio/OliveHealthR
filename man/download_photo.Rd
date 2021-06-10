@@ -12,3 +12,7 @@ download_photo()
 \description{
 This function download photos from a link and copy them in the www folder. Data are uploaded on a CNR server.
 }
+\seealso{
+If you want to download the data file (.csv) use this
+\href{http://bioinfo.na.iac.cnr.it/olivehealth/File_csv.rar}{link.}
+}

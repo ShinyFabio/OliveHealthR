@@ -8,6 +8,10 @@
 #' 
 #' @param url Url where download the zip file. The default is "http://bioinfo.na.iac.cnr.it/olivehealth/foto_drupe_foglie_20_21.zip".
 #' 
+#' 
+#' @seealso If you want to download the data file (.csv) use this
+#' \href{http://bioinfo.na.iac.cnr.it/olivehealth/File_csv.rar}{link.}
+#'  
 #' @export
 #' 
 #' 
