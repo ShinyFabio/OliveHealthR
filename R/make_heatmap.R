@@ -21,6 +21,7 @@
 #' @importFrom stats dist hclust as.dendrogram setNames
 #' @importFrom dendextend color_branches
 #' @importFrom ComplexHeatmap HeatmapAnnotation Heatmap draw
+#' @importFrom circlize colorRamp2
 #'
 #' @examples \dontrun{
 #' 
@@ -79,7 +80,14 @@ make_heatmap = function(datasorted, add_annot, scale_data, row_dend, row_nclust,
       temp = t(scale(t(temp))) # scale and center rows
       unit_legend = "Z-score"
     } 
-    
+  
+  if(scale_data == "none"){
+    legend_col = c("#ffffff", "#ff8080", "#ff0000")
+  }else{
+    max_legend = max(abs(temp), na.rm = TRUE)
+    legend_col = circlize::colorRamp2(c(-max_legend, 0, max_legend), c("blue", "white", "red"))
+  }
+  
     #dendrogram = none', 'row', 'column' or 'both' 
     if(row_dend == TRUE){
       row_dend2 = temp %>% stats::dist(method = dist_method) %>% stats::hclust(method = clust_method) %>% stats::as.dendrogram()
@@ -104,14 +112,18 @@ make_heatmap = function(datasorted, add_annot, scale_data, row_dend, row_nclust,
     leng = annotdata %>% dplyr::select(add_annot) %>% table() %>% length()
     colorannot = stats::setNames(grDevices::rainbow(n = leng), c(row.names(table(annotdata))))
     colorannot = stats::setNames(list(colorannot), paste(add_annot))
-    col_ha = ComplexHeatmap::HeatmapAnnotation(df = annotdata, which = "row", col = colorannot)
+    col_ha = ComplexHeatmap::HeatmapAnnotation(df = annotdata, which = "row", col = colorannot, border = TRUE)
     
     
-    ht = ComplexHeatmap::Heatmap(temp, name = unit_legend,  rect_gp = grid::gpar(col = "white", lwd = 1), row_title = "Codice azienda", 
-                                 column_title = col_lab, row_names_gp = grid::gpar(fontsize = 10), column_names_gp = grid::gpar(fontsize = col_label_size),
+    ht = ComplexHeatmap::Heatmap(temp, name = unit_legend, rect_gp = grid::gpar(col = "white", lwd = 1), row_title = "Codice azienda", 
+                                 column_title = col_lab, 
+                                 row_names_gp = grid::gpar(fontsize = 10), column_names_gp = grid::gpar(fontsize = col_label_size), #size testo
                                  cluster_rows = row_dend2, cluster_columns = col_dend2, 
                                  left_annotation = col_ha,
-                                 column_split = col_split, row_split = row_split)
+                                 column_split = col_split, row_split = row_split,
+                                 row_gap = unit(2, "mm"), column_gap = unit(2, "mm"), #spazio tra le divisioni
+                                 col = legend_col
+                                 )
     ht = ComplexHeatmap::draw(ht, padding = unit(bordi, "mm"))
 
 

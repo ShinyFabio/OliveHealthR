@@ -935,7 +935,7 @@ app_ui <- function(request) {
                                     conditionalPanel(condition = "input.tabboxlcxlc == 'tabpcalc'",
                                       #selectInput("selyearpca", "Seleziona l'anno", choices = "", multiple = FALSE),
                                       selectInput("numcamppcalc", "Scegli il numero di campionamento", choices = "", multiple = FALSE),
-                                      awesomeCheckbox("scalepcalc", "Scala i dati", value = FALSE)
+                                      awesomeCheckbox("scalepcalc", "Scala i dati", value = TRUE)
                                       
                                     ),
                                     

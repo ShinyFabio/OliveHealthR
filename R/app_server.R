@@ -1472,22 +1472,24 @@ app_server <- function( input, output, session ) {
     if(input$lcdatatypescatt == "Azienda"){
       datancamp = tidyr::gather(datancamp, Compounds, Quantificazione, colnames(dplyr::select(datancamp, starts_with("Peak"))))
       if(input$logscattlc == TRUE){
-        #qui faccio il logaritmo di quantificazione. Se il valore è -1 (<LOQ) lo trasformo in 0.5 così non esce errore
-        #e il log diventa un numero negativo, altrimenti aggiungo +1 (così se il valore è 0 diventa 1 e il logaritmo
-        #non esce -inf ma esce 0). Nota: log(0) = inf e log(-1) errore.
-        datancamp = datancamp %>% dplyr::mutate(Quantificazione = log(ifelse(Quantificazione == -1, 0.5, Quantificazione+1)))
+        #qui modifico i valori di quantificazione per evitare problemi col logaritmo in ggplot. 
+        #Se il valore è -1 (<LOQ) lo trasformo in 0.5 così non esce errore e il log diventa un numero negativo, 
+        #se è 0 diventa 1 (così se il valore è 0 il logaritmo non esce -inf ma esce 0), altrimenti rimane uguale. 
+        #Nota: log(0) = inf e log(-1) errore.
+        datancamp = datancamp %>% dplyr::mutate(Quantificazione = ifelse(Quantificazione == -1, 0.5, 
+                                                                         ifelse(Quantificazione == 0, 1, Quantificazione)))
       }
       datancamp = datancamp %>% dplyr::mutate(Presenza = dplyr::case_when(
-        Quantificazione == 0 ~ "Assente",
-        Quantificazione < 0 ~ "<LOQ",
-        Quantificazione > 0 ~ "Presente"
+        Quantificazione == 1 ~ "Assente",
+        Quantificazione == 0.5 ~ "<LOQ",
+        TRUE ~ "Presente"   #TRUE sarebbe l'equivalente di else quindi in tutti gli altri casi diventa "Presente"
       ))
     }else{
       datancamp = datancamp %>% dplyr::select(Codice_azienda, input$lcselpolifscatt)
       datancamp = datancamp %>% dplyr::mutate(Presenza = dplyr::case_when(
         dplyr::select(datancamp, input$lcselpolifscatt) == 0 ~ "Assente",
-        dplyr::select(datancamp, input$lcselpolifscatt) < 0 ~ "<LOQ",
-        dplyr::select(datancamp, input$lcselpolifscatt) > 0 ~ "Presente"
+        dplyr::select(datancamp, input$lcselpolifscatt) == -1 ~ "<LOQ",
+        TRUE ~ "Presente"
       ))
     }
     datancamp$Presenza = factor(datancamp$Presenza, levels = c("<LOQ", "Assente", "Presente"), ordered = FALSE)
@@ -1500,18 +1502,24 @@ app_server <- function( input, output, session ) {
   
   #aggiungo na.omit() nei colori così se ci sono NA non li conta nella scelta dei colori e non da errore
   output$scatterlc = renderPlotly({
+    if(input$logscattlc == TRUE){
+      transf = "log10"
+    }else{transf = "identity"}
+    #ora plotly mi mostra nel tooltip il log e non il valore normale (in barplot non succede). Per risolvere
+    #creo una label in ggplot e poi la riporto nei tooltip in ggplotly
     if(input$lcdatatypescatt == "Azienda"){
-      temp = ggplot(data = datalcgraph()) + 
+      temp = ggplot(data = datalcgraph(), aes_string(label = "Quantificazione")) + 
         geom_count(mapping = aes_string(x = "Compounds", y = "Quantificazione", shape = "Presenza"), color = grDevices::hcl.colors(length(na.omit(datalcgraph()$Quantificazione)), palette = "Dynamic")) + 
-        scale_shape_manual(values=c(10, 1, 16),drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) + 
-        theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + ylab("Quantificazione (mg/Kg)")
-      plotly::ggplotly(temp)  
+        scale_shape_manual(values=c(10, 1, 16), drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) + 
+        theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab("Quantificazione (mg/Kg)") +
+        scale_y_continuous(trans = transf)
+      plotly::ggplotly(temp, tooltip = c("Compounds", "Presenza", "label")) %>% plotly::layout(legend = list(title = list(text = "Presenza"))) 
     }else{
      temp = ggplot(data = datalcgraph()) + 
       geom_count(mapping = aes_string(x = "Codice_azienda", y = input$lcselpolifscatt, shape = "Presenza"),color = grDevices::hcl.colors(length(na.omit(dplyr::select(datalcgraph(),input$lcselpolifscatt))), palette = "Dynamic")) + 
        scale_shape_manual(values=c(10, 1, 16),drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) + 
        theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + ylab(paste(input$lcselpolifscatt, "(mg/Kg)"))
-    plotly::ggplotly(temp) #%>% plotly::layout(legend = list(title = list(text = "Codice_azienda")))
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "Presenza")))
     }
     
   })
@@ -1519,16 +1527,21 @@ app_server <- function( input, output, session ) {
   
   # Barplot
   output$barplotlc = renderPlotly({
+    if(input$logscattlc == TRUE){
+      transf = "log10"
+    }else{transf = "identity"}
+    
     if(input$lcdatatypescatt == "Azienda"){
     temp = ggplot(data=datalcgraph()) + 
       geom_col(mapping = aes_string(x = "Compounds", y = "Quantificazione", fill = "Presenza")) + 
-      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab("Quantificazione (mg/Kg)")
-    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "N_campionamento")))
+      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab("Quantificazione (mg/Kg)")+
+      scale_y_continuous(trans = transf)
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "N_campionamento"))) 
     }else{
       temp = ggplot(data=datalcgraph()) + 
       geom_col(mapping = aes_string(x = "Codice_azienda", y = input$lcselpolifscatt, fill = "Presenza")) + 
       theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(paste(input$lcselpolifscatt, "(mg/Kg)"))
-    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "N_campionamento")))
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "N_campionamento"))) 
     }
     
   })
@@ -1611,12 +1624,13 @@ app_server <- function( input, output, session ) {
   })
   
 
-  #rimuovo le righe di NA se ci sono. pcadatina mi servirà dopo per il semi_join con data().
+  #rimuovo le righe di NA se ci sono e faccio la PCA. Dato che ci sono colonne con soli zero uso dplyr::select(where(~ any(. != 0)))
+  #per selezionare le colonne che non hanno tutti 0.
   pcadatiLC = reactive({
     req(lcwidepolif())
     #scelgo il num campionamento e faccio la pca stavolta con prcomp perchè ci sono più colonne che righe.
     lcwidepolif() %>% dplyr::filter(N_campionamento == input$numcamppcalc) %>% 
-      dplyr::select(Codice_azienda, where(is.double)) %>% stats::na.exclude() %>%
+      dplyr::select(Codice_azienda, where(is.double)) %>% dplyr::select(where(~ any(. != 0))) %>% stats::na.exclude() %>%
       as.data.frame() %>% tibble::column_to_rownames("Codice_azienda") %>% stats::prcomp(scale = input$scalepcalc) #-Anno e non c'è cor =...
   })
 
