@@ -23,42 +23,42 @@ The goal of OliveHealthR is to analyze and map all the information obtained from
 
 ## Installation
 
-1. Install R. For Windows use this link:
+<strong>1. Install R. For Windows use this link:</strong>
 
     https://cran.r-project.org/bin/windows/base/
 
-2. Install RStudio from this link. Choose your OS.
+<strong>2. Install RStudio from this link. Choose your OS.</strong>
 
     https://www.rstudio.com/products/rstudio/download/#download
 
-3. Install Rtools from this link:
+<strong>3. If you are on Windows, install Rtools from this link otherwise skip this line.</strong>
 
     https://cran.r-project.org/bin/windows/Rtools
 
 
-4. Install devtools if not already installed. Click yes if R asks you something.
+<strong>4. Install devtools if not already installed. Click yes if R asks you something.</strong>
 
 ``` r
 install.packages("devtools")
 ```
 
 
-5. Now you can install OliveHealthR from [GitHub](https://github.com/ShinyFabio/OliveHealthR2) with:
+<strong>5. Now you can install OliveHealthR from [GitHub](https://github.com/ShinyFabio/OliveHealthR2) with:</strong>
 
 ``` r
-devtools::install_github("ShinyFabio/OliveHealthR2")
+devtools::install_github("ShinyFabio/OliveHealthR")
 ```
 Be sure that your R version is at least 4.0.0. Click yes if R asks you something.
 
 
-6. When installation is completed, you can launch this code if you want to download all the olives photos (this step is optional):
+<strong>6. When installation is completed, you can launch this code if you want to download all photos (this step is optional):</strong>
 
 ``` r
 OliveHealthR::download_photo()
 ```
 
 
-### Ubuntu (tested on 18.04) (TESTED ON AN OLIVEHEALTHR OLD VERSION. IT MAY NOT WORK.)
+### Ubuntu (tested on 18.04)
 
 If your OS is Ubuntu you have to perform some additional steps. In command line run these lines:
 
@@ -68,9 +68,17 @@ sudo apt-get install libcairo2-dev                                            #f
 sudo apt-get install libxt-dev                                                #for {Cairo} library
 sudo apt install libudunits2-dev                                              #for {units} library
 sudo apt install libgdal-dev                                                  #for {sf} library
+sudo apt install libmagick++-dev                                              #for {magick} library
 
 ```
 
+### MacOS (should be tested again)
+
+If you're a MacOS user, you have to run this line in the Terminal:
+
+``` r
+brew install imagemagick@6
+```
 
 ## Launch
 
