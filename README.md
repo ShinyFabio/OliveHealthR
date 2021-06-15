@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# OliveHealthR
+# OliveHealthR <img src="man/figures/OliveHealthRfavicon.png" align="right" height="139"/>
 
 <!-- badges: start -->
 

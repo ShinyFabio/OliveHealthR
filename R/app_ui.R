@@ -17,15 +17,14 @@ app_ui <- function(request) {
     golem_add_external_resources(),
     # Your application UI logic 
     navbarPage(title = "OliveHealthR", theme = shinytheme("spacelab"), id = "navb1",
-               tabPanel(title = "Welcome", value = "panel1",
-                        tags$img(src = "www/Photo_2.jpg", width = "100%"),
-                        h2(strong("Cos'è OliveHealthR?"), style = "text-align: center"),
-                        br(), br(),
-                        fluidRow(
-                          column(1, offset=1,tags$img(src = "www/Olivehealt_Logo.png", width = "200", height = "200")),
-                          column(width = 6, offset = 1,
-                                 p(h4("OliveHealthR è un software che svolge le analisi sui dati
-                 provenienti dal progetto Olive Health. L'obiettivo principale del progetto è quello di identificare le
+      tabPanel(title = "Welcome", value = "panel1",
+               tags$img(src = "www/Photo_2.jpg", width = "100%"),
+               h2(strong("Cos'è OliveHealthR?"), style = "text-align: center"),
+               br(), br(),
+               fluidRow(
+                 column(1, offset=1,tags$img(src = "www/OliveHealthRfavicon.png", width = "173", height = "200")),
+                 column(width = 6, offset = 1,
+                   p(h4("OliveHealthR è un software che svolge le analisi sui dati provenienti dal progetto Olive Health. L'obiettivo principale del progetto è quello di identificare le
                  componenti salutistiche (es polifenoli) in prodotti della filiera olivicola (quali foglie, drupe e
                  olio) correlandole alla geo-localizzazione di ciascun appezzamento. Sulla base di queste informazioni
                  verranno prodotti dataset delle variabili rappresentative delle principali caratteristiche fenotipiche,
@@ -33,28 +32,26 @@ app_ui <- function(request) {
                  produttori olivicoli campani.", "Per maggiori informazioni sul progetto clicca",
                                       strong(a(href = "https://olivehealth.it", "qui", .noWS = "after"), .noWS = "after"),
                                       ".", style = "font-family:'Quicksand', Sans-serif; font-weight: 400; line-height: 1.5; text-align: justify;"
-                                 )),
-                          )
-                        ),
+                   )),
+                 
+                 ),
+                 column(1, offset = 1, tags$img(src = "www/Olivehealt_Logo.png", width = "200", height = "200"))
+               ), 
                         
-                        fluidRow(column(1, offset = 5, 
-                                        br(),
-                                        actionButton("jumpToP2", label = HTML("&nbsp;VAI!"), icon("fas fa-rocket"), class = "btn btn-primary btn-lg", width = "200px", style='padding:10px; font-size:200%; font-weight: bold;')
-                        )
-                        ),
+               fluidRow(column(1, offset = 5, 
+                               br(),
+                               actionButton("jumpToP2", label = HTML("&nbsp;VAI!"), icon("fas fa-rocket"), class = "btn btn-primary btn-lg", width = "200px", style='padding:10px; font-size:200%; font-weight: bold;')
+               )
+               ), 
                         
-                        p(h4("Questo progetto è stato finanziato da:")),
-                        fluidRow(column(1, 
-                                        tags$img(src = "www/Logo_AprolCampania.jpg", width = "225", height = "150")
-                        ),
-                        column(2, offset = 4, 
-                               tags$img(src = "www/CNR.png", width = "150", height = "155")
-                        ),
-                        column(3, offset = 2,
-                               tags$img(src = "www/stringa-2.png", width = "423", height = "110")
-                        )
-                        )
-               ),
+               
+               p(h4("Questo progetto è stato finanziato da:")),
+               fluidRow(
+                 column(1, tags$img(src = "www/Logo_AprolCampania.jpg", width = "225", height = "150")),
+                 column(2, offset = 4,  tags$img(src = "www/CNR.png", width = "150", height = "155")),
+                 column(3, offset = 2, tags$img(src = "www/stringa-2.png", width = "423", height = "110"))
+               )
+      ), 
                
                ##### Lista menuItem #### 
                tabPanel(title = "Codice", value = "panel2", 
