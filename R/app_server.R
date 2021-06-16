@@ -48,6 +48,11 @@ app_server <- function( input, output, session ) {
                       selected = "panel2")
   })
   
+  observeEvent(input$jumptohome, {
+    updateTabsetPanel(session, "navb1",
+                      selected = "panel1")
+  })
+  
   #codice per far funzionare il conditional panel legato al "file1".
   output$file1_ready <- reactive({
     return(!is.null(input$file1))

@@ -13,10 +13,13 @@
 #' @noRd
 app_ui <- function(request) {
   tagList(
+    tags$head(tags$style(type = 'text/css', ".navbar-default{display:none;}")), #rimuove la barra "Home | Codice"
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # Your application UI logic 
-    navbarPage(title = "OliveHealthR", theme = shinytheme("spacelab"), id = "navb1",
+    navbarPage(title = "OliveHealthR", theme = shinytheme("spacelab"), id = "navb1", 
+               #tags$head(tags$style(type = "text/css", ".container-fluid{padding-left:0px; padding-right:0px ; }")), #margin-right:auto; margin-left:auto;
+               
       tabPanel(title = "Welcome", value = "panel1",
                tags$img(src = "www/Photo_2.jpg", width = "100%"),
                h2(strong("Cos'è OliveHealthR?"), style = "text-align: center"),
@@ -40,7 +43,7 @@ app_ui <- function(request) {
                         
                fluidRow(column(1, offset = 5, 
                                br(),
-                               actionButton("jumpToP2", label = HTML("&nbsp;VAI!"), icon("fas fa-rocket"), class = "btn btn-primary btn-lg", width = "200px", style='padding:10px; font-size:200%; font-weight: bold;')
+                               actionButton("jumpToP2", label = HTML("&nbsp;VAI!"), icon("rocket"), class = "btn btn-primary btn-lg", width = "200px", style='padding:10px; font-size:200%; font-weight: bold;')
                )
                ), 
                         
@@ -56,7 +59,7 @@ app_ui <- function(request) {
                ##### Lista menuItem #### 
                tabPanel(title = "Codice", value = "panel2", 
                         dashboardPage(
-                          dashboardHeader(title = "OliveHealthR"),
+                          dashboardHeader(title = "OliveHealthR", tags$li(class = "dropdown", actionBttn("jumptohome", icon = icon("home"), style = "stretch", size = "lg" , color = "primary"))),
                           dashboardSidebar(
                             sidebarMenu(
                               menuItem("Azienda", tabName = "azienda", startExpanded = TRUE,
@@ -131,7 +134,7 @@ app_ui <- function(request) {
                                         ),
                                         
                                         mainPanel(width = 10,
-                                              tabsetPanel(
+                                              tabsetPanel(id = "tab2",
                                                           tabPanel(title = "Tabella",
                                                                    box(width = NULL, status = "primary", style = "overflow-x: scroll;",
                                                                        DT::DTOutput("content")
