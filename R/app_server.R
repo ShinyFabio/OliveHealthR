@@ -36,12 +36,14 @@
 #' @importFrom FSA dunnTest
 #' @importFrom fmsb radarchart
 #' @importFrom janitor remove_empty
+#' @import cicerone
 #' @noRd
+
+
 app_server <- function( input, output, session ) {
   # List the first level callModules here
 
-  
-  
+
   ############# Upload file ###############
   observeEvent(input$jumpToP2, {
     updateTabsetPanel(session, "navb1",
@@ -404,7 +406,7 @@ app_server <- function( input, output, session ) {
   
   
   #crea la tabella
-  output$prov2 = DT::renderDT(dplyr::select(data(), c("Azienda", "Codice_azienda")), selection = "single", server = FALSE, rownames = FALSE)
+  output$prov2 = DT::renderDT(dplyr::select(data(), c("Codice_azienda", "Cultivar_principale", "Azienda")), selection = "single", server = FALSE, rownames = FALSE)
   
 
   #aggiorna il selectinput "selyearfoto" in base agli anni presenti e seleziono
@@ -591,7 +593,7 @@ app_server <- function( input, output, session ) {
   output$tableassaggischeda = renderDT({
     req(assaggi())
     assaggi()
-  }, options = list("pageLength" = 15))
+  })
   
   
   ########## Grafici
@@ -659,16 +661,16 @@ app_server <- function( input, output, session ) {
     assaggiyear = dataassaggi() %>% dplyr::filter(Anno == input$selyearbarassagg)
     gatherassaggi = tidyr::gather(assaggiyear, Mediana_misura, Valore, c(Mediana_fruttato, Mediana_amaro, Mediana_piccante), factor_key=TRUE)
     
-    if(input$barplotassaggi == "Affiancato"){
+    #if(input$barplotassaggi == "Affiancato"){
      temp2=ggplot(data=gatherassaggi) + 
-      geom_col(mapping = aes_string(x = "Codice_azienda", y = "Valore", fill = "Mediana_misura"), position = position_dodge()) + 
+      geom_col(mapping = aes_string(x = "Codice_azienda", y = "Valore", fill = "Mediana_misura"), position = input$barplotassaggi) + 
       theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) 
-    }else{
-      #assaggiuniti = dtassaggiyear() %>% dplyr::select(-starts_with("CVR"), -Presenza_difetti)
-      temp2 = ggplot(data = gatherassaggi) + 
-        geom_col(mapping = aes_string(x = "Codice_azienda", y = "Valore", fill = "Mediana_misura"), position = position_stack() ) + 
-        theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank())
-    }
+    # }else{
+    #   #assaggiuniti = dtassaggiyear() %>% dplyr::select(-starts_with("CVR"), -Presenza_difetti)
+    #   temp2 = ggplot(data = gatherassaggi) + 
+    #     geom_col(mapping = aes_string(x = "Codice_azienda", y = "Valore", fill = "Mediana_misura"), position = position_stack() ) + 
+    #     theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank())
+    # }
     plotly::ggplotly(temp2)
   })
   
@@ -1219,8 +1221,13 @@ app_server <- function( input, output, session ) {
   output$biplot = plotly::renderPlotly({
     req(pcadati())
     #qui con semi_join mi prendo solo le righe di data() presenti anche in pcadatina().
-    temp = autoplot(pcadati(), data = dplyr::semi_join(data(), pcadatina()), shape = input$shpbiplot, colour = input$colbiplot, loadings = TRUE, loadings.colour = 'blue', 
-                    loadings.label = TRUE, loadings.label.size = 4, title = "Screeplot")
+    if(input$selbiplotpolind == "Biplot"){
+     temp = autoplot(pcadati(), data = dplyr::semi_join(data(), pcadatina()), shape = input$shpbiplot, colour = input$colbiplot, loadings = TRUE, loadings.colour = 'blue', 
+                    loadings.label = TRUE, loadings.label.size = 4, title = "Biplot") 
+    }else{
+      temp = autoplot(pcadati(), data = dplyr::semi_join(data(), pcadatina()), shape = input$shpbiplot, colour = input$colbiplot, title = "Plot") 
+    }
+    
     plotly::ggplotly(temp)
   })
   
@@ -1410,7 +1417,7 @@ app_server <- function( input, output, session ) {
   #crea la tabella
   output$dtfotolc = DT::renderDT({
     ncamp = ifelse(input$ncampcromatlc == "1_campionamento", "R1", "R2")
-    lcwidepolif() %>% filter(N_campionamento == ncamp) %>% dplyr::select(c("Azienda", "Codice_azienda"))
+    lcwidepolif() %>% filter(N_campionamento == ncamp) %>% dplyr::select(c("Codice_azienda", "Cultivar_principale", "Azienda"))
     }, selection = "single", server = FALSE, rownames = FALSE)
   
   
@@ -1438,7 +1445,7 @@ app_server <- function( input, output, session ) {
     cod = cod[nroww,] %>%  dplyr::select(-c(1:4)) 
     hhh = tidyr::pivot_longer(cod, cols = starts_with("Peak"), names_to = "Compounds", values_to = "Quantizzazione (mg/Kg)")
     h2 = hhh %>% tidyr::separate(Compounds, into = c("Peak", "Compounds"), sep = 8)
-    h2 %>% tidyr::separate(Peak, into = c("rem", "Peak"), sep = "_") %>% dplyr::select(-1)
+    h2 %>% tidyr::separate(Peak, into = c("rem", "Peak"), sep = "_") %>% dplyr::select(-c(1:3))
   })
   
   
@@ -1453,6 +1460,7 @@ app_server <- function( input, output, session ) {
   observeEvent(lcwidepolif(), {
     updateSelectInput(session, "lcselaziendascatt", choices = unique(lcwidepolif()$Codice_azienda))
     updateSelectInput(session, "lcselpolifscatt", choices = colnames(dplyr::select(lcwidepolif(), starts_with("Peak"))))
+    updateSelectInput(session, "lcselcultscatt", choices = unique(lcwidepolif()$Cultivar_principale))
   })
   
   #questo mi serve per aggiornare il ncamp in base alla selezione
@@ -1460,6 +1468,8 @@ app_server <- function( input, output, session ) {
     req(lcwidepolif())
     if(input$lcdatatypescatt == "Azienda"){
       lcwidepolif() %>% dplyr::filter(Codice_azienda == input$lcselaziendascatt)
+    }else if(input$lcdatatypescatt == "Cultivar principale"){
+      lcwidepolif() %>% dplyr::filter(Cultivar_principale == input$lcselcultscatt)
     }else{
       lcwidepolif()
     }
@@ -1471,11 +1481,27 @@ app_server <- function( input, output, session ) {
   
   
   datalcgraph = reactive({
-    
     datancamp = datalcgraphcamp() %>% dplyr::filter(N_campionamento == input$numscattlc)
 
-    if(input$lcdatatypescatt == "Azienda"){
+    if(input$lcdatatypescatt == "Polifenolo"){
+      datancamp = datancamp %>% dplyr::select(-dplyr::starts_with("Peak"), input$lcselpolifscatt)
+      datancamp = datancamp %>% dplyr::mutate(Presenza = dplyr::case_when(
+        dplyr::select(datancamp, input$lcselpolifscatt) == 0 ~ "Assente",
+        dplyr::select(datancamp, input$lcselpolifscatt) == -1 ~ "<LOQ",
+        TRUE ~ "Presente"
+      ))
+    }else{
       datancamp = tidyr::gather(datancamp, Compounds, Quantificazione, colnames(dplyr::select(datancamp, starts_with("Peak"))))
+      if(input$sintscattlc == TRUE){
+        datancamp = datancamp %>% dplyr::group_by(dplyr::across("Compounds")) %>% 
+          dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE), N_aziende = dplyr::n()) %>% dplyr::ungroup() %>%
+          dplyr::mutate(Quantificazione = dplyr::case_when(Quantificazione < 0 ~ -1, TRUE ~ Quantificazione))
+      }
+      datancamp = datancamp %>% dplyr::mutate(Presenza = dplyr::case_when(
+        Quantificazione == 0 ~ "Assente",
+        Quantificazione == -1 ~ "<LOQ",
+        TRUE ~ "Presente"   #TRUE sarebbe l'equivalente di else quindi in tutti gli altri casi diventa "Presente"
+      ))
       if(input$logscattlc == TRUE){
         #qui modifico i valori di quantificazione per evitare problemi col logaritmo in ggplot. 
         #Se il valore è -1 (<LOQ) lo trasformo in 0.5 così non esce errore e il log diventa un numero negativo, 
@@ -1484,49 +1510,47 @@ app_server <- function( input, output, session ) {
         datancamp = datancamp %>% dplyr::mutate(Quantificazione = ifelse(Quantificazione == -1, 0.5, 
                                                                          ifelse(Quantificazione == 0, 1, Quantificazione)))
       }
-      datancamp = datancamp %>% dplyr::mutate(Presenza = dplyr::case_when(
-        Quantificazione == 1 ~ "Assente",
-        Quantificazione == 0.5 ~ "<LOQ",
-        TRUE ~ "Presente"   #TRUE sarebbe l'equivalente di else quindi in tutti gli altri casi diventa "Presente"
-      ))
-    }else{
-      datancamp = datancamp %>% dplyr::select(Codice_azienda, input$lcselpolifscatt)
-      datancamp = datancamp %>% dplyr::mutate(Presenza = dplyr::case_when(
-        dplyr::select(datancamp, input$lcselpolifscatt) == 0 ~ "Assente",
-        dplyr::select(datancamp, input$lcselpolifscatt) == -1 ~ "<LOQ",
-        TRUE ~ "Presente"
-      ))
+      
     }
+
     datancamp$Presenza = factor(datancamp$Presenza, levels = c("<LOQ", "Assente", "Presente"), ordered = FALSE)
     datancamp
   })
   
   
   
+  observeEvent(datalcgraph(), {
+    updateSelectInput(session, "fillscattlc", choices = colnames(dplyr::select(datalcgraph(), -dplyr::any_of(c(dplyr::starts_with("Peak"), "N_campionamento", "Presenza")))))
+  })
+  
+
   # Scatterplot
   
   #aggiungo na.omit() nei colori così se ci sono NA non li conta nella scelta dei colori e non da errore
   output$scatterlc = renderPlotly({
+    
     if(input$logscattlc == TRUE){
       transf = "log10"
     }else{transf = "identity"}
     #ora plotly mi mostra nel tooltip il log e non il valore normale (in barplot non succede). Per risolvere
     #creo una label in ggplot e poi la riporto nei tooltip in ggplotly
-    if(input$lcdatatypescatt == "Azienda"){
+    pos_jitter = ifelse(input$lcdatatypescatt == "Cultivar principale", "jitter", "identity")
+    if(input$lcdatatypescatt == "Polifenolo"){
+      temp = ggplot(data = datalcgraph()) + 
+        geom_count(mapping = aes_string(x = "Codice_azienda", y = input$lcselpolifscatt, shape = "Presenza", color = input$fillscattlc)) + #,color = grDevices::hcl.colors(length(na.omit(dplyr::select(datalcgraph(),input$lcselpolifscatt))), palette = "Dynamic")
+        scale_shape_manual(values=c(10, 1, 16),drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) + 
+        theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + ylab(paste(input$lcselpolifscatt, "(mg/Kg)"))
+      plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "Presenza")))
+    }else{
       temp = ggplot(data = datalcgraph(), aes_string(label = "Quantificazione")) + 
-        geom_count(mapping = aes_string(x = "Compounds", y = "Quantificazione", shape = "Presenza"), color = grDevices::hcl.colors(length(na.omit(datalcgraph()$Quantificazione)), palette = "Dynamic")) + 
+        geom_count(mapping = aes_string(x = "Compounds", y = "Quantificazione", shape = "Presenza", color = input$fillscattlc), size = 3, position = pos_jitter) + #, color = grDevices::hcl.colors(length(na.omit(datalcgraph()$Quantificazione)), palette = "Dynamic")
         scale_shape_manual(values=c(10, 1, 16), drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) + 
         theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab("Quantificazione (mg/Kg)") +
         scale_y_continuous(trans = transf)
-      plotly::ggplotly(temp, tooltip = c("Compounds", "Presenza", "label")) %>% plotly::layout(legend = list(title = list(text = "Presenza"))) 
-    }else{
-     temp = ggplot(data = datalcgraph()) + 
-      geom_count(mapping = aes_string(x = "Codice_azienda", y = input$lcselpolifscatt, shape = "Presenza"),color = grDevices::hcl.colors(length(na.omit(dplyr::select(datalcgraph(),input$lcselpolifscatt))), palette = "Dynamic")) + 
-       scale_shape_manual(values=c(10, 1, 16),drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) + 
-       theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + ylab(paste(input$lcselpolifscatt, "(mg/Kg)"))
-    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "Presenza")))
+      plotly::ggplotly(temp, tooltip = c("Compounds", "Presenza", "label", input$fillscattlc)) %>% plotly::layout(legend = list(title = list(text = "Legenda"))) 
     }
     
+
   })
   
   
@@ -1536,17 +1560,17 @@ app_server <- function( input, output, session ) {
       transf = "log10"
     }else{transf = "identity"}
     
-    if(input$lcdatatypescatt == "Azienda"){
-    temp = ggplot(data=datalcgraph()) + 
-      geom_col(mapping = aes_string(x = "Compounds", y = "Quantificazione", fill = "Presenza")) + 
+    if(input$lcdatatypescatt == "Polifenolo"){
+      temp = ggplot(data=datalcgraph()) + 
+        geom_col(mapping = aes_string(x = "Codice_azienda", y = input$lcselpolifscatt, fill = input$fillscattlc, linetype = "Presenza")) + 
+        theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(paste(input$lcselpolifscatt, "(mg/Kg)"))
+      plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$fillscattlc))) 
+    }else{
+     temp = ggplot(data=datalcgraph()) + 
+      geom_col(mapping = aes_string(x = "Compounds", y = "Quantificazione", fill = input$fillscattlc, linetype = "Presenza"), position = input$bartypelc) + 
       theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab("Quantificazione (mg/Kg)")+
       scale_y_continuous(trans = transf)
-    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "N_campionamento"))) 
-    }else{
-      temp = ggplot(data=datalcgraph()) + 
-      geom_col(mapping = aes_string(x = "Codice_azienda", y = input$lcselpolifscatt, fill = "Presenza")) + 
-      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(paste(input$lcselpolifscatt, "(mg/Kg)"))
-    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "N_campionamento"))) 
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$fillscattlc)))  
     }
     
   })
@@ -1562,12 +1586,20 @@ app_server <- function( input, output, session ) {
   observeEvent(lcwidepolif(), {
     #updateSelectInput(session, "selyearheatmorfo", choices = row.names(table(dplyr::select(datamorfo(), "Anno"))))
     updateSelectInput(session, "numheatlc", choices = row.names(table(dplyr::select(lcwidepolif(), "N_campionamento"))))
+    updateSelectInput(session, "cultheatlc", choices = c("Tutte", row.names(table(dplyr::select(lcwidepolif(), "Cultivar_principale")))))
+    
   })
   
   lcheatsorted = reactive({
     #dato che qui codice_azienda è diverso, non posso usare sorderdata() ma devo farlo a mano.
     #Filtro e tolgo Azienda e areale e poi faccio scegliere uno tra provincia e cultivar
-    dtfilterd = lcwidepolif() %>% dplyr::filter(N_campionamento == input$numheatlc) %>% dplyr::select(-c(Azienda, Areale))
+    if(input$cultheatlc != "Tutte"){
+      dtfilterd = lcwidepolif() %>% dplyr::filter(Cultivar_principale == input$cultheatlc)
+    }else{
+      dtfilterd = lcwidepolif()
+    }
+    
+    dtfilterd = dtfilterd %>% dplyr::filter(N_campionamento == input$numheatlc) %>% dplyr::select(-c(Azienda, Areale))
     if(input$selectannotlc == "Provincia"){
       dtfilterd = dtfilterd %>% dplyr::select(-Cultivar_principale)
     }else{
@@ -1691,8 +1723,14 @@ app_server <- function( input, output, session ) {
     req(pcadatiLC())
     #dato che a monte ho eliminato le righe dove non c'erano valori nei picchi (i double), faccio lo stesso qui con drop_na()
     datilabel = lcwidepolif() %>% dplyr::filter(N_campionamento == input$numcamppcalc) %>% tidyr::drop_na(starts_with("Peak"))
-    temp = autoplot(pcadatiLC(), data = datilabel, shape = input$shpbiplotlc, colour = input$colbiplotlc, loadings = TRUE, loadings.colour = 'blue', 
-                    loadings.label = TRUE, loadings.label.size = 4, title = "Screeplot")
+    if(input$selbiplotlc == "Biplot"){
+      temp = autoplot(pcadatiLC(), data = datilabel, shape = input$shpbiplotlc, colour = input$colbiplotlc, loadings = TRUE, loadings.colour = 'blue', 
+                      loadings.label = TRUE, loadings.label.size = 4, title = "Biplot")
+    }else{
+      temp = autoplot(pcadatiLC(), data = datilabel, shape = input$shpbiplotlc, colour = input$colbiplotlc, title = "Plot")
+    }
+    
+    
     plotly::ggplotly(temp)
   })
   
@@ -1798,7 +1836,7 @@ app_server <- function( input, output, session ) {
   ################# Foto campioni ############
   
   #crea la tabella
-  output$dtfotomorfo = DT::renderDT(dplyr::select(data(), c("Azienda", "Codice_azienda")), selection = "single", server = FALSE, rownames = FALSE)
+  output$dtfotomorfo = DT::renderDT(dplyr::select(data(), c("Codice_azienda", "Cultivar_principale", "Azienda")), selection = "single", server = FALSE, rownames = FALSE)
   
   
   #aggiorna il selectinput "selyearfotomorfo" in base agli anni presenti e seleziono
@@ -2189,11 +2227,14 @@ app_server <- function( input, output, session ) {
   ###biplot
   output$biplotmorfo = plotly::renderPlotly({
     req(pcadatimorfo())
-
-    temp = autoplot(pcadatimorfo(), data = datacolorpcamorfo(), shape = input$shpbiplotmorfo, colour = input$colbiplotmorfo, loadings = TRUE, loadings.colour = 'blue',
-                    loadings.label = TRUE, loadings.label.size = 4, title = "Biplot")
+    if(input$selbiplotmorfo == "Biplot"){
+     temp = autoplot(pcadatimorfo(), data = datacolorpcamorfo(), shape = input$shpbiplotmorfo, colour = input$colbiplotmorfo, loadings = TRUE, loadings.colour = 'blue',
+                    loadings.label = TRUE, loadings.label.size = 4, title = "Biplot") 
+    }else{
+      temp = autoplot(pcadatimorfo(), data = datacolorpcamorfo(), shape = input$shpbiplotmorfo, colour = input$colbiplotmorfo, title = "Plot")
+    }
+    
     plotly::ggplotly(temp)  
- 
   })
 
   #### Plot 3D

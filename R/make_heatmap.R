@@ -20,7 +20,7 @@
 #' @importFrom dplyr select
 #' @importFrom stats dist hclust as.dendrogram setNames
 #' @importFrom dendextend color_branches
-#' @importFrom ComplexHeatmap HeatmapAnnotation Heatmap draw
+#' @importFrom ComplexHeatmap HeatmapAnnotation Heatmap draw ht_opt
 #' @importFrom circlize colorRamp2
 #'
 #' @examples \dontrun{
@@ -113,6 +113,8 @@ make_heatmap = function(datasorted, add_annot, scale_data, row_dend, row_nclust,
     colorannot = stats::setNames(grDevices::rainbow(n = leng), c(row.names(table(annotdata))))
     colorannot = stats::setNames(list(colorannot), paste(add_annot))
     col_ha = ComplexHeatmap::HeatmapAnnotation(df = annotdata, which = "row", col = colorannot, border = TRUE)
+    #aggiungi spazio tra annotazione e heatmap
+    ComplexHeatmap::ht_opt(ROW_ANNO_PADDING = unit(5, "mm"))
     
     
     ht = ComplexHeatmap::Heatmap(temp, name = unit_legend, rect_gp = grid::gpar(col = "white", lwd = 1), row_title = "Codice azienda", 
