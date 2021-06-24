@@ -897,14 +897,13 @@ app_ui <- function(request) {
                                       ),
                                       
                                       # HEATMAP
-                                      conditionalPanel(
-                                        condition = "input.boxlcgraph == 'tabpanheatlc'",
+                                      conditionalPanel(condition = "input.boxlcgraph == 'tabpanheatlc'",
                                         
                                         div(actionButton("updateheatlc", label = "Carica!", class = "btn btn-primary btn-lg", width = "140px", style='padding:5px; font-size:150%; font-weight: bold;'), align= "center"),
                                         br(),
                                         h4(strong("Dati")),
                                         selectInput("numheatlc", "Scegli il numero di campionamento", choices = "", multiple = FALSE),
-                                        selectInput("cultheatlc", "Scegli il numero di campionamento", choices = "", multiple = FALSE),
+                                        selectInput("cultheatlc", "Filtra per cultivar", choices = "", multiple = FALSE),
                                         #selectInput("selyearheatmorfo", "Seleziona l'anno", choices = "", multiple = FALSE),
                                         h4(strong("Preprocessing")),
                                         selectInput("selscaleheatlc", "Scala i dati:", choices = c("No" = "none", "Per riga" = "row", "Per colonna" = "column"), selected = "none"),

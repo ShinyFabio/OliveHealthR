@@ -1531,7 +1531,11 @@ app_server <- function( input, output, session ) {
     
     if(input$logscattlc == TRUE){
       transf = "log10"
-    }else{transf = "identity"}
+      yname = "Log quantificazione (mg/Kg)"
+    }else{
+      transf = "identity"
+      yname = "Quantificazione (mg/Kg)"
+      }
     #ora plotly mi mostra nel tooltip il log e non il valore normale (in barplot non succede). Per risolvere
     #creo una label in ggplot e poi la riporto nei tooltip in ggplotly
     pos_jitter = ifelse(input$lcdatatypescatt == "Cultivar principale", "jitter", "identity")
@@ -1545,7 +1549,7 @@ app_server <- function( input, output, session ) {
       temp = ggplot(data = datalcgraph(), aes_string(label = "Quantificazione")) + 
         geom_count(mapping = aes_string(x = "Compounds", y = "Quantificazione", shape = "Presenza", color = input$fillscattlc), size = 3, position = pos_jitter) + #, color = grDevices::hcl.colors(length(na.omit(datalcgraph()$Quantificazione)), palette = "Dynamic")
         scale_shape_manual(values=c(10, 1, 16), drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) + 
-        theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab("Quantificazione (mg/Kg)") +
+        theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(yname) +
         scale_y_continuous(trans = transf)
       plotly::ggplotly(temp, tooltip = c("Compounds", "Presenza", "label", input$fillscattlc)) %>% plotly::layout(legend = list(title = list(text = "Legenda"))) 
     }
@@ -1558,7 +1562,11 @@ app_server <- function( input, output, session ) {
   output$barplotlc = renderPlotly({
     if(input$logscattlc == TRUE){
       transf = "log10"
-    }else{transf = "identity"}
+      yname = "Log quantificazione (mg/Kg)"
+    }else{
+      transf = "identity"
+      yname = "Quantificazione (mg/Kg)"
+      }
     
     if(input$lcdatatypescatt == "Polifenolo"){
       temp = ggplot(data=datalcgraph()) + 
@@ -1568,7 +1576,7 @@ app_server <- function( input, output, session ) {
     }else{
      temp = ggplot(data=datalcgraph()) + 
       geom_col(mapping = aes_string(x = "Compounds", y = "Quantificazione", fill = input$fillscattlc, linetype = "Presenza"), position = input$bartypelc) + 
-      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab("Quantificazione (mg/Kg)")+
+      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(yname)+
       scale_y_continuous(trans = transf)
     plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$fillscattlc)))  
     }
