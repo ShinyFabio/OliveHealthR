@@ -1521,6 +1521,9 @@ app_server <- function( input, output, session ) {
   
   observeEvent(datalcgraph(), {
     updateSelectInput(session, "fillscattlc", choices = colnames(dplyr::select(datalcgraph(), -dplyr::any_of(c(dplyr::starts_with("Peak"), "N_campionamento", "Presenza")))))
+    updateSelectInput(session, "lcselpolbar", choices = c("Tutti", unique(datalcgraph()$Compounds)), selected = "Tutti")
+    
+    
   })
   
 
@@ -1574,7 +1577,11 @@ app_server <- function( input, output, session ) {
         theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(paste(input$lcselpolifscatt, "(mg/Kg)"))
       plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$fillscattlc))) 
     }else{
-     temp = ggplot(data=datalcgraph()) + 
+      if(input$lcselpolbar != "Tutti"){
+        data = datalcgraph() %>% dplyr::filter(Compounds == input$lcselpolbar)
+      }else{data = datalcgraph()}
+      
+     temp = ggplot(data) + 
       geom_col(mapping = aes_string(x = "Compounds", y = "Quantificazione", fill = input$fillscattlc, linetype = "Presenza"), position = input$bartypelc) + 
       theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(yname)+
       scale_y_continuous(trans = transf)
@@ -1593,8 +1600,8 @@ app_server <- function( input, output, session ) {
   #aggiorna il selectinput , "selyearheatind" in base agli anni presenti
   observeEvent(lcwidepolif(), {
     #updateSelectInput(session, "selyearheatmorfo", choices = row.names(table(dplyr::select(datamorfo(), "Anno"))))
-    updateSelectInput(session, "numheatlc", choices = row.names(table(dplyr::select(lcwidepolif(), "N_campionamento"))))
-    updateSelectInput(session, "cultheatlc", choices = c("Tutte", row.names(table(dplyr::select(lcwidepolif(), "Cultivar_principale")))))
+    updateSelectInput(session, "numheatlc", choices = unique(lcwidepolif()$N_campionamento))
+    updateSelectInput(session, "cultheatlc", choices = c("Tutte", unique(lcwidepolif()$Cultivar_principale)))
     
   })
   

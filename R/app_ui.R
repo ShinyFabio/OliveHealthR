@@ -894,6 +894,7 @@ app_ui <- function(request) {
                                       
                                       conditionalPanel(condition = "input.boxlcgraph == 'tabpanbarlc' && input.lcdatatypescatt == 'Cultivar principale'",
                                       awesomeRadio("bartypelc", "Tipo di barplot", choices = c("Affiancato" = "dodge", "Impilato" = "stack")),
+                                      selectInput("lcselpolbar", "Polifenolo da mostrare", choices = "")
                                       ),
                                       
                                       # HEATMAP
