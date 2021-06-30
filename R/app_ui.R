@@ -10,7 +10,6 @@
 #' @import tmaptools
 #' @import htmltools
 #' @importFrom DT DTOutput
-#' @import cicerone
 #' @noRd
 app_ui <- function(request) {
   tagList(

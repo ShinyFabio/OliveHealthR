@@ -36,7 +36,6 @@
 #' @importFrom FSA dunnTest
 #' @importFrom fmsb radarchart
 #' @importFrom janitor remove_empty
-#' @import cicerone
 #' @noRd
 
 
