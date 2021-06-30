@@ -37,6 +37,13 @@ golem::add_css_file( "custom" )
 ## Add internal datasets ----
 ## If you have data in your package
 usethis::use_data_raw( name = "campania", open = T ) 
+usethis::use_data_raw( name = "drupecamp2020", open = T ) 
+usethis::use_data_raw( name = "oliocampionamento2020", open = T ) 
+usethis::use_data_raw( name = "assaggi2020", open = T ) 
+usethis::use_data_raw( name = "polifenoliLCxLC2020", open = T ) 
+usethis::use_data_raw( name = "Morfometria2020", open = T ) 
+
+
 
 ## Tests ----
 ## Add one line by test you want to create

@@ -1,4 +1,4 @@
-Codice_azienda;N_campionamento;Anno;N_oliva;Volume_(cm3);Area_superfice_(cm2);Lunghezza_(mm);Larghezza_(mm);Sfericità;Forma_(L/W)
+Codice_azienda;N_campionamento;Anno;ID_oliva;Volume_(cm3);Area_superfice_(cm2);Lunghezza_(mm);Larghezza_(mm);Sfericità;Forma_(L/W)
 AV_01;R2;2020;1;0,441174773;3,914334193;18,57146481;7,14;0,71597854;2,601045491
 AV_01;R2;2020;2;0,37803352;3,280149682;15,86473647;7;0,77080408;2,266390924
 AV_01;R2;2020;3;0,423244285;3,626233018;17,72346708;7;0,7517772;2,531923869

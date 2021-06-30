@@ -1,4 +1,4 @@
-Codice_azienda;N_campionamento;Anno;N_oliva;Rapporto_volume_mesocarpo;Rapporto_lunghezza;Rapporto_larghezza
+Codice_azienda;N_campionamento;Anno;ID_oliva;Rapporto_volume_mesocarpo;Rapporto_lunghezza;Rapporto_larghezza
 AV_01;R2;2020;1;0,890042689;1,423285985;2,284313725
 AV_01;R2;2020;2;0,846936568;1,414831227;2,07
 AV_01;R2;2020;3;0,856264872;1,3541813;2,16

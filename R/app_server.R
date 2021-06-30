@@ -92,37 +92,12 @@ app_server <- function( input, output, session ) {
   })
   
   
+  #file già in memoria. Per vedere i file originali e lo script per produrli vedere in data-raw.
+  drupe = reactive(drupecamp2020)
+
+  oliocamp = reactive(oliocampionamento2020)
   
-  #carica il file drupe come .csv
-  drupe = reactive({
-    req(input$drupeinput)
-    x = readr::read_delim(input$drupeinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, date_format = "%d/%m/%Y", encoding = "windows-1252")) %>%
-      janitor::remove_empty("rows")
-    x$Indice_maturazione = factor(x$Indice_maturazione, levels = c(0:8), ordered = TRUE)
-    x$Fase_fenologica = factor(x$Fase_fenologica, levels = c(51, 55, 59, 61, 65, 69, 71, 75, 79, 81, 85, 89), ordered = TRUE)
-    return(x)
-  })
-  
-  #file olio
-  oliocamp = reactive({
-    req(input$olioinput)
-    x = readr::read_delim(input$olioinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, date_format = "%d/%m/%Y", encoding = "windows-1252")) %>% 
-      janitor::remove_empty("rows")
-    x$Olio = factor(x$Olio, levels = c("SI", "NO"), ordered = FALSE)
-    x$Sansa  = factor(x$Sansa, levels = c("SI", "NO"), ordered = FALSE)
-    return(x)
-  })
-  
-  
-  #file assaggi
-  assaggi = reactive({
-    req(input$assagginput)
-    x = readr::read_delim(input$assagginput$datapath, na = "", delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, date_format = "%d/%m/%Y", encoding = "windows-1252")) %>%
-      janitor::remove_empty("rows")
-    x$Anno = as.character(x$Anno)
-    return(x)
-  })
-  
+  assaggi = reactive(assaggi2020)
   
   #carico il file polifenoli come .csv
   polif = reactive({
@@ -135,66 +110,30 @@ app_server <- function( input, output, session ) {
   
   
   ##### Carico i file polifenoli LCxLC ___________
-  lcpolfoglie = reactive({
-    req(input$lcpolfoglieinput)
-    readr::read_delim(input$lcpolfoglieinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>% 
-      janitor::remove_empty("rows")
-  })
+  lcpolfoglie = reactive(polifenoliLCxLC2020$Foglie)
   
-  lcpoldrupe = reactive({
-    req(input$lcpoldrupeinput)
-    readr::read_delim(input$lcpoldrupeinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>% 
-      janitor::remove_empty("rows")
-  })
+  lcpoldrupe = reactive(polifenoliLCxLC2020$Drupe)
   
-  lcpololio = reactive({
-    req(input$lcpololioinput)
-    readr::read_delim(input$lcpololioinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>% 
-      janitor::remove_empty("rows")
-  })
+  lcpololio = reactive(polifenoliLCxLC2020$Olio)
   
-  lcpolposa = reactive({
-    req(input$lcpolposainput)
-    readr::read_delim(input$lcpolposainput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>% 
-      janitor::remove_empty("rows")
-  })
+  lcpolposa = reactive(polifenoliLCxLC2020$Posa)
   
-  lcpolsansa = reactive({
-    req(input$lcpolsansainput)
-    readr::read_delim(input$lcpolsansainput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>%
-      janitor::remove_empty("rows")
-  })
+  lcpolsansa = reactive(polifenoliLCxLC2020$Sansa)
   
   
   #carico i file morfometria
   
   #file foglie
-  morfoleaf = reactive({
-    req(input$morfoleafinput)
-    readr::read_delim(input$morfoleafinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>%
-      janitor::remove_empty("rows")
-  })
+  morfoleaf = reactive(morfometria2020$Foglie)
   
   #file morfometria drupe
-  morfodrupe = reactive({
-    req(input$morfodrupeinput)
-    readr::read_delim(input$morfodrupeinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>%
-      janitor::remove_empty("rows")
-  })
+  morfodrupe = reactive(morfometria2020$Drupe)
   
   #file morfometria endocarpo
-  morfoendo = reactive({
-    req(input$morfoendoinput)
-    readr::read_delim(input$morfoendoinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>%
-      janitor::remove_empty("rows")
-  })
+  morfoendo = reactive(morfometria2020$Endocarpo)
   
   #file rapporti drupe endocarpo
-  morforatio = reactive({
-    req(input$morforatioinput)
-    readr::read_delim(input$morforatioinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>%
-      janitor::remove_empty("rows")
-  })
+  morforatio = reactive(morfometria2020$Rapporti)
   
   
   output$content = DT::renderDT({
@@ -306,6 +245,7 @@ app_server <- function( input, output, session ) {
     datadrupemap() %>% dplyr::mutate(Anno = lubridate::year(Data_campionamento)) #cambiato datadrupe
   })
   
+
   ##########  Grafici datadrupe  #########
   
 
@@ -478,11 +418,11 @@ app_server <- function( input, output, session ) {
  
   #vettore per il radiobutton
   checkfilecalend = reactive({
-    if(!is.null(input$drupeinput) == TRUE && !is.null(input$olioinput) == TRUE){
+    if(!is.null(drupe()) == TRUE && !is.null(oliocamp()) == TRUE){
       c("Tutto", "Olio", "Drupe e foglie")
-    } else if(!is.null(input$drupeinput) == TRUE && !is.null(input$olioinput) == FALSE){
+    } else if(!is.null(drupe()) == TRUE && !is.null(oliocamp()) == FALSE){
       "Drupe e foglie"
-    }else if (!is.null(input$drupeinput) == FALSE && !is.null(input$olioinput) == TRUE){
+    }else if (!is.null(drupe()) == FALSE && !is.null(oliocamp()) == TRUE){
       "Olio"
     }
   })

@@ -894,7 +894,7 @@ app_ui <- function(request) {
                                       
                                       conditionalPanel(condition = "input.boxlcgraph == 'tabpanbarlc' && input.lcdatatypescatt == 'Cultivar principale'",
                                       awesomeRadio("bartypelc", "Tipo di barplot", choices = c("Affiancato" = "dodge", "Impilato" = "stack")),
-                                      selectInput("lcselpolbar", "Polifenolo da mostrare", choices = "")
+                                      selectInput("lcselpolbar", "Polifenoli da mostrare", choices = "")
                                       ),
                                       
                                       # HEATMAP
@@ -1010,12 +1010,7 @@ app_ui <- function(request) {
                                       ##### Grafici
                                       tabPanel(tagList(shiny::icon("chart-bar"), HTML("&nbsp;Grafici")), value = "tabgraphlc",
                                         tabsetPanel(id = "boxlcgraph",
-                                          
-                                          tabPanel("Aziende", value = "tabpanaziendelc",
-                                                   
-                                                   ),
-                                          
-                                          
+
                                           tabPanel("Scatter plot", value = "tabpanscattlc",
                                                    plotly::plotlyOutput("scatterlc", height = "550px")
                                           ),
