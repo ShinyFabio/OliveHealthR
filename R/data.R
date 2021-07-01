@@ -72,11 +72,11 @@
 #'   \item{ID_foglia}{codice identificativo della foglia}
 #'   \item{`Area_(cm3)`}{area della foglia in cm3}
 #'   \item{`Lunghezza_(cm)`}{lunghezza della foglia in cm}
-#'   \item{`Lunghezza_(IOC)`}{lunghezza della foglia secondo la classificazione dell'IOC (short, medium, long)}
+#'   \item{`Lunghezza_(IOC)`}{lunghezza della foglia espresso secondo la classificazione dell'IOC (short, medium, long)}
 #'   \item{`Larghezza_(cm)`}{larghezza della foglia in cm}
-#'   \item{`Larghezza_(IOC)`}{larghezza della foglia secondo la classificazione dell'IOC (narrow, medium, broad)}
+#'   \item{`Larghezza_(IOC)`}{larghezza della foglia espresso secondo la classificazione dell'IOC (narrow, medium, broad)}
 #'   \item{`Forma_(L/W)`}{rapporto tra lunghezza e larghezza}
-#'   \item{`Shape (IOC)`}{forma della foglia secondo la classificazione dell'IOC (elliptic, medium, lanceolate)}
+#'   \item{`Shape (IOC)`}{forma della foglia espresso secondo la classificazione dell'IOC (elliptic, medium, lanceolate)}
 #'   \item{Circolarità}{valore di circolarità della foglia}
 #'   \item{Rotondità}{valore di rotondità della foglia}
 #'   \item{`Perimetro_(cm)`}{perimetro della foglia in cm}
@@ -95,13 +95,13 @@
 #'   \item{`Lunghezza_(mm)`}{lunghezza della drupa in mm}
 #'   \item{`Larghezza_(mm)`}{larghezza della drupa in mm}
 #'   \item{`Forma_(L/W)`}{forma della drupa (rapporto tra lunghezza e larghezza)}
-#'   \item{`Forma_(IOC)`}{forma della drupa secondo la classificazione dell'IOC (spherical, ovoid, elongated)}
-#'   \item{Sfericità}{misura della sfericità della drupa}
+#'   \item{`Forma_(IOC)`}{forma della drupa espresso secondo la classificazione dell'IOC (spherical, ovoid, elongated)}
+#'   \item{Sfericità}{rapporto tra il volume della sfera di superficie pari a quella della drupa e il volume della drupa}
 #'   \item{`Volume_mesocarpo_(cm3)`}{volume del mesocarpo della drupa in cm3}
-#'   \item{Coefficiente_asimmetria}{coefficiente di asimmetria della drupa}
-#'   \item{`Asimmetria_(IOC)`}{coefficiente di asimmetria secondo la classificazione dell'IOC (symmetric, slightly asymmetric, asymmetric)}
-#'   \item{`Posizione_MTD_(%L)`}{}
-#'   \item{`Posizione_MTD_(IOC)`}{posizione .... secondo la classificazione dell'IOC (central, toward base)}
+#'   \item{Coefficiente_asimmetria}{coefficiente di asimmetria della drupa (rapporto tra due porzioni di drupa opportunamente scelte)}
+#'   \item{`Asimmetria_(IOC)`}{coefficiente di asimmetria espresso secondo la classificazione dell'IOC (symmetric, slightly asymmetric, asymmetric)}
+#'   \item{`Posizione_MTD_(%L)`}{posizione del maximum transverse diameter espresso come % della lunghezza della drupa (il valore negativo indica che il diametro trasversale massimo si trova verso la base dell’oliva)}
+#'   \item{`Posizione_MTD_(IOC)`}{posizione del maximum transverse diameter espresso secondo la classificazione dell'IOC (central, toward base)}
 #'  }
 #'  \item{\strong{Endocarpo}}
 #'  \describe{
@@ -122,9 +122,9 @@
 #'   \item{N_campionamento}{codice utilizzato per distinguere il primo dal secondo campionamento (R1, R2)}
 #'   \item{Anno}{l'anno del campionamento (es. 2020)}
 #'   \item{ID_oliva}{codice identificativo dell'endocarpo}
-#'   \item{Rapporto_volume_mesocarpo}{rapporto tra il volume del mesocarpo e dell'endocarpo}
-#'   \item{Rapporto_lunghezza}{}
-#'   \item{Rapporto_larghezza}{}
+#'   \item{Rapporto_volume_mesocarpo}{rapporto tra il volume del mesocarpo e il volume della drupa intera}
+#'   \item{Rapporto_lunghezza}{rapporto tra la lunghezza della drupa e la lunghezza dell’endocarpo}
+#'   \item{Rapporto_larghezza}{rapporto tra la larghezza della drupa e la larghezza dell’endocarpo}
 #'  }
 #' }
 #' @source \url{http://bioinfo.na.iac.cnr.it/olivehealth/File_csv.rar}

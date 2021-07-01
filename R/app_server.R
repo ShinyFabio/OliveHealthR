@@ -1481,6 +1481,7 @@ app_server <- function( input, output, session ) {
     #ora plotly mi mostra nel tooltip il log e non il valore normale (in barplot non succede). Per risolvere
     #creo una label in ggplot e poi la riporto nei tooltip in ggplotly
     pos_jitter = ifelse(input$lcdatatypescatt == "Cultivar principale", "jitter", "identity")
+    size_points = ifelse(input$lcdatatypescatt == "Cultivar principale", 2, 3)
     if(input$lcdatatypescatt == "Polifenolo"){
       temp = ggplot(data = datalcgraph()) + 
         geom_count(mapping = aes_string(x = "Codice_azienda", y = input$lcselpolifscatt, shape = "Presenza", color = input$fillscattlc)) + #,color = grDevices::hcl.colors(length(na.omit(dplyr::select(datalcgraph(),input$lcselpolifscatt))), palette = "Dynamic")
@@ -1489,7 +1490,7 @@ app_server <- function( input, output, session ) {
       plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "Presenza")))
     }else{
       temp = ggplot(data = datalcgraph(), aes_string(label = "Quantificazione")) + 
-        geom_count(mapping = aes_string(x = "Compounds", y = "Quantificazione", shape = "Presenza", color = input$fillscattlc), size = 3, position = pos_jitter) + #, color = grDevices::hcl.colors(length(na.omit(datalcgraph()$Quantificazione)), palette = "Dynamic")
+        geom_count(mapping = aes_string(x = "Compounds", y = "Quantificazione", shape = "Presenza", color = input$fillscattlc), size = size_points, position = pos_jitter) + #, color = grDevices::hcl.colors(length(na.omit(datalcgraph()$Quantificazione)), palette = "Dynamic")
         scale_shape_manual(values=c(10, 1, 16), drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) + 
         theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(yname) +
         scale_y_continuous(trans = transf)

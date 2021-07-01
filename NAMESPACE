@@ -2,7 +2,6 @@
 
 export(download_photo)
 export(run_OliveHealthR)
-import(cicerone)
 import(dplyr, except = lag)
 import(ggfortify)
 import(ggplot2, except = last_plot)
