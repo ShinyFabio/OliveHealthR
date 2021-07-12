@@ -35,7 +35,10 @@ Imports:
     corrplot,
     fmsb,
     janitor,
-    circlize
+    circlize,
+    DataEditR,
+    shinyBS,
+    shinycssloaders
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1

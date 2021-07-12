@@ -10,6 +10,7 @@
 #' @import tmaptools
 #' @import htmltools
 #' @importFrom DT DTOutput
+#' @import shinycssloaders
 #' @noRd
 app_ui <- function(request) {
   tagList(
@@ -133,40 +134,47 @@ app_ui <- function(request) {
                                           )
                                         ),
                                         
+                                        
                                         mainPanel(width = 10,
-                                              tabsetPanel(id = "tab2",
-                                                          tabPanel(title = "Tabella",
-                                                                   box(width = NULL, status = "primary", style = "overflow-x: scroll;",
-                                                                       DT::DTOutput("content")
-                                                                   )
-                                                          ),
+                                          tabsetPanel(id = "tab2",
+                                            tabPanel("Tabella",
+                                              box(width = NULL, status = "primary", style = "overflow-x: scroll;",
+                                                  DT::DTOutput("content")
+                                              ), 
+                                              
+                                              mod_update_data_ui("updataaziende")
+                                              
+                                            ), 
                                                           
-                                                          tabPanel("Cultivar",
-                                                                   box(width=NULL, status = "primary", h4(htmlOutput("numcult"))),
-                                                                   br(),
-                                                                   fluidRow(column(width = 2,
-                                                                                   box(width = NULL, status = "primary",
-                                                                                       radioButtons("selplotcult", label = h4("Tipo di grafico"), choices = list("Grafico a torta" = 1, "Grafico a barre" = 2), selected = 2))
-                                                                   ),
-                                                                   column(width=10, box(width=NULL, status = "primary", uiOutput("cultplot")))
-                                                                   )
-                                                          ),
+                                            
+                                            tabPanel("Cultivar",
+                                              box(width=NULL, status = "primary", h4(htmlOutput("numcult"))),
+                                              br(),
+                                              fluidRow(
+                                                column(2,
+                                                       box(width = NULL, status = "primary",
+                                                           radioButtons("selplotcult", label = h4("Tipo di grafico"), choices = list("Grafico a torta" = 1, "Grafico a barre" = 2), selected = 2))
+                                                ),
+                                                column(width=10, box(width=NULL, status = "primary", uiOutput("cultplot")))
+                                              )
+                                            ), 
                                                           
-                                                          tabPanel("Descrizione", 
-                                                                   tags$h3(strong("Selezionare un'azienda")),
-                                                                   fluidRow(column(width=4, DT::DTOutput("descriz")),
-                                                                            column(width=8, 
-                                                                                   htmlOutput("taby12"), 
-                                                                                   br(), 
-                                                                                   htmlOutput("contatti")
-                                                                            )
-                                                                   )
-                                                          )
-                                              )#end of tabsetpanel
-
+                                            
+                                            tabPanel("Descrizione", 
+                                              tags$h3(strong("Selezionare un'azienda")),
+                                              fluidRow(column(4, DT::DTOutput("descriz")),
+                                                       column(8, 
+                                                         htmlOutput("taby12"),
+                                                         br(),
+                                                         htmlOutput("contatti")
+                                                       )
+                                              )
+                                            )
+                                          )#end of tabsetpanel
+                                          
                                         )#end of mainpanel
                                       )#end of sidebarlayout
-                              ),#end of tabitem "Home"
+                              ), #end of tabitem "Home"
                               
                               
                               tabItem(tabName = "mappa1sub", 
@@ -178,7 +186,7 @@ app_ui <- function(request) {
                                         ),
                                         mainPanel(width = 9,
                                           conditionalPanel(condition = "input.update != 0",
-                                                           tmapOutput("map1")
+                                                           withSpinner(tmapOutput("map1"))
                                           )
                                         )
                                       )
@@ -198,6 +206,8 @@ app_ui <- function(request) {
                                       box(width = NULL, status = "primary", style = "overflow-x: scroll;",
                                           DT::DTOutput("tabledrupscheda")),
                                       #mod_render_NAbox_ui("naboxpoltot")
+                                      mod_update_data_ui("updatadrupe")
+                                      
                                     )
                                     
                                   ),
@@ -221,7 +231,7 @@ app_ui <- function(request) {
                                                 column(3, selectInput("selectfill", "Colonna da usare come riempimento", choices = "", multiple = FALSE))
                                               )),
                                             
-                                            plotly::plotlyOutput("plotxy")
+                                            withSpinner(plotly::plotlyOutput("plotxy"), image = "www/running_olive.gif")
                                           ),
                                           
                                           tabPanel("Barplot",
@@ -516,7 +526,10 @@ app_ui <- function(request) {
                                                fluidPage(
                                                  box(width = NULL, status = "primary", style = "overflow-x: scroll;",
                                                      DT::DTOutput("tablepoltot")),
+                                                 mod_update_data_ui("updatapol"),
                                                  mod_render_NAbox_ui("naboxpoltot")
+                                                 
+                                                 
                                                )
                                       ), #end of tabpanel tabella
                                       

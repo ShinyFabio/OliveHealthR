@@ -36,6 +36,8 @@
 #' @importFrom FSA dunnTest
 #' @importFrom fmsb radarchart
 #' @importFrom janitor remove_empty
+#' @importFrom DataEditR dataEditUI dataEditServer
+#' @importFrom shinyBS bsModal
 #' @noRd
 
 
@@ -72,14 +74,17 @@ app_server <- function( input, output, session ) {
   
   
   #carica il file come .csv
-  data = reactive({
+  data2 = reactive({
     req(input$file1)
     readr::read_delim(input$file1$datapath, delim = input$delim, col_names = input$header, na = "", local = readr::locale(encoding = "windows-1252")) %>%
       janitor::remove_empty("rows")
   })
   
-  
-  
+
+
+  data = mod_update_data_server("updataaziende", original_data = data2, type_data = "azienda")
+
+
   #carico il file descrizione csv
   descri2 = reactive({
     req(input$desc1)
@@ -92,20 +97,33 @@ app_server <- function( input, output, session ) {
   
   
   #file già in memoria. Per vedere i file originali e lo script per produrli vedere in data-raw.
-  drupe = reactive(drupecamp2020)
-
+  drupe2 = reactive(drupecamp2020)
+  
+  
+  drupe = mod_update_data_server("updatadrupe", original_data = drupe2, type_data = "camp_drupe", confronto_aziende = data)
+  
+  # drupe = reactive({
+  #   x = drupe3()
+  #   x$Indice_maturazione = factor(x$Indice_maturazione, levels = c(0:8), ordered = TRUE)
+  #   x$Fase_fenologica = factor(x$Fase_fenologica, levels = c(51, 55, 59, 61, 65, 69, 71, 75, 79, 81, 85, 89), ordered = TRUE)
+  #   return(x)
+  # })
+  # 
   oliocamp = reactive(oliocampionamento2020)
   
   assaggi = reactive(assaggi2020)
   
   #carico il file polifenoli come .csv
-  polif = reactive({
+  polif2 = reactive({
     req(input$polifinput)
-    x = readr::read_delim(input$polifinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, encoding = "windows-1252")) %>% 
+    x = readr::read_delim(input$polifinput$datapath, delim = input$delim, col_names = input$header, local = readr::locale(decimal_mark = input$decim, date_format = "%d/%m/%Y", encoding = "windows-1252")) %>% 
       janitor::remove_empty("rows")
-    x$Presenza_larve = readr::parse_factor(as.character(x$Presenza_larve), levels = c("0","1","2"), ordered = TRUE)
+    #x$Presenza_larve = readr::parse_factor(as.character(x$Presenza_larve), levels = c("0","1","2"), ordered = TRUE)
     return(x)
   })
+  
+  polif = mod_update_data_server("updatapol", original_data = polif2, type_data = "polifenoli", confronto_aziende = data)
+  
   
   
   ##### Carico i file polifenoli LCxLC ___________
@@ -438,13 +456,12 @@ app_server <- function( input, output, session ) {
     oliodate = dplyr::select(oliocamp(), Codice_azienda, Data_campionamento, N_campionamento) %>% dplyr::mutate(campione = "Campionamento olio") %>% tidyr::drop_na()
     
     if(input$selfilecalend == "Tutto"){
-      joindate = dplyr::bind_rows(oliodate, drupdate) 
+      dplyr::bind_rows(oliodate, drupdate) 
     } else if(input$selfilecalend == "Drupe e foglie"){
-      joindate = drupdate
+      drupdate
     } else if(input$selfilecalend == "Olio"){
-      joindate = oliodate
+      oliodate
     }
-    joindate
   })
   
   
@@ -693,7 +710,7 @@ app_server <- function( input, output, session ) {
   #######polifenoli totali#####
   
   #data polifenoli totali
-  datapoltot= reactive({
+  datapoltot = reactive({
     dplyr::select(datapolif(), c("Codice_azienda", "Azienda", "Anno", "N_campionamento", "Cultivar_principale", "Polifenoli_tot", "Presenza_larve"))
   })
   

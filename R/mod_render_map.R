@@ -13,7 +13,7 @@
 #' @import shiny
 #' @import tmap
 #' @import tmaptools
-#' 
+#' @import shinycssloaders
 mod_render_map_ui <- function(id){
   ns <- NS(id)
   tagList(
@@ -43,10 +43,10 @@ mod_render_map_ui <- function(id){
       
       mainPanel(
         conditionalPanel(condition = "input.updatemap_mod != 0", ns = ns,
-                         tmapOutput(ns("mappa1"))),
+                         withSpinner(tmapOutput(ns("mappa1")))),
         conditionalPanel(condition = "input.addmap_mod2 != 0", ns = ns,
                          hr(),
-                         tmapOutput(ns("mappa2")))
+                         withSpinner(tmapOutput(ns("mappa2")), image =  "www/running_olive.gif"))
       )
     ) #end of sidebarlayout
     
