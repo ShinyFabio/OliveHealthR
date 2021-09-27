@@ -25,6 +25,7 @@
 #' @importFrom corrplot corrplot
 #' @importFrom DT renderDT datatable formatRound
 #' @importFrom grDevices rainbow hcl.colors colorRampPalette
+#' @importFrom RColorBrewer brewer.pal
 #' @importFrom dendextend color_branches
 #' @importFrom sf st_as_sf st_crs
 #' @importFrom VIM aggr
@@ -200,12 +201,12 @@ app_server <- function( input, output, session ) {
       plotlyOutput("pie1")
     } else {
       output$bar1 = plotly::renderPlotly({
+        getPalette = grDevices::colorRampPalette(RColorBrewer::brewer.pal(12, "Paired"))
         dd = ggplot(data=data()) + geom_bar(mapping = aes(x = Cultivar_principale, fill = Cultivar_principale)) + 
           scale_y_continuous(breaks = scales::pretty_breaks()) + ggtitle("Presenza delle varie cultivar sul territorio") + 
           xlab("Cultivar") + ylab("Conta") + 
           theme(axis.title = element_text(face="bold", size = 13), axis.text.x = element_text(angle = 315, hjust = 0, size = 11)) + 
-          scale_fill_manual(values = c("#d62728","#2ca02c", "#ff7f0e", "#1f77b4", "#e77c7c", "#5fd35f", "#ffb574", "#57a9e2", "#17becf", "#bcbd22", "#7f7f7f", "#e377c2", "#8c564b", "#9467bd" ))
-        
+          scale_fill_manual(values = getPalette(length(unique(data()$Cultivar_principale))))
       })
       plotly::plotlyOutput("bar1")
     }
@@ -1489,10 +1490,10 @@ app_server <- function( input, output, session ) {
   output$scatterlc = renderPlotly({
     
     if(input$logscattlc == TRUE){
-      transf = "log10"
-      yname = "Log quantificazione (mg/Kg)"
+      datalogg = dplyr::mutate_if(datalcgraph(), is.numeric, log2)
+      yname = "Log2 quantificazione (mg/Kg)"
     }else{
-      transf = "identity"
+      datalogg = datalcgraph()
       yname = "Quantificazione (mg/Kg)"
       }
     #ora plotly mi mostra nel tooltip il log e non il valore normale (in barplot non succede). Per risolvere
@@ -1500,17 +1501,16 @@ app_server <- function( input, output, session ) {
     pos_jitter = ifelse(input$lcdatatypescatt == "Cultivar principale", "jitter", "identity")
     size_points = ifelse(input$lcdatatypescatt == "Cultivar principale", 2, 3)
     if(input$lcdatatypescatt == "Polifenolo"){
-      temp = ggplot(data = datalcgraph()) + 
+      temp = ggplot(data = datalogg) + 
         geom_count(mapping = aes_string(x = "Codice_azienda", y = input$lcselpolifscatt, shape = "Presenza", color = input$fillscattlc)) + #,color = grDevices::hcl.colors(length(na.omit(dplyr::select(datalcgraph(),input$lcselpolifscatt))), palette = "Dynamic")
         scale_shape_manual(values=c(10, 1, 16),drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) + 
         theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + ylab(paste(input$lcselpolifscatt, "(mg/Kg)"))
       plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "Presenza")))
     }else{
-      temp = ggplot(data = datalcgraph(), aes_string(label = "Quantificazione")) + 
+      temp = ggplot(data = datalogg, aes_string(label = "Quantificazione")) + 
         geom_count(mapping = aes_string(x = "Compounds", y = "Quantificazione", shape = "Presenza", color = input$fillscattlc), size = size_points, position = pos_jitter) + #, color = grDevices::hcl.colors(length(na.omit(datalcgraph()$Quantificazione)), palette = "Dynamic")
         scale_shape_manual(values=c(10, 1, 16), drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) + 
-        theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(yname) +
-        scale_y_continuous(trans = transf)
+        theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(yname)
       plotly::ggplotly(temp, tooltip = c("Compounds", "Presenza", "label", input$fillscattlc)) %>% plotly::layout(legend = list(title = list(text = "Legenda"))) 
     }
     
@@ -1521,27 +1521,26 @@ app_server <- function( input, output, session ) {
   # Barplot
   output$barplotlc = renderPlotly({
     if(input$logscattlc == TRUE){
-      transf = "log10"
-      yname = "Log quantificazione (mg/Kg)"
+      datalogg = dplyr::mutate_if(datalcgraph(), is.numeric, log2)
+      yname = "Log2 quantificazione (mg/Kg)"
     }else{
-      transf = "identity"
+      datalogg = datalcgraph()
       yname = "Quantificazione (mg/Kg)"
       }
     
     if(input$lcdatatypescatt == "Polifenolo"){
-      temp = ggplot(data=datalcgraph()) + 
+      temp = ggplot(data=datalogg) + 
         geom_col(mapping = aes_string(x = "Codice_azienda", y = input$lcselpolifscatt, fill = input$fillscattlc, linetype = "Presenza")) + 
         theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(paste(input$lcselpolifscatt, "(mg/Kg)"))
       plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$fillscattlc))) 
     }else{
       if(input$lcselpolbar != "Tutti"){
-        data = datalcgraph() %>% dplyr::filter(Compounds == input$lcselpolbar)
-      }else{data = datalcgraph()}
+        data = datalogg %>% dplyr::filter(Compounds == input$lcselpolbar)
+      }else{data = datalogg}
       
      temp = ggplot(data) + 
       geom_col(mapping = aes_string(x = "Compounds", y = "Quantificazione", fill = input$fillscattlc, linetype = "Presenza"), position = input$bartypelc) + 
-      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(yname)+
-      scale_y_continuous(trans = transf)
+      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(yname)
     plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$fillscattlc)))  
     }
     
@@ -2331,12 +2330,16 @@ app_server <- function( input, output, session ) {
   #test normalità con shapiro test
   shapiro1data = reactive({
     req(datamorfoyeartest())
-    #shp1 = datamorfo()[datamorfo()[[input$catvarttest]] %in% input$culttest1,] %>% dplyr::pull(input$numvarttest) %>% 
+    req(input$catvarttest)
+    req(input$culttest1)
+         #shp1 = datamorfo()[datamorfo()[[input$catvarttest]] %in% input$culttest1,] %>% dplyr::pull(input$numvarttest) %>% 
      # stats::shapiro.test()
     shp1 = datamorfoyeartest() %>% dplyr::filter(.data[[input$catvarttest]] %in% input$culttest1) %>%
       dplyr::pull(input$numvarttest) %>%  stats::shapiro.test()
     shp1$data.name = paste(input$culttest1)
-    shp1
+    shp1 
+    
+
   })
   
   output$shapiro1 = renderPrint({
@@ -2345,6 +2348,8 @@ app_server <- function( input, output, session ) {
   
   shapiro2data = reactive({
     req(datamorfoyeartest())
+    req(input$catvarttest)
+    req(input$culttest2)
     shp2 = datamorfoyeartest() %>% dplyr::filter(.data[[input$catvarttest]] %in% input$culttest2) %>%
       dplyr::pull(input$numvarttest) %>%  stats::shapiro.test()
     shp2$data.name = paste(input$culttest2)

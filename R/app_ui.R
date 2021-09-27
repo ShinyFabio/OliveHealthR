@@ -10,7 +10,7 @@
 #' @import tmaptools
 #' @import htmltools
 #' @importFrom DT DTOutput
-#' @import shinycssloaders
+#' @importFrom shinycssloaders withSpinner
 #' @noRd
 app_ui <- function(request) {
   tagList(
@@ -155,7 +155,7 @@ app_ui <- function(request) {
                                                        box(width = NULL, status = "primary",
                                                            radioButtons("selplotcult", label = h4("Tipo di grafico"), choices = list("Grafico a torta" = 1, "Grafico a barre" = 2), selected = 2))
                                                 ),
-                                                column(width=10, box(width=NULL, status = "primary", uiOutput("cultplot")))
+                                                column(width=10, box(width=NULL, status = "primary", shinycssloaders::withSpinner(image = "www/running_olive.gif", uiOutput("cultplot"))))
                                               )
                                             ), 
                                                           
@@ -186,7 +186,7 @@ app_ui <- function(request) {
                                         ),
                                         mainPanel(width = 9,
                                           conditionalPanel(condition = "input.update != 0",
-                                                           withSpinner(tmapOutput("map1"))
+                                                           shinycssloaders::withSpinner(tmapOutput("map1"),image = "www/running_olive.gif")
                                           )
                                         )
                                       )
@@ -231,14 +231,17 @@ app_ui <- function(request) {
                                                 column(3, selectInput("selectfill", "Colonna da usare come riempimento", choices = "", multiple = FALSE))
                                               )),
                                             
-                                            withSpinner(plotly::plotlyOutput("plotxy"), image = "www/running_olive.gif")
+                                            shinycssloaders::withSpinner(plotly::plotlyOutput("plotxy"), image = "www/running_olive.gif")
                                           ),
                                           
                                           tabPanel("Barplot",
                                             fluidRow(column(width = 2, br(),
                                                             box(width = NULL, status = "primary", checkboxGroupInput("checkcamp", "Seleziona campionamento", choices = ""))
                                                            ),
-                                                     column(width = 10, br(), box(width=NULL, status = "primary", plotly::plotlyOutput("barplot1")))
+                                                     column(width = 10, br(), 
+                                                            box(width=NULL, status = "primary", 
+                                                                shinycssloaders::withSpinner(plotly::plotlyOutput("barplot1"), image = "www/running_olive.gif"))
+                                                     )
                                             )
                                             
                                           )#end of tabpanel
@@ -315,7 +318,7 @@ app_ui <- function(request) {
                                       ),
                                       mainPanel(width = 9,
                                         conditionalPanel(condition = "input.updateoilmap != 0",
-                                          tmapOutput("mapolio")),
+                                          shinycssloaders::withSpinner(image = "www/running_olive.gif", tmapOutput("mapolio"))),
                                       )
                                     )
                                     
@@ -335,7 +338,7 @@ app_ui <- function(request) {
                                     selectInput("selaziendacalend", "Scegli l'azienda", choices = "", multiple = FALSE),
                                   ),
                                   mainPanel(width = 10,
-                                    plotOutput("yearcalendar", height = "700px")
+                                     shinycssloaders::withSpinner(image = "www/running_olive.gif",plotOutput("yearcalendar", height = "700px"))
                                   )
                                 )
                               ),
@@ -370,7 +373,7 @@ app_ui <- function(request) {
                                                   column(3, selectInput("selyearscatterassagg", "Seleziona l'anno", choices = "", multiple = FALSE)),
                                                   column(3, selectInput("selectfillassaggi", "Colonna da usare come riempimento", choices = "", multiple = FALSE))
                                               ))),
-                                          plotly::plotlyOutput("scattplotassagg")
+                                            shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("scattplotassagg"))
                                           )
                                         )
                                       ), #end of tabpanel scatter plot
@@ -385,7 +388,7 @@ app_ui <- function(request) {
                                           
                                           mainPanel(width = 10,
                                             br(),
-                                            plotly::plotlyOutput("barplotassagg")
+                                            shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("barplotassagg"))
                                           )
                                         )
                                       ), #end of tabpanel barplot
@@ -402,7 +405,7 @@ app_ui <- function(request) {
                                           ),
                                           
                                           mainPanel(width = 10,
-                                            div(plotOutput("assaggispider", width = "100%",height = "600px"), align = "center"),
+                                            div(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotOutput("assaggispider", width = "100%",height = "600px")), align = "center"),
                                           )
                                         )
                                       ) #end of tabpanel spiderplot
@@ -414,10 +417,8 @@ app_ui <- function(request) {
                                       
                                       
 
-                                  
-                                  #spiderplot
+                                  #galleria
                                   tabPanel(tagList(shiny::icon("images"), HTML("&nbsp;Galleria")),
-                                    
                                     fluidPage(
                                       fluidRow(
                                         column(width=4, 
@@ -431,15 +432,10 @@ app_ui <- function(request) {
                                         ),
                                         
                                         column(width = 8,
-                                               
                                                column(width = 6, offset = 3,
-                                                      conditionalPanel(condition = "input.dtallegato_rows_selected == 0",
-                                                                       box(width = NULL, background = "yellow", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 27px"), h4(strong("Seleziona un'azienda dalla tabella"), style = "color: white"), style = "text-align: justify;  text-align: center;"),
-                                                      ),
-                                                      
-                                                      # conditionalPanel(condition = "input.dtfotomorfo_rows_selected != 0 && input.campfotomorfo == '1_campionamento'",
-                                                      #                  box(width = NULL, background = "yellow", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 27px"), h4(strong("Nessuna foto in archivio. I dati sulla morfometria riguardano solamente il secondo campionamento."), style = "color: white"), style = "text-align: justify;  text-align: center;"),
-                                                      # )
+                                                 conditionalPanel(condition = "input.dtallegato_rows_selected == 0",
+                                                   box(width = NULL, background = "yellow", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 27px"), h4(strong("Seleziona un'azienda dalla tabella"), style = "color: white"), style = "text-align: justify;  text-align: center;"),
+                                                 )
                                                ),
                                                
                                                conditionalPanel(condition = "input.dtallegato_rows_selected != 0",
@@ -527,6 +523,7 @@ app_ui <- function(request) {
                                                  box(width = NULL, status = "primary", style = "overflow-x: scroll;",
                                                      DT::DTOutput("tablepoltot")),
                                                  mod_update_data_ui("updatapol"),
+                                                 br(),
                                                  mod_render_NAbox_ui("naboxpoltot")
                                                  
                                                  
@@ -545,13 +542,13 @@ app_ui <- function(request) {
                                                        column(3, selectInput("numtot", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)),
                                                        column(3, selectInput("selectfilltot", "Colonna da usare come riempimento", choices = "", multiple = FALSE))
                                                      )),
-                                                   plotly::plotlyOutput("totscatplot")
+                                                   shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("totscatplot"))
                                                  ), #end of tabpanel scatter plot
                                                  
                                                  
                                                  
                                                  tabPanel("Barplot", value = "boxbarpoltot",
-                                                   plotly::plotlyOutput("barplottot")
+                                                   shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("barplottot"))
                                                  ) #end of tabpanel barplot
                                                  
                                                ) #end of tabsetpanel grafici
@@ -560,10 +557,10 @@ app_ui <- function(request) {
                                       #tabpanel mappa
                                       tabPanel(tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")), value = "tabpoltotmap",
                                         conditionalPanel(condition = "input.updatepoltotmap != 0", 
-                                          tmapOutput("poltotmap1")),
+                                          shinycssloaders::withSpinner(image = "www/running_olive.gif", tmapOutput("poltotmap1"))),
                                         conditionalPanel(condition = "input.addmappoltot2 != 0", 
                                           hr(),
-                                          tmapOutput("poltotmap2"))
+                                          shinycssloaders::withSpinner(image = "www/running_olive.gif", tmapOutput("poltotmap2")))
                                       )
                                       
                                     ) #end of tabbox poltot
@@ -722,13 +719,13 @@ app_ui <- function(request) {
                                                 column(3, selectInput("numind", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)),
                                                 column(3, selectInput("selectfillind", "Colonna da usare come riempimento", choices = "", multiple = FALSE))
                                               )),
-                                            plotly::plotlyOutput("scatterindpol")
+                                            shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("scatterindpol"))
                                           ), #end of tabpanel scatterplot
 
                                           
                                           
                                           tabPanel("Barplot", value = "boxbarpolind",
-                                            plotly::plotlyOutput("barplotind")
+                                                   shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("barplotind"))
                                           ), #end of tabpanel barplot
                                                  
                                                  
@@ -740,7 +737,7 @@ app_ui <- function(request) {
                                                  
                                                  
                                           tabPanel("Correlation Plot", value = "boxcorrpolind",
-                                            plotly::plotlyOutput("corrplotind")
+                                            shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("corrplotind"))
                                           ) #end of tabpanel correlation
                                                  
                                         ) #end of tabsetpanel
@@ -762,20 +759,20 @@ app_ui <- function(request) {
                                                        column(4, box(width = NULL, status = "primary",
                                                                    awesomeCheckboxGroup("shpbiplot", "Aggiungi geometria", choices = "Provincia", inline = TRUE)
                                                      ))),
-                                                   fluidRow(plotly::plotlyOutput("biplot", height = "500px")))
+                                                   fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("biplot", height = "500px"))))
                                           ),
                                           
                                           
                                           tabPanel("Screeplot",
                                             br(),
-                                            plotly::plotlyOutput("screeplot", width = "75%")         
+                                            shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("screeplot", width = "75%"))
                                           ),
                                                              
 
                                           tabPanel("Loadings",
                                             br(),
                                             fluidRow(column(4, box(width = NULL, status = "primary", uiOutput("sliderpc")))),
-                                            fluidRow(plotly::plotlyOutput("loadings"))
+                                            fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("loadings")))
                                             ),
                                                              
 
@@ -785,7 +782,7 @@ app_ui <- function(request) {
                                               column(4, box(width = NULL, status = "primary", 
                                                             selectInput("col3dind", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Provincia", "Cultivar_principale", "Areale"))))
                                             ),
-                                            fluidRow(plotly::plotlyOutput("pca3dpolind", height = "500px"))
+                                            fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("pca3dpolind", height = "500px")))
                                           )
 
                                         ) #end of tabsetpanel
@@ -839,10 +836,10 @@ app_ui <- function(request) {
                                       
                                       tabPanel(tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")), value = "tabpolindmap",
                                         conditionalPanel(condition = "input.updatepolindmap != 0", 
-                                          tmapOutput("polindmap1")),
+                                          shinycssloaders::withSpinner(image = "www/running_olive.gif", tmapOutput("polindmap1"))),
                                         conditionalPanel(condition = "input.addmappolind2 != 0", 
                                           hr(),
-                                          tmapOutput("polindmap2"))
+                                          shinycssloaders::withSpinner(image = "www/running_olive.gif", tmapOutput("polindmap2")))
                                       )
                                       
                                       
@@ -1024,21 +1021,18 @@ app_ui <- function(request) {
                                         tabsetPanel(id = "boxlcgraph",
 
                                           tabPanel("Scatter plot", value = "tabpanscattlc",
-                                                   plotly::plotlyOutput("scatterlc", height = "550px")
+                                                   shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("scatterlc", height = "550px"))
                                           ),
                                           
                                           #barplot
                                           tabPanel("Barplot", value = "tabpanbarlc",
-                                                   plotly::plotlyOutput("barplotlc", height = "550px")
+                                                   shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("barplotlc", height = "550px"))
                                           ),
                                           
                                           tabPanel("Heatmap", value = "tabpanheatlc",
                                                    br(),
                                                    htmlOutput("heatmap_outputlc")
                                           )
-                                          
-                                          
-                                          
                                         )
                                             
                                         ), # end of tabpanel grafici
@@ -1061,12 +1055,12 @@ app_ui <- function(request) {
                                                                           awesomeCheckboxGroup("shpbiplotlc", "Aggiungi geometria", choices = "Provincia", inline = TRUE)
                                                             ))
                                                           ),
-                                                          fluidRow(plotly::plotlyOutput("biplotlc", height = "500px")))
+                                                          fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("biplotlc", height = "500px"))))
                                                  ),
                                                  
                                                  tabPanel("Screeplot",
                                                           br(),
-                                                          plotly::plotlyOutput("screeplotlc", width = "75%")         
+                                                          shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("screeplotlc", width = "75%"))
                                                  ),
                                                  
                                                  
@@ -1074,7 +1068,7 @@ app_ui <- function(request) {
                                                           br(),
                                                           fluidPage(
                                                           fluidRow(column(4, box(width = NULL, status = "primary", uiOutput("sliderpclc")))),
-                                                          fluidRow(plotly::plotlyOutput("loadingslc", height = "550px")))
+                                                          fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("loadingslc", height = "550px"))))
                                                  ),
                                                  
                                                  
@@ -1086,7 +1080,7 @@ app_ui <- function(request) {
                                                             column(4, box(width = NULL, status = "primary", 
                                                                           selectInput("col3dlc", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Provincia", "Cultivar_principale", "Areale"))))
                                                           ),
-                                                          fluidRow(plotly::plotlyOutput("pca3dlc", height = "500px")))
+                                                          fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("pca3dlc", height = "500px"))))
                                                  )
                                                  
                                                ) #end of tabsetpanel
@@ -1399,23 +1393,23 @@ app_ui <- function(request) {
                                                
                                         tabsetPanel(id = "boxmorfograph",
                                           tabPanel("Boxplot", value = "tabpanboxmorfo",
-                                               plotly::plotlyOutput("boxmorfo")
+                                                   shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("boxmorfo"))
                                                ),
                                       
                                           tabPanel("Barplot", value = "tabpanbarmorfo",
-                                               plotly::plotlyOutput("barmorfo")
+                                                   shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("barmorfo"))
                                                ),
                                           
                                           tabPanel("Scatter plot", value = "tabpanscattmorfo",
-                                                   plotly::plotlyOutput("scattmorfo")
+                                                   shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("scattmorfo"))
                                                    ),
                                           
                                           tabPanel("IOC", value = "tabpaniocmorfo",
-                                                   plotly::plotlyOutput("iocmorfo"),
+                                                   shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("iocmorfo")),
                                                    
                                                    conditionalPanel(condition = "input.addiocmorfo2 != 0",
                                                      hr(),
-                                                     plotly::plotlyOutput("iocmorfo2"),
+                                                     shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("iocmorfo2")),
                                                    )
                                           ), 
                                           
@@ -1425,7 +1419,7 @@ app_ui <- function(request) {
                                                    ),
                                           tabPanel("Correlation plot", value = "tabpancorrmorfo",
                                             br(),
-                                            plotly::plotlyOutput("corrplotmorfo")
+                                            shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("corrplotmorfo"))
                                           )
                                         )
                                       ),
@@ -1447,12 +1441,12 @@ app_ui <- function(request) {
                                                            ))
                                                            
                                                          ),
-                                                         fluidRow(plotly::plotlyOutput("biplotmorfo", height = "500px")))
+                                                         fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("biplotmorfo", height = "500px"))))
                                               ),
 
                                               tabPanel("Screeplot",
                                                 br(),
-                                                plotly::plotlyOutput("screeplotmorfo", width = "75%")
+                                                shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("screeplotmorfo", width = "75%"))
                                               ),
 
                                               tabPanel("Loadings",
@@ -1460,7 +1454,7 @@ app_ui <- function(request) {
                                                 fluidPage(
                                                   fluidRow(column(4, box(width = NULL, status = "primary",
                                                                        uiOutput("sliderpcmorfo")))),
-                                                  fluidRow(plotly::plotlyOutput("loadingsmorfo")))
+                                                  fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("loadingsmorfo"))))
                                                 ),
 
 
@@ -1471,7 +1465,7 @@ app_ui <- function(request) {
                                                            column(4, box(width = NULL, status = "primary",
                                                                        selectInput("col3dmorfo", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Provincia", "Cultivar_principale", "Areale"))))
                                                          ), 
-                                                         fluidRow(plotly::plotlyOutput("pca3dmorfo", height = "500px")))
+                                                         fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("pca3dmorfo", height = "500px"))))
                                               )
                                             )
                                             
@@ -1483,7 +1477,7 @@ app_ui <- function(request) {
                                         tabsetPanel(
                                           tabPanel("Numero cluster",
                                             br(),
-                                            plotOutput("numclustergraph", height = "800px")
+                                            shinycssloaders::withSpinner(image = "www/running_olive.gif", plotOutput("numclustergraph", height = "800px"))
                                           ),
                                                   
                                           tabPanel("Cluster plot",
@@ -1501,7 +1495,7 @@ app_ui <- function(request) {
                                                   )
                                                 )
                                               ), 
-                                              fluidRow(plotOutput("plotclustermorfo", height = "600px"))
+                                              fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotOutput("plotclustermorfo", height = "600px")))
                                             )
                                           )
                                           
@@ -1531,7 +1525,8 @@ app_ui <- function(request) {
                                                                                  box(width = NULL, title = strong("Test statistico"), status = "warning", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 20px; color: rgb(243,156,18)"), 
                                                                                      h5(strong("Errore. La variabile dipendente e il fattore esplicativo devono essere diversi.", style = "color: rgb(243,156,18)")), style = "text-align: justify;  text-align: center;"))
                                                          ),
-                                                         column(6, box(width = NULL, title = strong("Grafico"), status = "primary", plotly::plotlyOutput("scattcorrtest")))
+                                                         column(6, box(width = NULL, title = strong("Grafico"), status = "primary", 
+                                                                       shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("scattcorrtest"))))
                                                        )
                                                      ),
                                             ), #end of tabpanel
@@ -1568,7 +1563,8 @@ app_ui <- function(request) {
                                                 ), 
                                                 
                                                 fluidRow(
-                                                  column(8, offset = 2, box(width = NULL, title = strong("Grafico"), status = "primary", plotlyOutput("boxttest")))
+                                                  column(8, offset = 2, box(width = NULL, title = strong("Grafico"), status = "primary", 
+                                                                            shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("boxttest"))))
                                                 )
                                               ) #end of fluidpage
                                           ), #end of tabpanel conf 2 gruppi
@@ -1579,7 +1575,8 @@ app_ui <- function(request) {
                                           tabPanel("Confronto tra più gruppi", value = "tabpananovamorfo",
                                             fluidPage(
                                               fluidRow(
-                                                column(12, box(width = NULL, title = strong("Boxplot"), status = "primary", plotly::plotlyOutput("boxanova")))
+                                                column(12, box(width = NULL, title = strong("Boxplot"), status = "primary", 
+                                                               shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("boxanova"))))
                                               ), 
                                                      
                                               fluidRow(
@@ -1617,7 +1614,7 @@ app_ui <- function(request) {
                                                                  conditionalPanel(condition = "input.selectanovatest2 == 'Kruskal-Wallis'",
                                                                    h4(strong("Dunn Test")),
                                                                  ),  
-                                                                 plotly::plotlyOutput("posthocmorfograph")
+                                                                 shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("posthocmorfograph"))
                                                                ), 
                                                                
                                                                conditionalPanel(condition = "output.signiftestmorfoui == 'non significativo'",
@@ -1649,7 +1646,7 @@ app_ui <- function(request) {
                                                   fluidRow(
                                                     conditionalPanel(condition = "output.signiftestchisqmorfoui == 'significativo'",
                                                     #box(width = NULL, title = strong("Grafico residui"), status = "primary", style = "text-align: justify;  text-align: center;",
-                                                          plotOutput("plotresidchisq")
+                                                    shinycssloaders::withSpinner(image = "www/running_olive.gif", plotOutput("plotresidchisq"))
                                                      #   )
                                                         
                                                     ),
@@ -1674,10 +1671,10 @@ app_ui <- function(request) {
                                       #tabpanel mappa
                                       tabPanel(tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")), value = "tabmapmor",
                                               conditionalPanel(condition = ("input.upmapmorfo != 0"),
-                                              tmapOutput("mapmorfo1"),
+                                                shinycssloaders::withSpinner(image = "www/running_olive.gif", tmapOutput("mapmorfo1")),
                                               conditionalPanel(condition = "input.addmapmorfo2 != 0",
                                                 hr(),
-                                                tmapOutput("mapmorfo2")
+                                                shinycssloaders::withSpinner(image = "www/running_olive.gif", tmapOutput("mapmorfo2"))
                                               )
                                               ))
                                     ) #end of tabBox
