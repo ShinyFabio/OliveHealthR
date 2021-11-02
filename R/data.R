@@ -129,3 +129,132 @@
 #' }
 #' @source \url{http://bioinfo.na.iac.cnr.it/olivehealth/File_csv.rar}
 "morfometria2020"
+
+
+
+
+#' Polifenoli totali di drupe, foglie, olio, posa e sansa 2020
+#'
+#' Una lista che contiene 4 dataframe contenenti i dati sui polifenoli totali  di drupe, foglie, olio, posa e sansa della stagione 2020.
+#'
+#' @format Una lista con 4 dataset:
+#' \itemize{
+#' \item{\strong{Foglie}}
+#' \describe{
+#' Un dataset con 312 righe e 5 variabili:
+#'   \item{Codice_azienda}{codice identificativo dell'azienda (es. SA_01)}
+#'   \item{N_campionamento}{codice utilizzato per distinguere il primo dal secondo campionamento (R1, R2)}
+#'   \item{Anno}{l'anno del campionamento (es. 2020)}
+#'   \item{Estrazione}{codice identificativo dell'estrazione}
+#'   \item{`Polifenoli (mg/g foglie)`}{polifenoli totali delle foglie in mg su g di foglie}
+#'   }
+#'  \item{\strong{Drupe}}
+#'  \describe{
+#'  Un dataset con 312 righe e 6 variabili:
+#'   \item{Codice_azienda}{codice identificativo dell'azienda (es. SA_01)}
+#'   \item{N_campionamento}{codice utilizzato per distinguere il primo dal secondo campionamento (R1, R2)}
+#'   \item{Anno}{l'anno del campionamento (es. 2020)}
+#'   \item{Estrazione}{codice identificativo dell'estrazione}
+#'   \item{Presenza_larve}{presenza di larve (0 niente larve; 1 poche larve; 2 molte larve)}
+#'   \item{`Polifenoli (mg/g drupe)`}{polifenoli totali delle drupe in mg su g di drupe}
+#'  }
+#'  \item{\strong{Olio}}
+#'  \describe{
+#'   \item{Codice_azienda}{codice identificativo dell'azienda (es. SA_01)}
+#'   \item{N_campionamento}{codice utilizzato per distinguere il primo dal secondo campionamento (R1, R2)}
+#'   \item{Tipo_olio}{colonna che identifica se le drupe sono state denocciolate ("denocciolato") o no ("massa_ultima")}
+#'   \item{Anno}{l'anno del campionamento (es. 2020)}
+#'   \item{Estrazione}{codice identificativo dell'estrazione}
+#'   \item{`Polifenoli (mg/g olio)`}{polifenoli totali delle olio in mg su kg di olio}
+#'  }
+#'  \item{\strong{Posa}}
+#'  \describe{
+#'   \item{Codice_azienda}{codice identificativo dell'azienda (es. SA_01)}
+#'   \item{N_campionamento}{codice utilizzato per distinguere il primo dal secondo campionamento (R1, R2)}
+#'   \item{Tipo_olio}{colonna che identifica se le drupe sono state denocciolate ("denocciolato") o no ("massa_ultima")}
+#'   \item{Anno}{l'anno del campionamento (es. 2020)}
+#'   \item{Estrazione}{codice identificativo dell'estrazione}
+#'   \item{`Polifenoli (mg/g posa)`}{polifenoli totali della posa in mg su kg di posa}
+#'  }
+#'  \item{\strong{Sansa}}
+#'  \describe{
+#'   \item{Codice_azienda}{codice identificativo dell'azienda (es. SA_01)}
+#'   \item{N_campionamento}{codice utilizzato per distinguere il primo dal secondo campionamento (R1, R2)}
+#'   \item{Tipo_olio}{colonna che identifica se le drupe sono state denocciolate ("denocciolato") o no ("massa_ultima")}
+#'   \item{Anno}{l'anno del campionamento (es. 2020)}
+#'   \item{Estrazione}{codice identificativo dell'estrazione}
+#'   \item{`Polifenoli (mg/g sansa)`}{polifenoli totali della sansa in mg su kg di sansa}
+#'  }
+#' }
+#' @source \url{http://bioinfo.na.iac.cnr.it/olivehealth/File_csv.rar}
+"poliftot2020"
+
+
+
+
+#' Polifenoli individuali di drupe, foglie, olio e posa 2020
+#'
+#' Una lista che contiene 4 dataframe contenenti i dati sui polifenoli individuali  di drupe, foglie, olio e posa della stagione 2020.
+#'
+#' @format Una lista con 4 dataset:
+#' \itemize{
+#' \item{\strong{Foglie}}
+#' \describe{
+#' Un dataset con 312 righe e 5 variabili:
+#'   \item{Codice_azienda}{codice identificativo dell'azienda (es. SA_01)}
+#'   \item{N_campionamento}{codice utilizzato per distinguere il primo dal secondo campionamento (R1, R2)}
+#'   \item{Anno}{l'anno del campionamento (es. 2020)}
+#'   \item{Estrazione}{codice identificativo dell'estrazione}
+#'   \item{Acido_Gallico}{concentrazione dell'Acido Gallico nelle foglie in ug su g di foglie}
+#'   \item{Idrossitirosolo}{concentrazione dell'Idrossitirosolo nelle foglie in ug su g di foglie}
+#'   \item{Acido_siringico}{concentrazione dell'Acido Siringico nelle foglie in ug su g di foglie}
+#'   \item{Acido_p.Cumarico}{concentrazione dell'Acido p-Cumarico nelle foglie in ug su g di foglie}
+#'   \item{Acido_trans.Ferulico}{concentrazione dell'Acido trans-Ferulico nelle foglie in ug su g di foglie}
+#'   \item{Oleuropeina}{concentrazione dell'Oleuropeina nelle foglie in ug su g di foglie}
+#'   \item{Quercetina}{concentrazione della Quercetina nelle foglie in ug su g di foglie}
+#'   }
+#'  \item{\strong{Drupe}}
+#'  \describe{
+#'  Un dataset con 312 righe e 6 variabili:
+#'   \item{Codice_azienda}{codice identificativo dell'azienda (es. SA_01)}
+#'   \item{N_campionamento}{codice utilizzato per distinguere il primo dal secondo campionamento (R1, R2)}
+#'   \item{Anno}{l'anno del campionamento (es. 2020)}
+#'   \item{Estrazione}{codice identificativo dell'estrazione}
+#'   \item{Idrossitirosolo}{concentrazione dell'Idrossitirosolo nelle drupe in ug su g di drupe}
+#'   \item{Acido_siringico}{concentrazione dell'Acido Siringico nelle drupe in ug su g di drupe}
+#'   \item{Acido_p.Cumarico}{concentrazione dell'Acido p-Cumarico nelle drupe in ug su g di drupe}
+#'   \item{Acido_trans.Ferulico}{concentrazione dell'Acido trans-Ferulico nelle drupe in ug su g di drupe}
+#'   \item{Oleuropeina}{concentrazione dell'Oleuropeina nelle drupe in ug su g di drupe}
+#'   \item{Quercetina}{concentrazione della Quercetina nelle drupe in ug su g di drupe}
+#'  }
+#'  \item{\strong{Olio}}
+#'  \describe{
+#'   \item{Codice_azienda}{codice identificativo dell'azienda (es. SA_01)}
+#'   \item{N_campionamento}{codice utilizzato per distinguere il primo dal secondo campionamento (R1, R2)}
+#'   \item{Tipo_olio}{colonna che identifica se le drupe sono state denocciolate ("denocciolato") o no ("massa_ultima")}
+#'   \item{Anno}{l'anno del campionamento (es. 2020)}
+#'   \item{Estrazione}{codice identificativo dell'estrazione}
+#'   \item{Idrossitirosolo}{concentrazione dell'Idrossitirosolo nell'olio in mg su kg di olio}
+#'   \item{Acido_siringico}{concentrazione dell'Acido Siringico nell'olio in mg su kg di olio}
+#'   \item{Acido_p.Cumarico}{concentrazione dell'Acido p-Cumarico nell'olio in mg su kg di olio}
+#'   \item{Acido_trans.Ferulico}{concentrazione dell'Acido trans-Ferulico nell'olio in mg su kg di olio}
+#'   \item{Oleuropeina}{concentrazione dell'Oleuropeina nell'olio in mg su kg di olio}
+#'   \item{Quercetina}{concentrazione della Quercetina nell'olio in mg su kg di olio}
+#'  }
+#'  \item{\strong{Posa}}
+#'  \describe{
+#'   \item{Codice_azienda}{codice identificativo dell'azienda (es. SA_01)}
+#'   \item{N_campionamento}{codice utilizzato per distinguere il primo dal secondo campionamento (R1, R2)}
+#'   \item{Tipo_olio}{colonna che identifica se le drupe sono state denocciolate ("denocciolato") o no ("massa_ultima")}
+#'   \item{Anno}{l'anno del campionamento (es. 2020)}
+#'   \item{Estrazione}{codice identificativo dell'estrazione}
+#'   \item{Idrossitirosolo}{concentrazione dell'Idrossitirosolo nella posa in mg su kg di posa}
+#'   \item{Acido_siringico}{concentrazione dell'Acido Siringico nella posa in mg su kg di posa}
+#'   \item{Acido_p.Cumarico}{concentrazione dell'Acido p-Cumarico nella posa in mg su kg di posa}
+#'   \item{Acido_trans.Ferulico}{concentrazione dell'Acido trans-Ferulico nella posa in mg su kg di posa}
+#'   \item{Oleuropeina}{concentrazione dell'Oleuropeina nella posa in mg su kg di posa}
+#'   \item{Quercetina}{concentrazione della Quercetina nella posa in mg su kg di posa}
+#'  }
+#' }
+#' @source \url{http://bioinfo.na.iac.cnr.it/olivehealth/File_csv.rar}
+"polifind2020"

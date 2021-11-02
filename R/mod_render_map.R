@@ -41,12 +41,12 @@ mod_render_map_ui <- function(id){
         )
       ), 
       
-      mainPanel(
+      mainPanel(width = 9,
         conditionalPanel(condition = "input.updatemap_mod != 0", ns = ns,
-                         shinycssloaders::withSpinner(tmapOutput(ns("mappa1")), image =  "www/running_olive.gif")),
+                         shinycssloaders::withSpinner(tmapOutput(ns("mappa1")))),
         conditionalPanel(condition = "input.addmap_mod2 != 0", ns = ns,
                          hr(),
-                         shinycssloaders::withSpinner(tmapOutput(ns("mappa2")), image =  "www/running_olive.gif"))
+                         shinycssloaders::withSpinner(tmapOutput(ns("mappa2"))))
       )
     ) #end of sidebarlayout
     

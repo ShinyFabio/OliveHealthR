@@ -23,7 +23,7 @@ golem::add_module( name = "Olv_select_col" ) # Name of the module
 golem::add_module(name = "render_map")
 golem::add_module( name = "name_of_module2" ) # Name of the module
 golem::add_module( name = "update_data" ) # Name of the module
-
+golem::add_module( name = "boxex_filecheck" ) 
 
 ## Add helper functions ----
 ## Creates ftc_* and utils_*

@@ -4,6 +4,7 @@
 #'     DO NOT REMOVE.
 #' @import shiny
 #' @import shinydashboard
+#' @importFrom shinyjs show
 #' @importFrom plotly renderPlotly ggplotly layout
 #' @rawNamespace import(ggplot2, except = last_plot)
 #' @rawNamespace import(stats, except = filter)
@@ -18,9 +19,8 @@
 #' @importFrom grid gpar
 #' @importFrom sp SpatialPointsDataFrame CRS
 #' @importFrom lubridate year yday leap_year
-#' @importFrom InteractiveComplexHeatmap InteractiveComplexHeatmapWidget
+#' @importFrom InteractiveComplexHeatmap makeInteractiveComplexHeatmap
 #' @importFrom readr read_delim locale parse_factor
-#' @importFrom ComplexHeatmap Heatmap HeatmapAnnotation draw
 #' @importFrom ggcorrplot ggcorrplot
 #' @importFrom corrplot corrplot
 #' @importFrom DT renderDT datatable formatRound
@@ -46,7 +46,6 @@ app_server <- function( input, output, session ) {
   # List the first level callModules here
 
 
-  ############# Upload file ###############
   observeEvent(input$jumpToP2, {
     updateTabsetPanel(session, "navb1",
                       selected = "panel2")
@@ -57,63 +56,262 @@ app_server <- function( input, output, session ) {
                       selected = "panel1")
   })
   
-  #codice per far funzionare il conditional panel legato al "file1".
-  output$file1_ready <- reactive({
-    return(!is.null(input$file1))
-  })
-  outputOptions(output, "file1_ready", suspendWhenHidden = FALSE)    # activate the output so it runs although not displayed
+  # #codice per far funzionare il conditional panel legato al "file1".
+  # output$file1_ready <- reactive({
+  #   return(!is.null(input$file1))
+  # })
+  # outputOptions(output, "file1_ready", suspendWhenHidden = FALSE)    # activate the output so it runs although not displayed
+  # 
   
-  
-  
-  
-  #nascondi prima il tab descrizione per poi visualizzarlo quando carico il file descrizione.csv
-  hideTab(inputId = "tab2", target = "Descrizione")
-  observeEvent(input$desc1, {
-    showTab(inputId = "tab2", target = "Descrizione")
+  observeEvent(input$ins_passw,{
+    if(input$ins_passw == "lcxlc"){
+      shinyjs::show(selector = "ul li:hidden")
+    }
   })
   
   
   
-  #carica il file come .csv
-  data2 = reactive({
-    req(input$file1)
-    readr::read_delim(input$file1$datapath, delim = input$delim, col_names = input$header, na = "", local = readr::locale(encoding = "windows-1252")) %>%
-      janitor::remove_empty("rows")
-  })
+  ############# Upload file ###############
   
+  ###aziende
 
+
+  output$valbox_aziende = renderUI({
+    if(exists("data_aziende") == FALSE){
+      box(width = 12, background = "yellow",
+          fluidPage(
+            fluidRow(
+              column(9, 
+                h4(strong("File aziende: "),style = "color: white"),
+                h5("Nessun file aziende presente in database!", style = "color: white")),
+              column(3, style = "padding-right: 0px; text-align: right;",
+                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;"))
+            )
+          )
+      )
+    }else{
+      n_az = data_aziende$Codice_azienda %>% unique() %>% length()
+      box(width = 12, background = "green",
+          fluidPage(
+            fluidRow(
+              column(9, 
+                h4(strong("File aziende: "),style = "color: white"),
+                h5(strong(n_az), " aziende coinvolte", style = "color: white")),
+              column(3, style = "padding-right: 0px; text-align: right;",
+                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;"))
+            )
+          )
+      )
+    }
+  })
+  
+  #carica il file
+  data2 = eventReactive(input$load_files,{
+    if(exists("data_aziende") != FALSE){
+      showNotification(tagList(icon("check"), HTML("&nbsp;File aziende caricato!")), type = "message")
+      data_aziende
+    }else{
+      showNotification(tagList(icon("times-circle"), HTML("&nbsp;File aziende non caricato")), type = "error")
+    }
+  })
 
   data = mod_update_data_server("updataaziende", original_data = data2, type_data = "azienda")
 
 
-  #carico il file descrizione csv
-  descri2 = reactive({
-    req(input$desc1)
-    req(data())
-    temp = readr::read_delim(input$desc1$datapath, delim = input$delim, col_names = input$header, local = readr::locale(encoding = "windows-1252")) %>%
-      janitor::remove_empty("rows")
-    temp2 = data() %>% dplyr::select(Codice_azienda, Azienda)
-    dplyr::inner_join(x = temp, y = temp2, by = "Codice_azienda")
+  ###Schede campionamento 
+
+
+  output$valbox_drupecamp = renderUI({
+    if(exists("drupecamp2020") == FALSE){
+      box(width = 12, background = "yellow",
+          fluidPage(
+            fluidRow(
+              column(9, 
+                     h4(strong("Drupe e foglie: "),style = "color: white"),
+                     h5("Nessun file presente in database!", style = "color: white")),
+              column(3, style = "padding-right: 0px; text-align: right;",
+                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;"))
+            )))
+    }else{
+      years = drupecamp2020$Data_campionamento %>% lubridate::year() %>% na.omit() %>% unique()
+      box(width = 12, background = "green",
+          fluidPage(
+            fluidRow(
+              column(9, 
+                     h4(strong("Drupe e foglie: "),style = "color: white"),
+                     h5("Anni presenti:  ", strong(paste(years, collapse = ", ")), style = "color: white")),
+              column(3, style = "padding-right: 0px; text-align: right;",
+                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;"))
+            )))
+    }
   })
   
-  
-  #file già in memoria. Per vedere i file originali e lo script per produrli vedere in data-raw.
-  drupe2 = reactive(drupecamp2020)
-  
+  drupe2 = eventReactive(input$load_files,{
+    if(exists("drupecamp2020") != FALSE){
+      showNotification(tagList(icon("check"), HTML("&nbsp;File campionamento drupe e foglie caricato!")), type = "message")
+      drupecamp2020
+    }else{
+      showNotification(tagList(icon("times-circle"), HTML("&nbsp;File campionamento drupe e foglie non caricato")), type = "error")
+    }
+  })
   
   drupe = mod_update_data_server("updatadrupe", original_data = drupe2, type_data = "camp_drupe", confronto_aziende = data)
   
-  # drupe = reactive({
-  #   x = drupe3()
-  #   x$Indice_maturazione = factor(x$Indice_maturazione, levels = c(0:8), ordered = TRUE)
-  #   x$Fase_fenologica = factor(x$Fase_fenologica, levels = c(51, 55, 59, 61, 65, 69, 71, 75, 79, 81, 85, 89), ordered = TRUE)
-  #   return(x)
-  # })
-  # 
-  oliocamp = reactive(oliocampionamento2020)
+
+#### OLIO 
+
+  output$valbox_oliocamp = renderUI({
+    if(exists("oliocampionamento2020") == FALSE){
+      box(width = 12, background = "yellow",
+          fluidPage(
+            fluidRow(
+              column(9, 
+                     h4(strong("Olio: "),style = "color: white"),
+                     h5("Nessun file presente in database!", style = "color: white")),
+              column(3, style = "padding-right: 0px; text-align: right;",
+                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;"))
+            )))
+    }else{
+      years = oliocampionamento2020$Data_campionamento %>% lubridate::year() %>% na.omit() %>% unique()
+      box(width = 12, background = "green",
+          fluidPage(
+            fluidRow(
+              column(9, 
+                     h4(strong("Olio: "),style = "color: white"),
+                     h5("Anni presenti:  ", strong(paste(years, collapse = ", ")), style = "color: white")),
+              column(3, style = "padding-right: 0px; text-align: right;",
+                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;"))
+            )))
+    }
+  })
   
-  assaggi = reactive(assaggi2020)
+  oliocamp = eventReactive(input$load_files,{
+    if(exists("oliocampionamento2020") != FALSE){
+      showNotification(tagList(icon("check"), HTML("&nbsp;File campionamento olio caricato!")), type = "message")
+      oliocampionamento2020
+    }else{
+      showNotification(tagList(icon("times-circle"), HTML("&nbsp;File campionamento olio non caricato")), type = "error")
+    }
+  })
   
+  
+  #### ASSAGGI
+  output$valbox_assaggi = renderUI({
+    if(exists("assaggi2020") == FALSE){
+      box(width = 12, background = "yellow",
+          fluidPage(
+            fluidRow(
+              column(9, 
+                     h4(strong("Analisi sensoriali: "),style = "color: white"),
+                     h5("Nessun file presente in database!", style = "color: white")),
+              column(3, style = "padding-right: 0px; text-align: right;",
+                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;"))
+            )))
+    }else{
+      years = oliocampionamento2020$Data_campionamento %>% lubridate::year() %>% na.omit() %>% unique()
+      box(width = 12, background = "green",
+          fluidPage(
+            fluidRow(
+              column(9, 
+                     h4(strong("Analisi sensoriali: "),style = "color: white"),
+                     h5("Anni presenti:  ", strong(paste(years, collapse = ", ")), style = "color: white")),
+              column(3, style = "padding-right: 0px; text-align: right;",
+                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;"))
+            )))
+    }
+  })
+  
+  assaggi = eventReactive(input$load_files,{
+    if(exists("assaggi2020") != FALSE){
+      showNotification(tagList(icon("check"), HTML("&nbsp;File analisi sensoriali caricato!")), type = "message")
+      assaggi2020
+    }else{
+      showNotification(tagList(icon("times-circle"), HTML("&nbsp;File analisi sensoriali non caricato")), type = "error")
+    }
+  })
+  
+  
+  #### POLIFENOLI TOTALI
+  
+  output$valbox_poltot = renderUI({
+    if(exists("poliftot2020") == FALSE){
+      box(width = 12, background = "yellow",
+          fluidPage(
+            fluidRow(
+              column(9, 
+                     h4(strong("Polifenoli totali: "),style = "color: white"),
+                     h5("Nessun file presente in database!", style = "color: white")),
+              column(3, style = "padding-right: 0px; text-align: right;",
+                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;"))
+            )))
+    }else{
+      box(width = 12, background = "green",
+          fluidPage(
+            fluidRow(
+              column(9, 
+                     h4(strong("Polifenoli totali: "),style = "color: white"),
+                     h5("Foglie (", strong(paste(unique(poliftot2020$Foglie$Anno), collapse = ", "),")"), style = "color: white"),
+                     h5("Drupe (", strong(paste(unique(poliftot2020$Drupe$Anno), collapse = ", "),")"), style = "color: white"),
+                     h5("Olio (", strong(paste(unique(poliftot2020$Olio$Anno), collapse = ", "),")"), style = "color: white"),
+                     h5("Posa (", strong(paste(unique(poliftot2020$Posa$Anno), collapse = ", "),")"), style = "color: white"),
+                     h5("Sansa (", strong(paste(unique(poliftot2020$Sansa$Anno), collapse = ", "),")"), style = "color: white")
+                     ),
+              column(3, style = "padding-right: 0px; text-align: right;", br(), br(),
+                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;"))
+            )))
+    }
+  })
+
+  poliftot = eventReactive(input$load_files,{
+    if(exists("poliftot2020") != FALSE){
+      showNotification(tagList(icon("check"), HTML("&nbsp;File polifenoli totali caricato!")), type = "message")
+      poliftot2020
+    }else{
+      showNotification(tagList(icon("times-circle"), HTML("&nbsp;File polifenoli totali non caricato")), type = "error")
+    }
+  })
+  
+  
+  ##### POLIFENOLI INDIVIDUALI
+  
+  output$valbox_polind = renderUI({
+    if(exists("polifind2020") == FALSE){
+      box(width = 12, background = "yellow",
+          fluidPage(
+            fluidRow(
+              column(9, 
+                     h4(strong("Polifenoli individuali: "),style = "color: white"),
+                     h5("Nessun file presente in database!", style = "color: white")),
+              column(3, style = "padding-right: 0px; text-align: right;",
+                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;"))
+            )))
+    }else{
+      box(width = 12, background = "green",
+          fluidPage(
+            fluidRow(
+              column(9, 
+                     h4(strong("Polifenoli individuali: "),style = "color: white"),
+                     h5("Foglie (", strong(paste(unique(polifind2020$Foglie$Anno), collapse = ", "),")"), style = "color: white"),
+                     h5("Drupe (", strong(paste(unique(polifind2020$Drupe$Anno), collapse = ", "),")"), style = "color: white"),
+                     h5("Olio (", strong(paste(unique(polifind2020$Olio$Anno), collapse = ", "),")"), style = "color: white"),
+                     h5("Posa (", strong(paste(unique(polifind2020$Posa$Anno), collapse = ", "),")"), style = "color: white")
+              ),
+              column(3, style = "padding-right: 0px; text-align: right;", br(), br(),
+                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;"))
+            )))
+    }
+  })
+  
+  polifind = eventReactive(input$load_files,{
+    if(exists("polifind2020") != FALSE){
+      showNotification(tagList(icon("check"), HTML("&nbsp;File polifenoli individuali caricato!")), type = "message")
+      polifind2020
+    }else{
+      showNotification(tagList(icon("times-circle"), HTML("&nbsp;File polifenoli individuali non caricato")), type = "error")
+    }
+  })
+
+    
   #carico il file polifenoli come .csv
   polif2 = reactive({
     req(input$polifinput)
@@ -127,6 +325,47 @@ app_server <- function( input, output, session ) {
   
   
   
+  #carico i file morfometria
+  
+  output$valbox_morfo = renderUI({
+    if(exists("morfometria2020") == FALSE){
+      box(width = 12, background = "yellow",
+          fluidPage(
+            fluidRow(
+              column(9, 
+                     h4(strong("Morfometria: "),style = "color: white"),
+                     h5("Nessun file presente in database!", style = "color: white")),
+              column(3, style = "padding-right: 0px; text-align: right;",
+                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;"))
+            )))
+    }else{
+      box(width = 12, background = "green",
+          fluidPage(
+            fluidRow(
+              column(9, 
+                     h4(strong("Morfometria: "),style = "color: white"),
+                     h5("Foglie (", strong(paste(unique(morfometria2020$Foglie$Anno), collapse = ", "),")"), style = "color: white"),
+                     h5("Drupe (", strong(paste(unique(morfometria2020$Drupe$Anno), collapse = ", "),")"), style = "color: white"),
+                     h5("Endocarpo (", strong(paste(unique(morfometria2020$Endocarpo$Anno), collapse = ", "),")"), style = "color: white"),
+                     h5("Rapporti (", strong(paste(unique(morfometria2020$Rapporti$Anno), collapse = ", "),")"), style = "color: white")
+              ),
+              column(3, style = "padding-right: 0px; text-align: right;", br(), br(),
+                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;"))
+            )))
+    }
+  })
+  
+  morfom = eventReactive(input$load_files,{
+    if(exists("morfometria2020") != FALSE){
+      showNotification(tagList(icon("check"), HTML("&nbsp;File morfometria caricato!")), type = "message")
+      morfometria2020
+    }else{
+      showNotification(tagList(icon("times-circle"), HTML("&nbsp;File morfometria non caricato")), type = "error")
+    }
+  })
+
+  
+  
   ##### Carico i file polifenoli LCxLC ___________
   lcpolfoglie = reactive(polifenoliLCxLC2020$Foglie)
   
@@ -138,50 +377,11 @@ app_server <- function( input, output, session ) {
   
   lcpolsansa = reactive(polifenoliLCxLC2020$Sansa)
   
-  
-  #carico i file morfometria
-  
-  #file foglie
-  morfoleaf = reactive(morfometria2020$Foglie)
-  
-  #file morfometria drupe
-  morfodrupe = reactive(morfometria2020$Drupe)
-  
-  #file morfometria endocarpo
-  morfoendo = reactive(morfometria2020$Endocarpo)
-  
-  #file rapporti drupe endocarpo
-  morforatio = reactive(morfometria2020$Rapporti)
-  
-  
   output$content = DT::renderDT({
     data()
   })
   
-  #####DESCRIZIONE####
-  
-  #join con data per aggiungere la colonna "Azienda"
-  
-  output$descriz = DT::renderDT({
-    req(descri2())
-    dplyr::select(descri2(), "Azienda")
-    }, selection = "single", server = FALSE, rownames = FALSE)
 
-  ####selezionare la riga dell'azienda    
-  y11 = reactive({
-    nroww=input$descriz_rows_selected
-    descri2()[nroww,]
-  })
-  #e stamparla
-  output$taby12 = renderUI({
-    HTML(paste(y11()[,2]))
-  })
-  #stampo anche i contatti
-  output$contatti = renderUI({
-    HTML(paste("<b>",y11()[,3],"</b>"))
-  })
-  
-  
 
   
   ############## Cultivar principale #################
@@ -603,11 +803,11 @@ app_server <- function( input, output, session ) {
     fill = Olv_select_col(data = dataassaggi(), input = input$selectfillassaggi)
     temp = ggplot(data = dtassaggiyear) +
       geom_count(mapping = aes_string(x = colnames(x), y = colnames(y), colour = colnames(fill))) +
-      scale_size_continuous(range = c(3,9)) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+       theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
     plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
   })
   
-  
+  #scale_size_continuous(range = c(2,9)) +
   
   ## Barplot 
 
@@ -691,166 +891,194 @@ app_server <- function( input, output, session ) {
   
   ##########################POLIFENOLI##############################################
   
-  #polif
-  #fare il join di data con i polifenoli
-  datapolifmap = reactive({
-    req(polif())
-    z = data() %>% dplyr::select("Codice_azienda", "Cultivar_principale", "Azienda", "UTM_33T_E", "UTM_33T_N")
-    x = dplyr::inner_join(x = z, y = polif(), by = "Codice_azienda")
-    u1 = within(x, levels(Presenza_larve)[levels(Presenza_larve) == "0"] <- "Non individuabili") 
-    u2 = within(u1, levels(Presenza_larve)[levels(Presenza_larve) == "1"] <- "Poche larve")
-    u3 = within(u2, levels(Presenza_larve)[levels(Presenza_larve) == "2"] <- "Molte larve")
-    return(u3)
+  
+  #scegli i dati in base alla selezione
+  datapoltot1 = reactive({
+    req(poliftot())
+    if(input$selfilepoltot == "foglie"){
+      tempdata = poliftot()$Foglie
+    } else if(input$selfilepoltot == "drupe"){
+      tempdata = poliftot()$Drupe
+    } else if(input$selfilepoltot == "olio"){
+      tempdata = poliftot()$Olio
+    } else if(input$selfilepoltot == "posa"){
+      tempdata = poliftot()$Posa
+    }else{
+      tempdata = poliftot()$Sansa
+    }
+    #ATTENZIONE QUESTO VA FATTO DOPO L'UNIONE DI PIù ANNI (quelli che verranno). rbind funziona ma il dataEditR non so
+    tempdata$Anno = factor(tempdata$Anno, ordered = TRUE)
+    return(tempdata)
   })
   
-  datapolif = reactive({
-    req(datapolifmap())
-    datapolifmap() %>% dplyr::select(!starts_with("UTM"))
-  })
-  
-  #######polifenoli totali#####
-  
-  #data polifenoli totali
+  #fare il join con data
   datapoltot = reactive({
-    dplyr::select(datapolif(), c("Codice_azienda", "Azienda", "Anno", "N_campionamento", "Cultivar_principale", "Polifenoli_tot", "Presenza_larve"))
+    req(datapoltot1())
+    z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale)
+    x = dplyr::left_join(x = z, y = datapoltot1(), by = "Codice_azienda")
+    if(input$selfilepoltot == "foglie" || input$selfilepoltot == "drupe"){
+      x
+    }else{
+      x %>% dplyr::mutate(Codice_azienda = dplyr::case_when(
+        Tipo_olio ==  "denocciolato" ~ "SA_02_den",
+        TRUE ~ Codice_azienda
+      )) 
+    }
   })
   
-  #data polifenoli totali per mappa
-  datapoltotmap = reactive({
-    dplyr::select(datapolifmap(), c("Codice_azienda", "Azienda", "Anno", "N_campionamento", "Cultivar_principale", "Polifenoli_tot", "Presenza_larve", "UTM_33T_E", "UTM_33T_N"))
+  
+  #summarizzo i dati
+  datapoltot_summ1 = reactive({
+    req(datapoltot1())
     
+    if(input$selfilepoltot == "foglie"){
+      datapoltot1() %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno) %>% 
+        dplyr::summarise(dplyr::across("Polifenoli (mg/g foglie)", mean, na.rm = T)) %>% dplyr::ungroup()
+    } else if(input$selfilepoltot == "drupe"){
+      datapoltot1() %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno, Presenza_larve) %>% 
+        dplyr::summarise(dplyr::across("Polifenoli (mg/g drupe)", mean, na.rm = T)) %>% dplyr::ungroup()
+    } else if (input$selfilepoltot == "olio"){  #olio posa e sansa
+      datapoltot1() %>% dplyr::group_by(Codice_azienda, N_campionamento, Tipo_olio, Anno) %>% 
+        dplyr::summarise(dplyr::across("Polifenoli (mg/kg olio)", mean, na.rm = T)) %>% dplyr::ungroup()
+    } else if(input$selfilepoltot == "posa"){
+      datapoltot1() %>% dplyr::group_by(Codice_azienda, N_campionamento, Tipo_olio, Anno) %>% 
+        dplyr::summarise(dplyr::across("Polifenoli (mg/kg posa)", mean, na.rm = T)) %>% dplyr::ungroup()
+    } else{
+      datapoltot1() %>% dplyr::group_by(Codice_azienda, N_campionamento, Tipo_olio, Anno) %>% 
+        dplyr::summarise(dplyr::across("Polifenoli (mg/kg sansa)", mean, na.rm = T)) %>% dplyr::ungroup()
+    }
+  })
+  
+  datapoltotmap = reactive({
+    req(datapoltot_summ1())
+    z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale, UTM_33T_E, UTM_33T_N)
+    x = dplyr::right_join(x = z, y = datapoltot_summ1(), by = "Codice_azienda")
+    if(input$selfilepoltot == "foglie" || input$selfilepoltot == "drupe"){
+      x
+    }else{
+     x %>% dplyr::mutate(Codice_azienda = dplyr::case_when(
+      Tipo_olio ==  "denocciolato" ~ "SA_02_den",
+      TRUE ~ Codice_azienda
+    )) 
+    }
+    
+  })
+  
+  
+
+  #fare il join con data per la mappa
+  datapoltot_summ = reactive({
+    req(datapoltotmap())
+    datapoltotmap() %>% dplyr::select(!starts_with("UTM"))
+  })
+  
+
+   #######polifenoli totali#####
+  
+  dataforselect_poltot = reactive({
+    if(input$summpoltot == TRUE){
+      data = datapoltot_summ() 
+    } else{
+      data = datapoltot()
+    }
   })
   
   #aggiusto i data eliminando tutte le colonne non numeriche
   nadatapoltot = reactive({
-    req(datapoltot())
-    data = datapoltot() %>% dplyr::select(where(is.double) & -Anno)
-    return(data)
+    req(datapoltot_summ1())
+    if(input$summpoltot == TRUE){
+      data = datapoltot_summ1() 
+    } else{
+      data = datapoltot1()
+    }
+    data %>% dplyr::select(where(is.double))
   })
   
   #creo il modulo per i NA
   mod_render_NAbox_server("naboxpoltot", data = nadatapoltot, text_size = 1.1)
-  
-  #crea tabella polifenoli totali
-  output$tablepoltot = DT::renderDT({
-    req(datapoltot())
-    temp = datapoltot() %>% dplyr::rename("Polifenoli_tot_(mg/g)" = "Polifenoli_tot")
-    DT::datatable(temp, options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% 
-      DT::formatRound(columns = "Polifenoli_tot_(mg/g)", digits = 2) 
+
+
     
+  output$tablepoltot = DT::renderDT({
+    req(datapoltot_summ1())
+    if(input$summpoltot == TRUE){
+      data = datapoltot_summ1() 
+    } else{
+      data = datapoltot1()
+    }
+    data %>% dplyr::mutate(dplyr::across(where(is.double), round, digits = 3))
+  })
+
+
+
+  observeEvent(dataforselect_poltot(), {
+    updateSelectInput(session, "selectxtot", choices=colnames(dataforselect_poltot()))
+    updateSelectInput(session, "selectfilltot", choices=colnames(dataforselect_poltot()))
+    updateSelectInput(session, "selectytot", choices=colnames(dataforselect_poltot()))
+    updateSelectInput(session, "selyearscattertot", choices = row.names(table(dplyr::select(dataforselect_poltot(), "Anno"))))
+    updateSelectInput(session, "numtot", choices = unique(na.omit(dataforselect_poltot()$N_campionamento)))
   })
   
 
-  
-  #selezionare colonna X da plottare
-  showcoltotx = reactive({
-    Olv_select_col(data = datapoltot(), input = input$selectxtot)
-  })  
-  
-  observeEvent(datapoltot(), {
-    updateSelectInput(session, "selectxtot", choices=colnames(datapoltot()))
-    updateSelectInput(session, "selectfilltot", choices=colnames(datapoltot()))
-    updateSelectInput(session, "selectytot", choices=colnames(datapoltot()))
-    updateSelectInput(session, "selyearscattertot", choices = row.names(table(dplyr::select(datapoltot(), "Anno"))))
-    updateSelectInput(session, "selectxtotbar", choices=colnames(datapoltot()))
-    updateSelectInput(session, "selectytotbar", choices=colnames(datapoltot()))
-  })
-  
-  ###selezionare colonna Y da plottare
 
-  showcoltoty = reactive({
-    Olv_select_col(data = datapoltot(), input = input$selectytot)
-  })  
-
-  
-  ###selezionare colonna per il riempimento
-  fillcolumntot = reactive({
-    Olv_select_col(data = datapoltot(), input = input$selectfilltot)
-  }) 
-
-  
-  #aggiorna il selectinput , "selyearscattertot" in base agli anni presenti e filtra
-  dtplotyeartot2 = reactive({
-    datapoltot() %>% dplyr::filter(Anno == input$selyearscattertot)
-  })
-  
-  
-  ###scegliere anche il campionamento (scatter plot)
-  dtdrupfilttot2 = reactive({
-    req(dtplotyeartot2())
-    dplyr::filter(dtplotyeartot2(), N_campionamento == input$numtot)
-  })
-  
-  
-  xlabtot = reactive({
-    label_with_unit(data = datapolind(), colname = showcoltotx(), unit = "(mg/g drupe)", optional = "Presenza_larve")
-  })
-
-  ylabtot = reactive({
-    label_with_unit(data = datapolind(), colname = showcoltoty(), unit = "(mg/g drupe)", optional = "Presenza_larve")
-  })
-  
-  filllabtot = reactive({
-    label_with_unit(data = datapolind(), colname = fillcolumntot(), unit = "(mg/g drupe)", optional = "Presenza_larve")
-  })
-  
-
-  
   ###grafico classico (scatter plot)   , position = "jitter" , alpha = 0.7
   output$totscatplot = plotly::renderPlotly({
-    temp = ggplot(data = dtdrupfilttot2()) + 
-      geom_count(mapping = aes_string(x = colnames(showcoltotx()), y = colnames(showcoltoty()), colour = colnames(fillcolumntot()))) + 
-      ylab(ylabtot()) + xlab(xlabtot()) + labs(colour=filllabtot()) + #scale_size_continuous(range = c(3,9)) + 
+    req(dataforselect_poltot())
+    data = dataforselect_poltot() %>% dplyr::filter(Anno == input$selyearscattertot) %>% 
+      dplyr::filter(N_campionamento == input$numtot)
+
+    temp = ggplot(data) + 
+      geom_count(aes_string(x = paste0("`",input$selectxtot, "`"), y = paste0("`",input$selectytot, "`"), colour = paste0("`",input$selectfilltot, "`")), 
+                 size = 2) + 
       theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
-    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = filllabtot())))
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$selectfilltot)))
   })
   
   
   #########BARPLOT POLIFENOLI TOTALI#####################
-  
+
   ###modificare la colonna campionamento con unite (R1_2020)
   datapoltotyearunite = reactive({
-    req(datapoltot())
-    datapoltot() %>% tidyr::unite(col = N_campionamento, N_campionamento, Anno, remove = TRUE)
-    
+    req(datapoltot_summ())
+    datapoltot_summ() %>% tidyr::unite(col = N_campionamento, N_campionamento, Anno, remove = TRUE)
   })
   
-  ###salvare quanti campionamenti ci sono nei file
-  numerocamptot = reactive({
-    req(datapoltotyearunite())
-    datapoltotyearunite() %>% dplyr::select(N_campionamento) %>% table() %>% row.names()
-  })
-  
+
   ###aggiornare il checkbox in base al numero dei campionamenti
-  observeEvent(numerocamptot(), {
-    updateCheckboxGroupInput(session, "checkcamptot", choices = numerocamptot(),  selected = numerocamptot())
+  observeEvent(datapoltotyearunite(), {
+    updateCheckboxGroupInput(session, "checkcamptot", choices = unique(datapoltotyearunite()$N_campionamento),  selected = unique(datapoltotyearunite()$N_campionamento))
+    updateSelectInput(session, "selectxtotbar", choices = colnames(datapoltotyearunite()))
+    updateSelectInput(session, "selectytotbar", choices = colnames(datapoltotyearunite()))
   })
   
-  
-  ###filtrare in base al numero di campionamento per colorare il barplot
-  colorcamptot = reactive({
-    req(datapoltotyearunite())
-    datapoltotyearunite() %>% dplyr::filter(N_campionamento %in% input$checkcamptot)
-  })
-  
-  
-  
+
+
   ###grafico a barre
   output$barplottot = plotly::renderPlotly({
-    
-    x = Olv_select_col(data = datapoltot(), input = input$selectxtotbar)
-    y = Olv_select_col(data = datapoltot(), input = input$selectytotbar)
-    
-    xlabg = label_with_unit(data = datapoltot(), colname = x, unit = "(µg/g)")
-    ylabg = label_with_unit(data = datapoltot(), colname = y, unit = "(µg/g)")
+    req(datapoltotyearunite())
+    data = datapoltotyearunite() %>% dplyr::filter(N_campionamento %in% input$checkcamptot)
+    data_err = datapoltot1() %>% tidyr::unite(col = N_campionamento, N_campionamento, Anno, remove = FALSE) %>% 
+      dplyr::filter(N_campionamento %in% input$checkcampind)
     
     
-    temp2=ggplot(data=colorcamptot()) + 
-      geom_col(mapping = aes_string(x = colnames(x), y = colnames(y), fill = input$selectfilltotbar), position = position_dodge2(preserve = "single")) + 
-      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(ylabtot()) + xlab(xlabtot())
+    #con group risolvo il problema dell'unica barra di errore anche se ci sono due barre
+    temp2=ggplot(data, aes_string(x = "Codice_azienda", y = paste0("`",input$selectytotbar, "`"), fill = paste0("`",input$selectfilltotbar, "`"), group = "N_campionamento")) +
+      geom_col(position = position_dodge2( preserve = "single")) +
+      stat_summary(data = data_err, geom = "errorbar", fun.data = mean_se,
+                   position = position_dodge2(padding = 1.6, preserve = "single")) +
+      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank())
     plotly::ggplotly(temp2) %>% plotly::layout(legend = list(title = list(text = "N_campionamento")))
+    
+    
+    
+    # temp2=ggplot(data) + 
+    #   geom_col(mapping = aes_string(x = paste0("`",input$selectxtotbar, "`"), y = paste0("`",input$selectytotbar, "`"), fill = paste0("`",input$selectfilltotbar, "`")), position = position_dodge2(preserve = "single")) + 
+    #   theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) #+ ylab(ylabtot()) + xlab(xlabtot())
+    # plotly::ggplotly(temp2) %>% plotly::layout(legend = list(title = list(text = "N_campionamento")))
   })
   
+  
+
   
   
   #################### Mappa Polifenoli totali ###########################################
@@ -861,28 +1089,25 @@ app_server <- function( input, output, session ) {
   
   
   
-  observeEvent(datapoltot(), {
-    updateSelectInput(session, "colpoltotmap1", choices = colnames(datapoltot()))
-    updateSelectInput(session, "colpoltotmap2", choices = colnames(datapoltot()))
+  observeEvent(datapoltot_summ(), {
+    updateSelectInput(session, "colpoltotmap1", choices = colnames(datapoltot_summ()))
+    updateSelectInput(session, "colpoltotmap2", choices = colnames(datapoltot_summ()))
+    updateSelectInput(session, "yearpoltotmap1", choices = unique(na.omit(datapoltot_summ()$Anno)))
+    updateSelectInput(session, "yearpoltotmap2", choices = unique(na.omit(datapoltot_summ()$Anno)))
+    updateSelectInput(session, "numpoltotmap1", choices = unique(na.omit(datapoltot_summ()$N_campionamento)))
+    updateSelectInput(session, "numpoltotmap2", choices = unique(na.omit(datapoltot_summ()$N_campionamento)))
   })
   
   
   
-  
-  #aggiorna il selectinput "selyear" in base agli anni presenti
-  observeEvent(datapoltotmap(), {
-    updateSelectInput(session, "yearpoltotmap1", choices = row.names(table(dplyr::select(datapoltotmap(), Anno))))
-    updateSelectInput(session, "yearpoltotmap2", choices = row.names(table(dplyr::select(datapoltotmap(), Anno))))
-    
-  })
-  
-  
+
   #stampo mappa
   output$poltotmap1 = renderTmap({
     req(datapoltotmap())
     #filtra in base all'anno selezionato e il campionamento
-    datamap = datapoltotmap() %>% dplyr::filter(Anno == input$yearpoltotmap1) %>% dplyr::filter(N_campionamento == input$numpoltotmap1)
-    colmap = Olv_select_col(data = datapoltot(), input = input$colpoltotmap1)
+    datamap = datapoltotmap() %>% dplyr::filter(Anno == input$yearpoltotmap1) %>% dplyr::filter(N_campionamento == input$numpoltotmap1) %>% 
+      na.omit()
+    colmap = dplyr::select(datamap,input$colpoltotmap1)
     make_tmap(data = datamap, dotlegend = colmap)
   })
   
@@ -892,8 +1117,9 @@ app_server <- function( input, output, session ) {
   output$poltotmap2 = renderTmap({
     req(datapoltotmap())
     #filtra in base all'anno selezionato e il campionamento
-    datamap = datapoltotmap() %>% dplyr::filter(Anno == input$yearpoltotmap2) %>% dplyr::filter(N_campionamento == input$numpoltotmap2)
-    colmap = Olv_select_col(data = datapoltot(), input = input$colpoltotmap2)
+    datamap = datapoltotmap() %>% dplyr::filter(Anno == input$yearpoltotmap2) %>% dplyr::filter(N_campionamento == input$numpoltotmap2) %>%
+      na.omit()
+    colmap = dplyr::select(datamap, input$colpoltotmap2)
     make_tmap(data = datamap, dotlegend = colmap)
   })
   
@@ -901,169 +1127,262 @@ app_server <- function( input, output, session ) {
   ##################################POLIFENOLI INDIVIDUALI##############################
   
   
-  #data polifenoli individuali
-  datapolind = reactive({
-    dplyr::select(datapolif(), !c("Polifenoli_tot", "Presenza_larve"))
+  
+  #scegli i dati in base alla selezione
+  datapolind1 = reactive({
+    req(polifind())
+    if(input$selfilepolind == "foglie"){
+      tempdata = polifind()$Foglie
+      unit = " (ug/g)"
+      start = 5
+    } else if(input$selfilepolind == "drupe"){
+      tempdata = polifind()$Drupe
+      unit = " (ug/g)"
+      start = 5
+    } else if(input$selfilepolind == "olio"){
+      tempdata = polifind()$Olio
+      unit = " (mg/kg)"
+      start = 6
+    } else{ #posa
+      tempdata = polifind()$Posa
+      unit = " (mg/kg)"
+      start = 6
+    }
+    #ATTENZIONE QUESTO VA FATTO DOPO L'UNIONE DI PIù ANNI (quelli che verranno). rbind funziona ma il dataEditR non so
+    tempdata$Anno = factor(tempdata$Anno, ordered = TRUE)
+    
+    #aggiunto unità di misura
+    for(i in seq(start,length(tempdata))){
+      colnames(tempdata)[i] = paste0(colnames(tempdata)[i], unit)}
+    
+    return(tempdata)
   })
   
-  #data polifenoli individuali per mappa
-  datapolindmap = reactive({
-    dplyr::select(datapolifmap(), !c("Polifenoli_tot", "Presenza_larve"))
+  #fare il join con data
+  datapolind = reactive({
+    req(datapolind1())
+    z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale, Areale) #, UTM_33T_E, UTM_33T_N
+    x = dplyr::left_join(x = z, y = datapolind1(), by = "Codice_azienda")
+    if(input$selfilepolind == "foglie" || input$selfilepolind == "drupe"){
+      x
+    }else{
+      x %>% dplyr::mutate(Codice_azienda = dplyr::case_when(
+        Tipo_olio ==  "denocciolato" ~ "SA_02_den",
+        TRUE ~ Codice_azienda)) 
+    }
   })
+  
+  
+  #summarizzo i dati
+  datapolind_summ1 = reactive({
+    req(datapolind1())
+    
+    if(input$selfilepolind == "foglie" || input$selfilepolind == "drupe"){
+      datapolind1() %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno) %>% 
+        dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% dplyr::ungroup()
+    } else{  #olio e posa
+      datapolind1() %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno, Tipo_olio) %>% 
+        dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% dplyr::ungroup()
+    }
+  })
+  
+
+  datapolindmap = reactive({
+    req(datapolind_summ1())
+    z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale, Areale, UTM_33T_E, UTM_33T_N)
+    x = dplyr::right_join(x = z, y = datapolind_summ1(), by = "Codice_azienda")
+    if(input$selfilepolind == "foglie" || input$selfilepolind == "drupe"){
+      x
+    }else{
+      x %>% dplyr::mutate(Codice_azienda = dplyr::case_when(
+        Tipo_olio ==  "denocciolato" ~ "SA_02_den",
+        TRUE ~ Codice_azienda))
+    }
+  })
+  
+  
+  
+  #fare il join con data per la mappa
+  datapolind_summ = reactive({
+    req(datapolindmap())
+    datapolindmap() %>% dplyr::select(!starts_with("UTM"))
+  })
+  
+
   
   #aggiusto i data eliminando tutte le colonne non numeriche
   nadatapolind = reactive({
-    req(datapolind())
-    data = datapolind() %>% dplyr::select(where(is.double) & -Anno)
-    return(data)
+    req(datapolind_summ1())
+    if(input$summpolind == TRUE){
+      data = datapoltot_summ1() 
+    } else{
+      data = datapolind1()
+    }
+    data %>% dplyr::select(where(is.double))
   })
+
+  
+  
+  output$tablepolind = DT::renderDT({
+    req(datapolind_summ1())
+    if(input$summpolind == TRUE){
+      data = datapolind_summ1() 
+    } else{
+      data = datapolind1()
+    }
+    data %>% dplyr::mutate(dplyr::across(where(is.double), round, digits = 3))
+  })
+  
+  
+
   
   #creo il modulo per i NA
   mod_render_NAbox_server("naboxpolind", data = nadatapolind, text_size = 1.1)
   
-  
-  #crea tabella polifenoli individuali con l'unità di misura
-  output$tablepolind = DT::renderDT({ 
-    req(datapolind())
-    temp = datapolind()
-    for(i in seq(6,length(temp))){
-      names(temp)[i] = paste0(names(temp)[i], "_(ug/g)")
-    }
-    return(temp)
-    
-  })
+
+
   
   
   ###################SCATTER PLOT INDIVIDUALI#################
 
-  observeEvent(datapolind(), {
-    updateSelectInput(session, "selectxind", choices=colnames(datapolind()))
-    updateSelectInput(session, "selectyind", choices=colnames(datapolind()))
-    updateSelectInput(session, "selectfillind", choices=colnames(datapolind()))
-    updateSelectInput(session, "selyearscatterind", choices = row.names(table(dplyr::select(datapolind(), "Anno"))))
+  dataforselect_polind = reactive({
+    if(input$summpolind == TRUE){
+      data = datapolind_summ() 
+    } else{
+      data = datapolind()
+    }
   })
   
+  observeEvent(dataforselect_polind(), {
+    updateSelectInput(session, "selectxind", choices=colnames(dataforselect_polind()))
+    updateSelectInput(session, "selectyind", choices=colnames(dataforselect_polind()))
+    updateSelectInput(session, "selectfillind", choices=colnames(dataforselect_polind()))
+    updateSelectInput(session, "selyearscatterind", choices = row.names(table(dplyr::select(dataforselect_polind(), "Anno"))))
+    updateSelectInput(session, "numind", choices = unique(na.omit(dataforselect_polind()$N_campionamento)))
+  })
 
-  #aggiorna il selectinput , "selyearscatterind" in base agli anni presenti e filtra
-  dtplotyearind2 = reactive({
-    datapolind() %>% dplyr::filter(Anno == input$selyearscatterind)
-  })
-  
-  
-  ###scegliere anche il campionamento (scatter plot)
-  dtdrupfiltind2 = reactive({
-    req(dtplotyearind2())
-    dplyr::filter(dtplotyearind2(), N_campionamento == input$numind)
-  })
-  
- 
+
 
   ####grafico classico (scatter plot)   , position = "jitter" , alpha = 0.7
   output$scatterindpol = plotly::renderPlotly({
-    
-    x = Olv_select_col(data = datapolind(), input = input$selectxind)
-    y = Olv_select_col(data = datapolind(), input = input$selectyind)
-    fill = Olv_select_col(data = datapolind(), input = input$selectfillind)
-    
-    xlabg = label_with_unit(data = datapoltot(), colname = x, unit = "(µg/g)")
-    ylabg = label_with_unit(data = datapoltot(), colname = y, unit = "(µg/g)")
-    filllab = label_with_unit(data = datapoltot(), colname = fill, unit = "(µg/g)")
+    req(dataforselect_polind())
+    data = dataforselect_polind() %>% dplyr::filter(Anno == input$selyearscatterind) %>% 
+      dplyr::filter(N_campionamento == input$numind)
+      
 
-    temp = ggplot(data = dtdrupfiltind2()) + 
-      geom_count(mapping = aes_string(x = colnames(x), y = colnames(y), colour = colnames(fill))) + 
-      ylab(ylabg) + xlab(xlabg) + labs(colour=filllab) +#scale_size_continuous(range = c(3,9)) + 
+
+    temp = ggplot(data) +
+      geom_count(aes_string(x = paste0("`",input$selectxind, "`"), y = paste0("`",input$selectyind, "`"), colour = paste0("`",input$selectfillind, "`")), 
+                 size = 2) + 
       theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
-    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = filllab)))
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$selectfillind)))
+  })
+
+
+  ############# BOXPLOT INDIVIDUALI #########
+
+  observeEvent(datapolind(), {
+    updateSelectInput(session, "selyearboxind", choices = unique(datapolind()$Anno))
+    updateSelectInput(session, "numboxind", choices = unique(na.omit(datapolind()$N_campionamento)))
+    
+    updateSelectInput(session, "selectyboxind", choices = colnames(dplyr::select(datapolind(), where(is.double))))
+    updateSelectInput(session, "selectfillboxind", choices = colnames(dplyr::select(datapolind(), where(is.character))))
+  })
+  
+  output$boxplotindpol = renderPlotly({
+    req(datapolind())
+    data = datapolind() %>% dplyr::filter(Anno == input$selyearboxind) %>% dplyr::filter(N_campionamento == input$numboxind)
+    
+    
+    temp = ggplot(data, aes_string(x = "Codice_azienda", y = paste0("`",input$selectyboxind, "`"), fill = paste0("`",input$selectfillboxind, "`"))) + 
+      geom_boxplot() + geom_jitter(width = 0.3) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$selectfillboxind)))
   })
   
   
   ###############BARPLOT INDIVIDUALI##########
-  
-  observeEvent(datapolind(), {
-    updateSelectInput(session, "selectxindbar", choices=colnames(datapolind()))
-    updateSelectInput(session, "selectyindbar", choices=colnames(datapolind()))
-  })
-  
+
+
 
   ###modificare la colonna campionamento con unite (R1_2020)
   datapolindyearunite = reactive({
-    req(datapolind())
-    datapolind() %>% tidyr::unite(col = N_campionamento, N_campionamento, Anno, remove = FALSE)
+    req(datapolind_summ())
+    datapolind_summ() %>% tidyr::unite(col = N_campionamento, N_campionamento, Anno, remove = FALSE)
     
   })
   
-  ###salvare quanti campionamenti ci sono nei file
-  numerocampind = reactive({
-    req(datapolindyearunite())
-    datapolindyearunite() %>% dplyr::select(N_campionamento) %>% table() %>% row.names()
+  
+  observeEvent(datapolind_summ(), {
+    updateSelectInput(session, "selectyindbar", choices=colnames(dplyr::select(datapolind_summ(), where(is.double))))
+    updateCheckboxGroupInput(session, "checkcampind", choices = unique(datapolindyearunite()$N_campionamento),  selected = unique(datapolindyearunite()$N_campionamento))
   })
-  
-  ###aggiornare il checkbox in base al numero dei campionamenti
-  observeEvent(numerocampind(), {
-    updateCheckboxGroupInput(session, "checkcampind", choices = numerocampind(),  selected = numerocampind())
-  })
-  
-  
-  ###filtrare in base al numero di campionamento per colorare il barplot
-  colorcampind = reactive({
-    req(datapolindyearunite())
-    datapolindyearunite() %>% dplyr::filter(N_campionamento %in% input$checkcampind)
-  })
-  
+
+
 
 
   ###grafico a barre
   output$barplotind = plotly::renderPlotly({
-    req(datapolind())
-    x = Olv_select_col(data = datapolind(), input = input$selectxindbar)
-    y = Olv_select_col(data = datapolind(), input = input$selectyindbar)
+    req(datapolindyearunite())
+    data = datapolindyearunite() %>% dplyr::filter(N_campionamento %in% input$checkcampind)
+    data_err = datapolind() %>% tidyr::unite(col = N_campionamento, N_campionamento, Anno, remove = FALSE) %>% 
+      dplyr::filter(N_campionamento %in% input$checkcampind)
 
-    xlabg = label_with_unit(data = datapoltot(), colname = x, unit = "(µg/g)")
-    ylabg = label_with_unit(data = datapoltot(), colname = y, unit = "(µg/g)")
-
-    temp2=ggplot(data=colorcampind()) + 
-      geom_col(mapping = aes_string(x = colnames(x), y = colnames(y), fill = input$selectfillindbar), position = position_dodge2(preserve = "single")) + 
-      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(ylabg) + xlab(xlabg)
+    #con group risolvo il problema dell'unica barra di errore anche se ci sono due barre
+    temp2=ggplot(data, aes_string(x = "Codice_azienda", y = paste0("`",input$selectyindbar, "`"), fill = paste0("`",input$selectfillindbar, "`"), group = "N_campionamento")) +
+      geom_col(position = position_dodge2( preserve = "single")) +
+      stat_summary(data = data_err, geom = "errorbar", fun.data = mean_se,
+                   position = position_dodge2(padding = 1.6, preserve = "single")) +
+      theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank())
     plotly::ggplotly(temp2) %>% plotly::layout(legend = list(title = list(text = "N_campionamento")))
   })
-  
-  
+
+
   
   ################# HEATMAP POLIFENOLI INDIVIDUALI ##################
-  
-  
-  
+
+
+
   #aggiorna il selectinput , "selyearheatind" in base agli anni presenti
-  observeEvent(datapolind(), {
-    updateSelectInput(session, "selyearheatind", choices = row.names(table(dplyr::select(datapolind(), "Anno"))))
+  observeEvent(datapolind_summ(), {
+    updateSelectInput(session, "selyearheatind", choices = unique(datapolind_summ()$Anno))
+    updateSelectInput(session, "numheat", choices = unique(datapolind_summ()$N_campionamento))
   })
 
 
-  
+
   dtheatsorted = reactive({
+    data_pol = datapolind_summ()
+    #rimuovo le unità di misura dai nomi
+    names(data_pol) <- stringr::str_remove(names(data_pol), ' .*')
     sorder_data(
       data = data(),
-      data2 = dplyr::select(datapolind(), -Cultivar_principale), #devo toglierlo perchè l'ho aggiunto prima
-      year = input$selyearheatind, 
-      n_camp = input$numheat, 
-      heat_sort = input$heatsort, 
+      data2 = dplyr::select(data_pol, Codice_azienda, Azienda, Anno, N_campionamento, where(is.double)), #devo toglierlo perchè l'ho aggiunto prima
+      year = input$selyearheatind,
+      n_camp = input$numheat,
+      heat_sort = input$heatsort,
       add_annot = input$selectannot)
   })
-  
-  #dtheatsorted ha le seguenti colonne: Codice_azienda, N_campionamento, Anno, i vari polifenoli individuali 
+
+  #dtheatsorted ha le seguenti colonne: Codice_azienda, N_campionamento, Anno, i vari polifenoli individuali
   #e input$selectannot (che può essere Provincia, Areale o Cultivar_principale)
 
-  
+
   #creo slider per colonna. Qui praticamente rimango solo con i vari polifenoli individuali
   output$sliderheatcol <- renderUI({
     req(dtheatsorted())
-    len = dtheatsorted() %>% dplyr::select(where(is.double), -Anno)
+    len = dtheatsorted() %>% dplyr::select(where(is.double)) #-Anno non c'è perchè l'ho trasformato in factor
     sliderInput("slidercolheat", "Numero cluster:", min=2, max=length(len), value=2, step = 1)
   })
-  
-  
+
+
   #creo l'heatmap
   dataheat = reactive({
+    if(input$selfilepolind == "foglie" || input$selfilepolind == "drupe"){
+      unit = "ug/g"
+    } else{  #olio e posa
+      unit = "mg/kg"
+    }
+     
     make_heatmap(
       datasorted = dtheatsorted(),
       add_annot = input$selectannot,
@@ -1075,208 +1394,296 @@ app_server <- function( input, output, session ) {
       col_dend = input$columndend,
       col_nclust = input$slidercolheat,
       col_lab = "Polifenoli",
-      unit_legend = "ug/g",
+      unit_legend = unit,
+      col_label_size = 12,
       bordi = c(4,2,2,15)
     )
   })
-  
+
 
   observeEvent(input$updateheat,{
-    dataheat2 = dataheat()
-    InteractiveComplexHeatmap::InteractiveComplexHeatmapWidget(input, output, session, dataheat2, output_id = "heatmap_output", layout = "1|23", width1 = 850, height1 = 550)
-  })
-  
-  
-  ###################### CORRELATION PLOT POLIFENOLI ####################################
-  
-  #aggiorna il selectinput , "selyearheatind" in base agli anni presenti e filtra
-  observeEvent(datapolind(), {
-    updateSelectInput(session, "selyearcorrind", choices = row.names(table(dplyr::select(datapolind(), "Anno"))))
+    InteractiveComplexHeatmap::makeInteractiveComplexHeatmap(input, output, session, dataheat(), heatmap_id  = "heatmap_polind_output")
   })
 
-  
+
+  ###################### CORRELATION PLOT POLIFENOLI ####################################
+
+  #aggiorna il selectinput , "selyearheatind" in base agli anni presenti e filtra
+  observeEvent(datapolind_summ(), {
+    updateSelectInput(session, "selyearcorrind", choices = unique(na.omit(datapolind_summ()$Anno)))
+    updateSelectInput(session, "numcorr", choices = unique(na.omit(datapolind_summ()$N_campionamento)))
+    
+    #spider
+    updateSelectInput(session, "selyearspiderpolind", choices = unique(na.omit(datapolind_summ()$Anno)))
+    updateSelectInput(session, "selcodspiderpolind", choices = unique(datapolind_summ()$Codice_azienda))
+    updateSelectInput(session, "selcampspiderpolind", choices = unique(na.omit(datapolind_summ()$N_campionamento)))
+    updateSelectInput(session, "selcodspiderpolind2", choices = unique(datapolind_summ()$Codice_azienda))
+  })
+
+
   ###creo il corrplot
   output$corrplotind = plotly::renderPlotly({
-    req(datapolind())
+    req(datapolind_summ())
     ###scegliere anno e  il campionamento (scatter plot)
-    datatemp = datapolind() %>% dplyr::filter(Anno == input$selyearcorrind) %>% dplyr::filter(N_campionamento == input$numcorr)
-    
-    temp = datatemp %>% dplyr::select(where(is.double), -Anno)
+    datatemp = datapolind_summ() %>% dplyr::filter(Anno == input$selyearcorrind) %>% dplyr::filter(N_campionamento == input$numcorr)
+
+    temp = datatemp %>% dplyr::select(where(is.double))
     temp2 = round(stats::cor(temp, use = "na.or.complete"),1)
     par(xpd = TRUE)
-    
+
     plot = ggcorrplot::ggcorrplot(temp2, hc.order = TRUE, type = "lower", outline.col = "white", show.diag = TRUE)
     plotly::ggplotly(plot)
-   
+
   })
   
+
   
+
+  ##### SPIDERPLOT polifenoli ind #####
   
-  
+  output$spider_polind = renderPlot({
+    req(datapolind_summ())
+    radardata = datapolind_summ() %>% dplyr::filter(Anno == input$selyearspiderpolind) %>% 
+      dplyr::filter(N_campionamento == input$selcampspiderpolind)
+    
+    if(input$addcodspiderpolind == FALSE){
+      radardata = radardata %>% dplyr::filter(Codice_azienda == input$selcodspiderpolind) %>%
+      column_to_rownames("Codice_azienda") %>% dplyr::select(where(is.double))
+      radr = (radardata+1) %>% log2() #%>% dplyr::mutate(across(.cols = everything(),  ~ ifelse(.x == "-Inf", 0, .x)))
+      max = round(max(radr))
+      while(max%%5 != 0){
+        max = max+1
+      }
+      g2 = rbind("Max" = max, "Min" = 0, radr)
+      lab = c(0, max*2/10, max*4/10, max*6/10, max*8/10, max)
+      create_beautiful_radarchart(
+        g2, 
+        caxislabels = lab, 
+        color = grDevices::hcl.colors(2, palette = "Dynamic"), 
+        title = paste("Log2 dei polifenoli individuali di", input$selcodspiderpolind))
+    }else{
+      radardata = radardata %>% dplyr::filter(Codice_azienda == input$selcodspiderpolind | Codice_azienda == input$selcodspiderpolind2) %>%
+        column_to_rownames("Codice_azienda") %>% dplyr::select(where(is.double))
+      radr = (radardata+1) %>% log2() #%>% dplyr::mutate(across(.cols = everything(),  ~ ifelse(.x == "-Inf", 0, .x)))
+      max = round(max(radr))
+      while(max%%5 != 0){
+        max = max+1
+      }
+      g2 = rbind("Max" = max, "Min" = 0, radr)
+      lab = c(0, max*2/10, max*4/10, max*6/10, max*8/10, max)
+      create_beautiful_radarchart(
+        g2, 
+        caxislabels = lab, 
+        color = grDevices::hcl.colors(2, palette = "Dynamic"), 
+        title = paste("Log2 dei polifenoli individuali di", input$selcodspiderpolind, "e", input$selcodspiderpolind2))
+      
+    }
+    
+    
+  })
+
+
   ######################### PCA #####################################################
-  
-  
+
+
   #aggiorna il selectinput , "selyearheatind" in base agli anni presenti e filtra
-  observeEvent(datapolind(), {
-    updateSelectInput(session, "selyearpca", choices = row.names(table(dplyr::select(datapolind(), Anno))))
+  observeEvent(dataforselect_polind(), {
+    updateSelectInput(session, "selyearpca", choices = unique(dataforselect_polind()$Anno))
+    updateSelectInput(session, "numpca", choices = unique(dataforselect_polind()$N_campionamento))
   })
 
   #rimuovo le righe di NA se ci sono. pcadatina mi servirà dopo per il semi_join con data().
   pcadatina = reactive({
-    req(datapolind())
-    #filtro in base agli anni presenti e scelgo anche il num campionamento
-    datapolind() %>% dplyr::filter(Anno == input$selyearpca) %>% dplyr::filter(N_campionamento == input$numpca) %>% 
-      dplyr::select(-Anno, -N_campionamento, -Azienda, -Cultivar_principale) %>% stats::na.exclude()
+    req(dataforselect_polind())
+    #se non summarizzo non posso avere i rownames uguali e quindi unisco cod_az con estrazione
+    if(input$summpolind == TRUE){
+      dataforselect_polind() %>% dplyr::filter(Anno == input$selyearpca) %>% dplyr::filter(N_campionamento == input$numpca) %>%
+        stats::na.exclude()
+    }else{
+      dataforselect_polind() %>% dplyr::filter(Anno == input$selyearpca) %>% dplyr::filter(N_campionamento == input$numpca) %>% 
+        tidyr::unite(col = Codice_azienda, Codice_azienda, Estrazione) %>% stats::na.exclude()
+    }
+
   })
-  
+
   pcadati = reactive({
-    data = pcadatina() %>% as.data.frame() %>% tibble::column_to_rownames("Codice_azienda")
+    req(pcadatina())
+    data = pcadatina() %>% tibble::column_to_rownames("Codice_azienda") %>%
+      dplyr::select(where(is.double)) %>%  as.data.frame()
     stats::princomp(data, cor = input$selcorpca)
   })
-  
+
   #slider dinamico per la scelta delle pcs
   output$sliderpc <- renderUI({
     req(pcadati())
     pca = pcadati()
     sliderInput("selpcs", "Numero di Componenti Principali (PC)", min=1, max=length(pca$sdev), value=2, step = 1)
   })
-  
-  
-  
+
+
+
   ###plot loadings
   output$loadings = plotly::renderPlotly({
     req(pcadati())
     pca = pcadati()
     loadpca = as.data.frame(pca$loadings[, input$selpcs])
     loadpca = tibble::rownames_to_column(loadpca)
-    
+
     pcasdev = as.data.frame(round(pca$sdev^2/sum(pca$sdev^2)*100, 2))
-    
+
     colnames(loadpca) = c("Polifenoli", paste0("PC", input$selpcs))
     loadplot = ggplot(loadpca) + geom_col(aes(x = Polifenoli, y = loadpca[,2], fill = Polifenoli)) +
       labs(y = paste0("PC", input$selpcs, " ", "(", pcasdev[as.numeric(input$selpcs), ], "%", ")"), title = "Loadings")
     plotly::ggplotly(loadplot)
   })
-  
+
   ###screeplot
   output$screeplot <- plotly::renderPlotly({
     pca = pcadati()
-    var = cumsum(100*pca$sdev^2/sum(pca$sdev^2)) 
+    var = cumsum(100*pca$sdev^2/sum(pca$sdev^2))
     var = as.data.frame(cbind(var)) %>% tibble::rownames_to_column()
     colnames(var) = c("Componenti_principali", "Varianza_spiegata")
-    
+
     screegg = ggplot(var, aes(Componenti_principali,Varianza_spiegata)) +
-      geom_line(colour = "red", group = 1, linetype = "dashed", size = 1) + geom_point(size = 4, colour = "red") + 
+      geom_line(colour = "red", group = 1, linetype = "dashed", size = 1) + geom_point(size = 4, colour = "red") +
       labs(x = "Componenti principali", y = "Varianza spiegata (%)", title = "Screeplot") +
       scale_y_continuous(limits = c(0, 100), breaks = c(seq(0, 100, by = 10)))
     plotly::ggplotly(screegg)
-    
+
   })
-  
-  
+
+
   ###biplot
   output$biplot = plotly::renderPlotly({
     req(pcadati())
+    coll = pcadatina() %>% dplyr::select(!where(is.double)) %>% as.data.frame()
+    tjoin = pcadati()$scores %>% as.data.frame() %>% tibble::rownames_to_column("Codice_azienda")
+    pcadatainfo = dplyr::inner_join(tjoin, coll, by = "Codice_azienda") #%>% tibble::column_to_rownames("Codice_azienda")
+    
     #qui con semi_join mi prendo solo le righe di data() presenti anche in pcadatina().
     if(input$selbiplotpolind == "Biplot"){
-     temp = autoplot(pcadati(), data = dplyr::semi_join(data(), pcadatina()), shape = input$shpbiplot, colour = input$colbiplot, loadings = TRUE, loadings.colour = 'blue', 
-                    loadings.label = TRUE, loadings.label.size = 4, title = "Biplot") 
+     temp = autoplot(pcadati(), data = pcadatainfo, shape = input$shpbiplot, colour = input$colbiplot, loadings = TRUE, loadings.colour = 'blue',
+                    loadings.label = TRUE, loadings.label.size = 4, title = "Biplot") + theme(legend.title = element_blank())
     }else{
-      temp = autoplot(pcadati(), data = dplyr::semi_join(data(), pcadatina()), shape = input$shpbiplot, colour = input$colbiplot, title = "Plot") 
+      temp = autoplot(pcadati(), data = pcadatainfo, shape = input$shpbiplot, colour = input$colbiplot, title = "Plot") +
+        theme(legend.title = element_blank())
     }
-    
-    plotly::ggplotly(temp)
+
+    if (is.null(input$shpbiplot)){
+      legtitle = input$colbiplot
+    }else{
+      legtitle = paste(input$colbiplot, ",", input$shpbiplot)
+    }
+
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = legtitle)))
   })
-  
   
   ### plot 3D
   output$pca3dpolind = plotly::renderPlotly({
     req(pcadati())
     pc = pcadati()
     scoreind = pc$scores
-    scoreindtb = scoreind %>% as.data.frame() %>% tibble::rownames_to_column("Codice_azienda") %>% tibble::as_tibble()
-    scoreindjoin = dplyr::left_join(x = scoreindtb, y = dplyr::select(data(), Codice_azienda, Provincia, Cultivar_principale, Areale), by = "Codice_azienda")
+    scoreindtb = scoreind %>% as.data.frame() %>% tibble::rownames_to_column("Codice_azienda")
+    coll = pcadatina()  %>% dplyr::select(!where(is.double)) %>% as.data.frame()
+    scoreindjoin = dplyr::left_join(x = scoreindtb, y = coll, by = "Codice_azienda")
 
     scoreindjoin %>% plotly::plot_ly(x = ~Comp.1, y = ~Comp.2, z= ~Comp.3, type = "scatter3d", mode = "markers", color = ~base::get(input$col3dind))
-    
-  })
-  
 
-  
+  })
+
+
+
   #################### Mappa Polifenoli individuali ###########################################
-  
 
 
-  observeEvent(datapolind(), {
-    updateSelectInput(session, "colpolindmap1", choices = colnames(datapolind()))
-    updateSelectInput(session, "colpolindmap2", choices = colnames(datapolind()))
-  })
-  
 
-  #aggiorna il selectinput "selyear" in base agli anni presenti
-  observeEvent(datapolindmap(), {
-    updateSelectInput(session, "yearpolindmap1", choices = row.names(table(dplyr::select(datapolindmap(), Anno))))
-    updateSelectInput(session, "yearpolindmap2", choices = row.names(table(dplyr::select(datapolindmap(), Anno))))
+  observeEvent(datapolind_summ(), {
+    updateSelectInput(session, "colpolindmap1", choices = colnames(datapolind_summ()))
+    updateSelectInput(session, "colpolindmap2", choices = colnames(datapolind_summ()))
+    updateSelectInput(session, "yearpolindmap1", choices = unique(na.omit(datapolind_summ()$Anno)))
+    updateSelectInput(session, "yearpolindmap2", choices = unique(na.omit(datapolind_summ()$Anno)))
     
+    updateSelectInput(session, "numpolindmap1", choices = unique(na.omit(datapolind_summ()$N_campionamento)))
+    updateSelectInput(session, "numpolindmap2", choices = unique(na.omit(datapolind_summ()$N_campionamento)))
   })
-  
-  
+
+
+
+
   #stampo mappa
   output$polindmap1 = renderTmap({
     req(datapolindmap())
     #filtra in base all'anno selezionato e il campionamento
-    datamap = datapolindmap() %>% dplyr::filter(Anno == input$yearpolindmap1) %>% dplyr::filter(N_campionamento == input$numpolindmap1)
-    colmap = Olv_select_col(data = datapolind(), input = input$colpolindmap1)
-    make_tmap(data = datamap, dotlegend = colmap)
-  })
-  
-  
-  #### seconda mappa
-  
-  output$polindmap2 = renderTmap({
-    req(datapolindmap())
-    #filtra in base all'anno selezionato e il campionamento
-    datamap = datapolindmap() %>% dplyr::filter(Anno == input$yearpolindmap2) %>% dplyr::filter(N_campionamento == input$numpolindmap2)
-    colmap = Olv_select_col(data = datapolind(), input = input$colpolindmap2)
+    datamap = datapolindmap() %>% dplyr::filter(Anno == input$yearpolindmap1) %>% dplyr::filter(N_campionamento == input$numpolindmap1) %>% 
+      na.omit()
+    colmap = dplyr::select(datapolind_summ(), input$colpolindmap1)
     make_tmap(data = datamap, dotlegend = colmap)
   })
 
-  
-  ################# Cromatogrammi polifenoli individuali ################
-  
-  
-  #crea la tabella
-  output$prov3 = DT::renderDT(dplyr::select(data(), c("Azienda", "Codice_azienda")), selection = "single", server = FALSE, rownames = FALSE, options = list("pageLength" = 15))
-  
-  
-  #aggiorna il selectinput "selyearfoto" in base agli anni presenti e seleziono
-  observeEvent(datapolif(), {
-    updateSelectInput(session, "selyearcromatph", choices = row.names(table(dplyr::select(datapolif(), "Anno"))))
+
+  #### seconda mappa
+
+  output$polindmap2 = renderTmap({
+    req(datapolindmap())
+    #filtra in base all'anno selezionato e il campionamento
+    datamap = datapolindmap() %>% dplyr::filter(Anno == input$yearpolindmap2) %>% dplyr::filter(N_campionamento == input$numpolindmap2) %>%
+      na.omit()
+    colmap = dplyr::select(datapolind_summ(), input$colpolindmap2)
+    make_tmap(data = datamap, dotlegend = colmap)
   })
+
+
+  ################# Cromatogrammi polifenoli individuali ################
+
+
+  datapolind_cromat = reactive({
+    req(datapolind_summ())
+    datapolind_summ() %>% na.omit()
+  })
+  #crea la tabella
+  output$prov3 = DT::renderDT({
+    req(datapolind_cromat())
+    datapolind_cromat() %>% dplyr::select(c("Azienda", "Codice_azienda")) %>% unique()
+    }, selection = "single", server = FALSE, rownames = FALSE, options = list("pageLength" = 15))
+
+
+  #aggiorna il selectinput "selyearfoto" in base agli anni presenti e seleziono
+  observeEvent(datapolind_cromat(), {
+    updateSelectInput(session, "selyearcromatph", choices = unique(datapolind_cromat()$Anno))
+    })
   
+  #output per i conditionalPanels
+  output$check_crompolind = reactive({
+    if(input$campcromatph == "1_campionamento" && (input$selfilepolind == "olio" || input$selfilepolind == "posa")){
+      "no"
+    }else{"yes"}
+  })
+  outputOptions(output, 'check_crompolind', suspendWhenHidden = FALSE)
   
+
+
   #####selezionare la riga dell'azienda cromatogramma drupe
   selprovcromat = reactive({
     req(input$prov3_rows_selected)
     nroww=input$prov3_rows_selected
-    x = dplyr::select(data(), "Codice_azienda")
+    x = dplyr::select(datapolind_cromat(), "Codice_azienda") %>% unique()
     z = paste("www/cromatogrammi", input$selyearcromatph, input$selfilepolind, input$campcromatph, sep = "/") #selyearfoto e campfoto
     paste(z, x[nroww,], sep = "/")
   })
-  
-  
+
+
   #foto cromatogramma drupe
   output$phcromat = renderUI({
-    croma = paste0(selprovcromat(),".jpg")
+    croma = paste0(selprovcromat(),".png")
     tags$img(src = croma)
   })
-  
-  
+
+
   
   #################  POLIFENOLI LCxLC ###################
-  
+
   #scegli i dati in base alla selezione
-  
+
   datalcxlc = reactive({
     req(data())
     if(input$selfilepollc == "foglie"){
@@ -1296,7 +1703,7 @@ app_server <- function( input, output, session ) {
                            flag = "0")
     return(tempdata)
   })
-  
+
   #data long
   datalclong = reactive({
     req(datalcxlc())
@@ -1305,8 +1712,8 @@ app_server <- function( input, output, session ) {
     temp = temp %>% tidyr::separate(Codice_azienda, into = c("Codice_azienda", "ID"), sep = 5)
     temp %>% tidyr::separate(ID, into = c("rem", "N_campionamento", "Estrazione"), sep = "_", fill = "right") %>% dplyr::select(-rem)
   })
-  
-  
+
+
   output$dtlcxlc = renderDT({
     req(datalclong())
     if(input$dttypelc == "Wide"){
@@ -1315,10 +1722,10 @@ app_server <- function( input, output, session ) {
       datalclong()
     }
   })
-  
-  
+
+
   #valutare i missing value
-  
+
   #aggiusto i data eliminando tutte le colonne non numeriche
   nadatalc = reactive({
     req(datalcxlc())
@@ -1329,36 +1736,36 @@ app_server <- function( input, output, session ) {
     }
     data %>% dplyr::select(where(is.double))
   })
-  
+
 
   #creo il modulo per i NA
   mod_render_NAbox_server("naboxlc", data = nadatalc, text_size = 0.8, margins = c(20,5,3,1))
-  
-  
-  
+
+
+
   ###### data wide con polifenoli sulle colonne
-  ###### File del tipo Codice_azienda | Cultivar_principale | Azienda | Areale | N_campionamento | Peak_01.. | Peak_02_... 
+  ###### File del tipo Codice_azienda | Cultivar_principale | Azienda | Areale | N_campionamento | Peak_01.. | Peak_02_...
   lcwidepolif = reactive({
-    temp = datalcxlc() %>% tidyr::gather(Codice_azienda, Quantificazione, colnames(datalcxlc()[,6:length(datalcxlc())])) %>% 
+    temp = datalcxlc() %>% tidyr::gather(Codice_azienda, Quantificazione, colnames(datalcxlc()[,6:length(datalcxlc())])) %>%
       dplyr::select(Codice_azienda, everything())
     #creo una seconda colonna PEAK2
-    lclong_test = dplyr::select(temp,-c(3:4,6)) %>% dplyr::mutate(PEAK2 = "Peak") %>% 
+    lclong_test = dplyr::select(temp,-c(3:4,6)) %>% dplyr::mutate(PEAK2 = "Peak") %>%
       tidyr::unite(col = Compounds, PEAK2, PEAK, Compounds, sep = "_", remove = TRUE)
-    
+
     #trasformo in wide con i polifenoli sulle colonne e codice_azienda sulle righe
     lcwidecompound = tidyr::pivot_wider(data = lclong_test, names_from = Compounds, values_from = Quantificazione)
-    
+
     #codice azienda da SA_01_EXT_R2 deve diventare SA_01_EXT || R2
-    lcpolifazienda = lcwidecompound %>% tidyr::separate(Codice_azienda, into = c("Codice_azienda", "ID"), sep = 5) %>% 
+    lcpolifazienda = lcwidecompound %>% tidyr::separate(Codice_azienda, into = c("Codice_azienda", "ID"), sep = 5) %>%
       tidyr::separate(ID, into = c("rem", "N_campionamento", "Estrazione"), sep = "_", fill = "right") %>% dplyr::select(-rem)
-    
+
     #ora join con data() per aggiungere cultivar e azienda
     z = data() %>% dplyr::select(Codice_azienda, Azienda, Cultivar_principale, Provincia, Areale)   #qui ho aggiunto provincia e areale
     lcpolifazienda = dplyr::right_join(x = z, y = lcpolifazienda, by = "Codice_azienda")
-    
+
     #gli NA in Estrazione diventano ""
     lcpolifazienda$Estrazione[is.na(lcpolifazienda$Estrazione)] = ""
-    
+
     #unisco codice_azienda con estrazione
     lcpolifazienda2 = tidyr::unite(lcpolifazienda, col = Codice_azienda, Codice_azienda, Estrazione, sep = "_", remove = TRUE)
     #e se estrazione è vuoto invece di avere SA_01_ tolgo il "_" finale.
@@ -1369,57 +1776,57 @@ app_server <- function( input, output, session ) {
     }
     return(lcpolifazienda2)
   })
-  
- 
+
+
   #crea la tabella
   output$dtfotolc = DT::renderDT({
     ncamp = ifelse(input$ncampcromatlc == "1_campionamento", "R1", "R2")
     lcwidepolif() %>% filter(N_campionamento == ncamp) %>% dplyr::select(c("Codice_azienda", "Cultivar_principale", "Azienda"))
     }, selection = "single", server = FALSE, rownames = FALSE)
-  
-  
+
+
 
   #foto cromatogramma drupe
   output$phcromatlc = renderUI({
     req(input$dtfotolc_rows_selected)
     nroww=input$dtfotolc_rows_selected
     ncamp = ifelse(input$ncampcromatlc == "1_campionamento", "R1", "R2")
-    
+
     cod = lcwidepolif() %>% filter(N_campionamento == ncamp) %>% dplyr::select("Codice_azienda")
     path = paste("www/cromatogrammi_LCxLC/2020", input$selfilepollc, input$ncampcromatlc, cod[nroww,], sep = "/")
     croma = paste0(path,".png")
     tags$img(src = croma, style="width: 800px")
 
   })
-  
+
   #crea la tabella dei polifenoli dell'azienda selezionata
   output$poliffotolc = DT::renderDT({
     req(input$dtfotolc_rows_selected)
     nroww=input$dtfotolc_rows_selected
     ncamp = ifelse(input$ncampcromatlc == "1_campionamento", "R1", "R2")
     #prendo un'azienda filtro e tolgo le colonne in più. Se è vuota, NULL
-    cod = dplyr::filter(lcwidepolif(), N_campionamento == ncamp) 
-    cod = cod[nroww,] %>%  dplyr::select(-c(1:4)) 
+    cod = dplyr::filter(lcwidepolif(), N_campionamento == ncamp)
+    cod = cod[nroww,] %>%  dplyr::select(-c(1:4))
     hhh = tidyr::pivot_longer(cod, cols = starts_with("Peak"), names_to = "Compounds", values_to = "Quantizzazione (mg/Kg)")
     h2 = hhh %>% tidyr::separate(Compounds, into = c("Peak", "Compounds"), sep = 8)
     h2 %>% tidyr::separate(Peak, into = c("rem", "Peak"), sep = "_") %>% dplyr::select(-c(1:3))
   })
-  
-  
-  
+
+
+
   ####### Grafici LCxLC######
-  
-  #data da usara per i grafici. 
+
+  #data da usara per i grafici.
   #Se per azienda, avrò un'azienda, la colonna compound e la colonna quantizzazione.
   #Se per polifenolo, avrò la colonna Codice_azienda con tutte le aziende e una colonna di un polifenolo (es.Peak_1_Acid_gallic)
-  
-  
+
+
   observeEvent(lcwidepolif(), {
     updateSelectInput(session, "lcselaziendascatt", choices = unique(lcwidepolif()$Codice_azienda))
     updateSelectInput(session, "lcselpolifscatt", choices = colnames(dplyr::select(lcwidepolif(), starts_with("Peak"))))
     updateSelectInput(session, "lcselcultscatt", choices = unique(lcwidepolif()$Cultivar_principale))
   })
-  
+
   #questo mi serve per aggiornare il ncamp in base alla selezione
   datalcgraphcamp = reactive({
     req(lcwidepolif())
@@ -1431,12 +1838,12 @@ app_server <- function( input, output, session ) {
       lcwidepolif()
     }
   })
-  
+
   observeEvent(datalcgraphcamp(), {
     updateSelectInput(session, "numscattlc", choices = unique(datalcgraphcamp()$N_campionamento))
   })
-  
-  
+
+
   datalcgraph = reactive({
     datancamp = datalcgraphcamp() %>% dplyr::filter(N_campionamento == input$numscattlc)
 
@@ -1450,7 +1857,7 @@ app_server <- function( input, output, session ) {
     }else{
       datancamp = tidyr::gather(datancamp, Compounds, Quantificazione, colnames(dplyr::select(datancamp, starts_with("Peak"))))
       if(input$sintscattlc == TRUE){
-        datancamp = datancamp %>% dplyr::group_by(dplyr::across("Compounds")) %>% 
+        datancamp = datancamp %>% dplyr::group_by(dplyr::across("Compounds")) %>%
           dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE), N_aziende = dplyr::n()) %>% dplyr::ungroup() %>%
           dplyr::mutate(Quantificazione = dplyr::case_when(Quantificazione < 0 ~ -1, TRUE ~ Quantificazione))
       }
@@ -1460,35 +1867,35 @@ app_server <- function( input, output, session ) {
         TRUE ~ "Presente"   #TRUE sarebbe l'equivalente di else quindi in tutti gli altri casi diventa "Presente"
       ))
       if(input$logscattlc == TRUE){
-        #qui modifico i valori di quantificazione per evitare problemi col logaritmo in ggplot. 
-        #Se il valore è -1 (<LOQ) lo trasformo in 0.5 così non esce errore e il log diventa un numero negativo, 
-        #se è 0 diventa 1 (così se il valore è 0 il logaritmo non esce -inf ma esce 0), altrimenti rimane uguale. 
+        #qui modifico i valori di quantificazione per evitare problemi col logaritmo in ggplot.
+        #Se il valore è -1 (<LOQ) lo trasformo in 0.5 così non esce errore e il log diventa un numero negativo,
+        #se è 0 diventa 1 (così se il valore è 0 il logaritmo non esce -inf ma esce 0), altrimenti rimane uguale.
         #Nota: log(0) = inf e log(-1) errore.
-        datancamp = datancamp %>% dplyr::mutate(Quantificazione = ifelse(Quantificazione == -1, 0.5, 
+        datancamp = datancamp %>% dplyr::mutate(Quantificazione = ifelse(Quantificazione == -1, 0.5,
                                                                          ifelse(Quantificazione == 0, 1, Quantificazione)))
       }
-      
+
     }
 
     datancamp$Presenza = factor(datancamp$Presenza, levels = c("<LOQ", "Assente", "Presente"), ordered = FALSE)
     datancamp
   })
-  
-  
-  
+
+
+
   observeEvent(datalcgraph(), {
     updateSelectInput(session, "fillscattlc", choices = colnames(dplyr::select(datalcgraph(), -dplyr::any_of(c(dplyr::starts_with("Peak"), "N_campionamento", "Presenza")))))
     updateSelectInput(session, "lcselpolbar", choices = c("Tutti", unique(datalcgraph()$Compounds)), selected = "Tutti")
-    
-    
+
+
   })
-  
+
 
   # Scatterplot
-  
+
   #aggiungo na.omit() nei colori così se ci sono NA non li conta nella scelta dei colori e non da errore
   output$scatterlc = renderPlotly({
-    
+
     if(input$logscattlc == TRUE){
       datalogg = dplyr::mutate_if(datalcgraph(), is.numeric, log2)
       yname = "Log2 quantificazione (mg/Kg)"
@@ -1501,23 +1908,23 @@ app_server <- function( input, output, session ) {
     pos_jitter = ifelse(input$lcdatatypescatt == "Cultivar principale", "jitter", "identity")
     size_points = ifelse(input$lcdatatypescatt == "Cultivar principale", 2, 3)
     if(input$lcdatatypescatt == "Polifenolo"){
-      temp = ggplot(data = datalogg) + 
+      temp = ggplot(data = datalogg) +
         geom_count(mapping = aes_string(x = "Codice_azienda", y = input$lcselpolifscatt, shape = "Presenza", color = input$fillscattlc)) + #,color = grDevices::hcl.colors(length(na.omit(dplyr::select(datalcgraph(),input$lcselpolifscatt))), palette = "Dynamic")
-        scale_shape_manual(values=c(10, 1, 16),drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) + 
+        scale_shape_manual(values=c(10, 1, 16),drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) +
         theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + ylab(paste(input$lcselpolifscatt, "(mg/Kg)"))
       plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "Presenza")))
     }else{
-      temp = ggplot(data = datalogg, aes_string(label = "Quantificazione")) + 
+      temp = ggplot(data = datalogg, aes_string(label = "Quantificazione")) +
         geom_count(mapping = aes_string(x = "Compounds", y = "Quantificazione", shape = "Presenza", color = input$fillscattlc), size = size_points, position = pos_jitter) + #, color = grDevices::hcl.colors(length(na.omit(datalcgraph()$Quantificazione)), palette = "Dynamic")
-        scale_shape_manual(values=c(10, 1, 16), drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) + 
+        scale_shape_manual(values=c(10, 1, 16), drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) +
         theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(yname)
-      plotly::ggplotly(temp, tooltip = c("Compounds", "Presenza", "label", input$fillscattlc)) %>% plotly::layout(legend = list(title = list(text = "Legenda"))) 
+      plotly::ggplotly(temp, tooltip = c("Compounds", "Presenza", "label", input$fillscattlc)) %>% plotly::layout(legend = list(title = list(text = "Legenda")))
     }
-    
+
 
   })
-  
-  
+
+
   # Barplot
   output$barplotlc = renderPlotly({
     if(input$logscattlc == TRUE){
@@ -1527,40 +1934,40 @@ app_server <- function( input, output, session ) {
       datalogg = datalcgraph()
       yname = "Quantificazione (mg/Kg)"
       }
-    
+
     if(input$lcdatatypescatt == "Polifenolo"){
-      temp = ggplot(data=datalogg) + 
-        geom_col(mapping = aes_string(x = "Codice_azienda", y = input$lcselpolifscatt, fill = input$fillscattlc, linetype = "Presenza")) + 
+      temp = ggplot(data=datalogg) +
+        geom_col(mapping = aes_string(x = "Codice_azienda", y = input$lcselpolifscatt, fill = input$fillscattlc, linetype = "Presenza")) +
         theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(paste(input$lcselpolifscatt, "(mg/Kg)"))
-      plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$fillscattlc))) 
+      plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$fillscattlc)))
     }else{
       if(input$lcselpolbar != "Tutti"){
         data = datalogg %>% dplyr::filter(Compounds == input$lcselpolbar)
       }else{data = datalogg}
-      
-     temp = ggplot(data) + 
-      geom_col(mapping = aes_string(x = "Compounds", y = "Quantificazione", fill = input$fillscattlc, linetype = "Presenza"), position = input$bartypelc) + 
+
+     temp = ggplot(data) +
+      geom_col(mapping = aes_string(x = "Compounds", y = "Quantificazione", fill = input$fillscattlc, linetype = "Presenza"), position = input$bartypelc) +
       theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(yname)
-    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$fillscattlc)))  
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$fillscattlc)))
     }
-    
+
   })
-  
-  
-  
-  
+
+
+
+
   ############# HEATMAP LCxLC
-  
-  #lcwidepolif() =  Codice_azienda | Cultivar_principale | Azienda | Provincia | Areale | N_campionamento | Peak_01.. | Peak_02_... 
-  
+
+  #lcwidepolif() =  Codice_azienda | Cultivar_principale | Azienda | Provincia | Areale | N_campionamento | Peak_01.. | Peak_02_...
+
   #aggiorna il selectinput , "selyearheatind" in base agli anni presenti
   observeEvent(lcwidepolif(), {
     #updateSelectInput(session, "selyearheatmorfo", choices = row.names(table(dplyr::select(datamorfo(), "Anno"))))
     updateSelectInput(session, "numheatlc", choices = unique(lcwidepolif()$N_campionamento))
     updateSelectInput(session, "cultheatlc", choices = c("Tutte", unique(lcwidepolif()$Cultivar_principale)))
-    
+
   })
-  
+
   lcheatsorted = reactive({
     #dato che qui codice_azienda è diverso, non posso usare sorderdata() ma devo farlo a mano.
     #Filtro e tolgo Azienda e areale e poi faccio scegliere uno tra provincia e cultivar
@@ -1569,7 +1976,7 @@ app_server <- function( input, output, session ) {
     }else{
       dtfilterd = lcwidepolif()
     }
-    
+
     dtfilterd = dtfilterd %>% dplyr::filter(N_campionamento == input$numheatlc) %>% dplyr::select(-c(Azienda, Areale))
     if(input$selectannotlc == "Provincia"){
       dtfilterd = dtfilterd %>% dplyr::select(-Cultivar_principale)
@@ -1583,21 +1990,21 @@ app_server <- function( input, output, session ) {
       return(dtfilterd)
     }
   })
-  
-  #lcheatsorted ha le seguenti colonne: Codice_azienda, N_campionamento, [Anno (non c'è qui)], i vari picchi 
+
+  #lcheatsorted ha le seguenti colonne: Codice_azienda, N_campionamento, [Anno (non c'è qui)], i vari picchi
   #e input$selectannotlc (che può essere Provincia o Cultivar_principale).Ho eliminato year = "..."
   #così di default è null e non filtra per anno
-  
-  
+
+
   #creo slider per colonna. Qui praticamente rimango solo con i vari polifenoli individuali
   output$slidercolheatlc <- renderUI({
     req(lcheatsorted())
     len = lcheatsorted() %>% dplyr::select(where(is.double)) #ho tolto "-Anno"
     sliderInput("slidercolheatlc", "Numero cluster:", min=2, max=length(len), value=2, step = 1)
   })
-  
 
-  
+
+
   #creo l'heatmap
   dataheatlc = reactive({
     make_heatmap(
@@ -1617,129 +2024,127 @@ app_server <- function( input, output, session ) {
       bordi = c(25,2,2,10)
     )
   })
-  
-  
+
+
   observeEvent(input$updateheatlc,{
-    dataheat2 = dataheatlc()
-    InteractiveComplexHeatmap::InteractiveComplexHeatmapWidget(input, output, session, dataheat2, output_id = "heatmap_outputlc", layout = "1|23", width1 = 1150, height1 = 700)
+    InteractiveComplexHeatmap::makeInteractiveComplexHeatmap(input, output, session, dataheatlc(), heatmap_id  = "heatmap_lc_output")
   })
-  
-  
+
+
   ####################### PCA LCxLC #######################
-  
+
   observeEvent(lcwidepolif(), {
     updateSelectInput(session, "numcamppcalc", choices = unique(lcwidepolif()$N_campionamento))
   })
-  
+
 
   #rimuovo le righe di NA se ci sono e faccio la PCA. Dato che ci sono colonne con soli zero uso dplyr::select(where(~ any(. != 0)))
   #per selezionare le colonne che non hanno tutti 0.
   pcadatiLC = reactive({
     req(lcwidepolif())
     #scelgo il num campionamento e faccio la pca stavolta con prcomp perchè ci sono più colonne che righe.
-    lcwidepolif() %>% dplyr::filter(N_campionamento == input$numcamppcalc) %>% 
+    lcwidepolif() %>% dplyr::filter(N_campionamento == input$numcamppcalc) %>%
       dplyr::select(Codice_azienda, where(is.double)) %>% dplyr::select(where(~ any(. != 0))) %>% stats::na.exclude() %>%
       as.data.frame() %>% tibble::column_to_rownames("Codice_azienda") %>% stats::prcomp(scale = input$scalepcalc) #-Anno e non c'è cor =...
   })
 
-  
 
-  
+
+
   #slider dinamico per la scelta delle pcs
   output$sliderpclc <- renderUI({
     req(pcadatiLC())
     pca = pcadatiLC()
     sliderInput("selpcslc", "Numero di Componenti Principali (PC)", min=1, max=length(pca$sdev), value=2, step = 1)
   })
-  
-  
-  
+
+
+
   ###plot loadings
   output$loadingslc = plotly::renderPlotly({
     req(pcadatiLC())
     pca = pcadatiLC()
     loadpca = as.data.frame(pca$rotation[, input$selpcslc]) #invece di loadings ci sono i rotation
     loadpca = tibble::rownames_to_column(loadpca)
-    
+
     pcasdev = as.data.frame(round(pca$sdev^2/sum(pca$sdev^2)*100, 2))
-    
+
     colnames(loadpca) = c("Compounds", paste0("PC", input$selpcslc))
     loadplot = ggplot(loadpca) + geom_col(aes(x = Compounds, y = loadpca[,2], fill = Compounds)) +
-      labs(y = paste0("PC", input$selpcslc, " ", "(", pcasdev[as.numeric(input$selpcslc), ], "%", ")"), title = "Loadings") + 
+      labs(y = paste0("PC", input$selpcslc, " ", "(", pcasdev[as.numeric(input$selpcslc), ], "%", ")"), title = "Loadings") +
       theme(axis.text.x = element_text(angle = 315, hjust = 0))
     plotly::ggplotly(loadplot)
   })
-  
+
   ###screeplot
   output$screeplotlc <- plotly::renderPlotly({
     pca = pcadatiLC()
-    var = cumsum(100*pca$sdev^2/sum(pca$sdev^2)) 
+    var = cumsum(100*pca$sdev^2/sum(pca$sdev^2))
     var = as.data.frame(cbind(var)) %>% tibble::rownames_to_column()
     colnames(var) = c("Componenti_principali", "Varianza_spiegata")
     #non so perchè non ordina le componenti e devo farlo io
     var$Componenti_principali = factor(var$Componenti_principali, levels = c(1:length(var$Componenti_principali)))
-    
-    
+
+
     screegg = ggplot(var, aes(Componenti_principali,Varianza_spiegata)) +
-      geom_line(colour = "red", group = 1, linetype = "dashed", size = 1) + geom_point(size = 4, colour = "red") + 
+      geom_line(colour = "red", group = 1, linetype = "dashed", size = 1) + geom_point(size = 4, colour = "red") +
       labs(x = "Componenti principali", y = "Varianza spiegata (%)", title = "Screeplot") +
       scale_y_continuous(limits = c(0, 100), breaks = c(seq(0, 100, by = 10)))
     plotly::ggplotly(screegg)
-    
+
   })
-  
-  
+
+
   ###biplot
   output$biplotlc = plotly::renderPlotly({
     req(pcadatiLC())
     #dato che a monte ho eliminato le righe dove non c'erano valori nei picchi (i double), faccio lo stesso qui con drop_na()
     datilabel = lcwidepolif() %>% dplyr::filter(N_campionamento == input$numcamppcalc) %>% tidyr::drop_na(starts_with("Peak"))
     if(input$selbiplotlc == "Biplot"){
-      temp = autoplot(pcadatiLC(), data = datilabel, shape = input$shpbiplotlc, colour = input$colbiplotlc, loadings = TRUE, loadings.colour = 'blue', 
+      temp = autoplot(pcadatiLC(), data = datilabel, shape = input$shpbiplotlc, colour = input$colbiplotlc, loadings = TRUE, loadings.colour = 'blue',
                       loadings.label = TRUE, loadings.label.size = 4, title = "Biplot")
     }else{
       temp = autoplot(pcadatiLC(), data = datilabel, shape = input$shpbiplotlc, colour = input$colbiplotlc, title = "Plot")
     }
-    
-    
+
+
     plotly::ggplotly(temp)
   })
-  
-  
+
+
   ### plot 3D
   output$pca3dlc = plotly::renderPlotly({
     req(pcadatiLC())
     pc = pcadatiLC()
     scoreind = pc$x #qui invece degli scores ci sono gli x
     scoreindtb = scoreind %>% as.data.frame() %>% tibble::rownames_to_column("Codice_azienda") %>% tibble::as_tibble()
-    
+
     #datilabel = lcwidepolif() %>% dplyr::filter(N_campionamento == input$numcamppcalc)
     scoreindjoin = dplyr::left_join(x = scoreindtb, y = dplyr::select(lcwidepolif(), Codice_azienda, Provincia, Cultivar_principale, Areale), by = "Codice_azienda")
     #invece di Comp.1, Comp.2 e Comp.3 qui ho PC1, PC2 e PC3
     scoreindjoin %>% plotly::plot_ly(x = ~PC1, y = ~PC2, z= ~PC3, type = "scatter3d", mode = "markers", color = ~base::get(input$col3dlc))
-    
+
   })
-  
+
   
   
   
   
   #################### MORFOMETRIA ############################
   
- 
-  
+
   #scegli i dati in base alla selezione
   
   datamorfo = reactive({
     req(data())
     if(input$selfilemorfo == "foglie"){
-      tempdata = morfoleaf()
+      tempdata = morfom()$Foglie
     } else if(input$selfilemorfo == "drupe"){
-      tempdata = morfodrupe()
+      tempdata = morfom()$Drupe
     } else if(input$selfilemorfo == "endocarpo"){
-      tempdata = morfoendo()
+      tempdata = morfom()$Endocarpo
     } else{
-      tempdata = morforatio()
+      tempdata = morfom()$Rapporti
     }
     
     z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale)
@@ -1903,7 +2308,7 @@ app_server <- function( input, output, session ) {
     y =  Olv_select_col(data = datamorfo(), input = input$selectymorfobb)
     fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfobb)
     summ = datamorfo() %>% dplyr::group_by(Codice_azienda, dplyr::across(c(colnames(x), colnames(fill)))) %>%
-      dplyr::summarise(across(where(is.double), mean , na.rm = TRUE), n = dplyr::n()) %>%
+      dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE), n = dplyr::n()) %>%
       dplyr::rename(!! paste(nfoglieolivenew()) := n) %>% dplyr::select(!starts_with("ID"))
     
     temp = ggplot(data = summ, mapping = aes_string(x = colnames(x), y = paste0("`",colnames(y), "`"), 
@@ -2055,6 +2460,7 @@ app_server <- function( input, output, session ) {
   
   #creo l'heatmap
   dataheatmorfo = reactive({
+    req(dtheatsortedmorfo())
     make_heatmap(
       datasorted = dtheatsortedmorfo(),
       add_annot = input$selectannotmorfo,
@@ -2067,14 +2473,12 @@ app_server <- function( input, output, session ) {
       col_nclust = input$slidercolheatmorfo,
       col_lab = "Misure",
       bordi = c(6,2,2,15)
-      
     )
   })
   
   
   observeEvent(input$updateheatmorfo,{
-    dataheat2 = dataheatmorfo()
-    InteractiveComplexHeatmap::InteractiveComplexHeatmapWidget(input, output, session, dataheat2, output_id = "heatmap_outputmorfo", layout = "1|23", width1 = 850, height1 = 600)
+    InteractiveComplexHeatmap::makeInteractiveComplexHeatmap(input, output, session, dataheatmorfo(), heatmap_id  = "heatmap_morfo_output")
   })
   
 

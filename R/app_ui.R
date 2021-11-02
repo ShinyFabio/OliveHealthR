@@ -11,16 +11,22 @@
 #' @import htmltools
 #' @importFrom DT DTOutput
 #' @importFrom shinycssloaders withSpinner
+#' @importFrom shinyjs hidden
+#' @importFrom InteractiveComplexHeatmap InteractiveComplexHeatmapOutput
 #' @noRd
 app_ui <- function(request) {
   tagList(
     tags$head(tags$style(type = 'text/css', ".navbar-default{display:none;}")), #rimuove la barra "Home | Codice"
+    
     # Leave this function for adding external resources
     golem_add_external_resources(),
+    
+    shinyjs::useShinyjs(),
+    
     # Your application UI logic 
     navbarPage(title = "OliveHealthR", theme = shinytheme("spacelab"), id = "navb1", 
-               #tags$head(tags$style(type = "text/css", ".container-fluid{padding-left:0px; padding-right:0px ; }")), #margin-right:auto; margin-left:auto;
-               
+                #margin-right:auto; margin-left:auto;
+      #tags$head(tags$style(type = "text/css", ".container-fluid{padding-left:0px; padding-right:0px ; }")),         
       tabPanel(title = "Welcome", value = "panel1",
                tags$img(src = "www/Photo_2.jpg", width = "100%"),
                h2(strong("Cos'è OliveHealthR?"), style = "text-align: center"),
@@ -59,139 +65,113 @@ app_ui <- function(request) {
                
                ##### Lista menuItem #### 
                tabPanel(title = "Codice", value = "panel2", 
+                        shinyBS::bsModal("keybutton_modal", "Inserisci codice", trigger = "keybutton", size = "small",
+                                         br(),textInput("ins_passw", label = "", value = "Scrivi qui...")),
                         dashboardPage(
-                          dashboardHeader(title = "OliveHealthR", tags$li(class = "dropdown", actionBttn("jumptohome", icon = icon("home"), style = "stretch", size = "lg" , color = "primary"))),
+                          dashboardHeader(title = "OliveHealthR", 
+                            tags$li(class = "dropdown",
+                              actionBttn("keybutton", icon = icon("key"), style = "stretch", size = "lg" , color = "primary"),
+                              actionBttn("jumptohome", icon = icon("home"), style = "stretch", size = "lg" , color = "primary")
+                              )),
                           dashboardSidebar(
                             sidebarMenu(
-                              menuItem("Azienda", tabName = "azienda", startExpanded = TRUE,
-                                       menuSubItem("Home", tabName = "homesub"),
-                                       menuSubItem("Mappa", tabName = "mappa1sub")
-                              ),
-                              menuItem("Campionamento azienda", tabName = "campazienda",
+                              menuItem("File", tabName = "filemenuitem", icon = icon("file-import")),
+                              menuItem("Azienda", tabName = "azienda", icon = icon("id-card")),
+                              menuItem("Campionamento azienda", tabName = "campazienda", icon = icon("file-alt"),
                                        menuSubItem("Drupe e foglie", tabName = "drupleafsub"),
                                        menuSubItem("Olio", tabName = "oliosub"),
                                        menuSubItem("Calendario campionamenti", tabName = "calendar"),
                                        menuSubItem("Analisi sensoriali", tabName = "assaggsub")),
-                              menuItem("Analisi laboratorio", tabName = "anlab",
+                              menuItem("Analisi laboratorio", tabName = "anlab", icon = icon("flask"),
                                        menuSubItem("Polifenoli totali", tabName = "totpolsub"),
                                        menuSubItem("Polifenoli individuali", tabName = "inpolsub"),
-                                       menuSubItem("Polifenoli LCxLC", tabName = "lcpolsub"),
+                                       shinyjs::hidden(menuSubItem("Polifenoli LCxLC", tabName = "lcpolsub")),
                                        menuSubItem("Analisi morfometrica", tabName = "anmorfosub")),
-                              menuItem("Integrazione dati", tabName = "integrdati")
+                              menuItem("Integrazione dati", tabName = "integrdati", icon = icon("vials"))
                             )
                           ), 
                           dashboardBody(
                             tabItems(
                               
+                              ##### tabitem File ####
+                              tabItem(tabName = "filemenuitem",
+                                fluidRow(
+                                  #schede aziende
+                                  column(3, 
+                                    box(width = NULL, status = "primary", title = h3(strong("Aziende"), style = "color: white; display:inline; margin-top: 0px;margin-bottom: 0px;"), solidHeader = T,
+                                        uiOutput("valbox_aziende")
+                                    )
+                                  ),
+                                  
+                                  #schede campionamento
+                                  column(3,
+                                    box(width = NULL, status = "primary", title = h3(strong("Schede campionamento"), style = "color: white; display:inline; margin-top: 0px;margin-bottom: 0px;"), solidHeader = T,
+                                        uiOutput("valbox_drupecamp"),
+                                        uiOutput("valbox_oliocamp"),
+                                        uiOutput("valbox_assaggi")
+                                        )
+                                  ),
+                                  #polifenoli
+                                  column(3,
+                                         box(width = NULL, status = "primary", title = h3(strong("Polifenoli"), style = "color: white; display:inline; margin-top: 0px;margin-bottom: 0px;"), solidHeader = T,
+                                             uiOutput("valbox_poltot"),
+                                             uiOutput("valbox_polind")
+                                         )
+                                  ),
+                                  #morfometria
+                                  column(3,
+                                         box(width = NULL, status = "primary", title = h3(strong("Morfometria"), style = "color: white; display:inline; margin-top: 0px;margin-bottom: 0px;"), solidHeader = T,
+                                         uiOutput("valbox_morfo"))
+                                  )
+                                ), #end of fluidrow
+                                fluidRow(
+                                  column(4, offset = 4, style = "text-align:center;", br(), br(), br(), br(), br(),
+                                         actionButton("load_files", label = HTML("&nbsp;Carica tutti dati!"), icon("file-upload"), class = "btn btn-primary btn-lg", width = "300px", style='padding:10px; font-size:200%; font-weight: bold;')
+                                  )
+                                )
+
+                              ),
+                              
                               ##### tabItem Home ####
-                              tabItem(tabName = "homesub",
-                                      sidebarLayout(
-                                        sidebarPanel(width = 2,
-                                          #seleziona il separatore
-                                          radioButtons("delim", "Scegli il separatore", choices = c("Virgola" = ",", "Punto e virgola" = ";", "Tab" = "\t"), selected = ";"),
-                                                     
-                                          #scegli se header
-                                          checkboxInput("header", "Header", TRUE),
-                                          radioButtons("decim", "Decimale", choices = c("Virgola" = ",", "Punto" = "."), selected = ","),
-                                          
-                                          hr(), 
-                                                     
-                                          #carica il file
-                                          fileInput("file1", "File aziende (.csv)"),
-                                          br(), 
-                                                     
-                                          #file descrizione aziende
-                                          conditionalPanel(condition = "output.file1_ready",
-                                            
-                                            fileInput("desc1", "File descrizione .csv (opzionale)"),
-                                            hr(),
-                                            tags$h3("File con dati"), 
-                                            radioButtons("tipofile", label = "Tipo di file", choices = list("Schede campionamento" = 1, "Polifenoli" = 2, "Morfometria" = 3, "Polifenoli LCxLC" = 4),
-                                                         selected = 1),
-                                            
-                                            conditionalPanel(condition = "input.tipofile == 1",
-                                              fileInput("drupeinput", "Campionamento drupe e foglie (.csv)"),
-                                              fileInput("olioinput", "Campionamento olio (.csv)"),
-                                              fileInput("assagginput", "Assaggi sensoriali (.csv)")),
-                                                                      
-                                            conditionalPanel(condition = "input.tipofile == 2",
-                                              fileInput("polifinput", "File dati polifenoli (.csv)")),
-                                                                      
-                                            conditionalPanel(condition = "input.tipofile == 3",
-                                              fileInput("morfoleafinput", "File morfometria foglie 2D (.csv)"),
-                                              fileInput("morfodrupeinput", "File morfometria drupe 3D (.csv)"),
-                                              fileInput("morfoendoinput", "File morfometria endocarpo 3D (.csv)"),
-                                              fileInput("morforatioinput", "File rapporti drupe endocarpo (.csv)")
-                                            ),
-                                            
-                                            conditionalPanel(condition = "input.tipofile == 4",
-                                              fileInput("lcpoldrupeinput", "File polifenoli drupe LCxLC (.csv)"),
-                                              fileInput("lcpolfoglieinput", "File polifenoli foglie LCxLC (.csv)"),
-                                              fileInput("lcpololioinput", "File polifenoli oli LCxLC (.csv)"),
-                                              fileInput("lcpolposainput", "File polifenoli posa LCxLC (.csv)"),
-                                              fileInput("lcpolsansainput", "File polifenoli sansa LCxLC (.csv)")
-                                            )
-                                          )
-                                        ),
-                                        
-                                        
-                                        mainPanel(width = 10,
-                                          tabsetPanel(id = "tab2",
-                                            tabPanel("Tabella",
-                                              box(width = NULL, status = "primary", style = "overflow-x: scroll;",
-                                                  DT::DTOutput("content")
-                                              ), 
-                                              
-                                              mod_update_data_ui("updataaziende")
-                                              
-                                            ), 
-                                                          
-                                            
-                                            tabPanel("Cultivar",
-                                              box(width=NULL, status = "primary", h4(htmlOutput("numcult"))),
-                                              br(),
-                                              fluidRow(
-                                                column(2,
-                                                       box(width = NULL, status = "primary",
-                                                           radioButtons("selplotcult", label = h4("Tipo di grafico"), choices = list("Grafico a torta" = 1, "Grafico a barre" = 2), selected = 2))
-                                                ),
-                                                column(width=10, box(width=NULL, status = "primary", shinycssloaders::withSpinner(image = "www/running_olive.gif", uiOutput("cultplot"))))
-                                              )
-                                            ), 
-                                                          
-                                            
-                                            tabPanel("Descrizione", 
-                                              tags$h3(strong("Selezionare un'azienda")),
-                                              fluidRow(column(4, DT::DTOutput("descriz")),
-                                                       column(8, 
-                                                         htmlOutput("taby12"),
-                                                         br(),
-                                                         htmlOutput("contatti")
-                                                       )
-                                              )
-                                            )
-                                          )#end of tabsetpanel
-                                          
-                                        )#end of mainpanel
-                                      )#end of sidebarlayout
-                              ), #end of tabitem "Home"
-                              
-                              
-                              tabItem(tabName = "mappa1sub", 
-                                      sidebarLayout(
-                                        sidebarPanel(width = 3,
-                                                     div(actionButton("update", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:160%'), align = "center"),
-                                                     hr(), 
-                                                     selectInput("select3", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE)
-                                        ),
-                                        mainPanel(width = 9,
-                                          conditionalPanel(condition = "input.update != 0",
-                                                           shinycssloaders::withSpinner(tmapOutput("map1"),image = "www/running_olive.gif")
-                                          )
+                              tabItem(tabName = "azienda",
+                                tabsetPanel(
+                                  
+                                  tabPanel("Tabella",
+                                    box(width = NULL, status = "primary", style = "overflow-x: scroll;",
+                                        DT::DTOutput("content")
+                                    ), 
+                                    mod_update_data_ui("updataaziende")
+                                  ), 
+                                  
+                                  
+                                  tabPanel("Cultivar",
+                                    box(width=NULL, status = "primary", h4(htmlOutput("numcult"))),
+                                    br(),
+                                    fluidRow(
+                                      column(2,
+                                             box(width = NULL, status = "primary",
+                                                 radioButtons("selplotcult", label = h4("Tipo di grafico"), choices = list("Grafico a torta" = 1, "Grafico a barre" = 2), selected = 2))
+                                      ),
+                                      column(width=10, box(width=NULL, status = "primary", shinycssloaders::withSpinner(image = "www/running_olive.gif", uiOutput("cultplot"))))
+                                    )
+                                  ),
+                                  
+                                  tabPanel("Mappa",
+                                    sidebarLayout(
+                                      sidebarPanel(width = 3,
+                                        div(actionButton("update", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:160%'), align = "center"),
+                                        hr(), 
+                                        selectInput("select3", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE)
+                                      ),
+                                      mainPanel(width = 9,
+                                        conditionalPanel(condition = "input.update != 0",
+                                          shinycssloaders::withSpinner(tmapOutput("map1")),
                                         )
                                       )
-                              ), #end of tabitem mappa1sub
-                              
+                                    )
+                                  )
+                                ) #end of tabset
+                              ),
                               
                               
                               ##### TabItem Campionamento Azienda ####
@@ -318,7 +298,7 @@ app_ui <- function(request) {
                                       ),
                                       mainPanel(width = 9,
                                         conditionalPanel(condition = "input.updateoilmap != 0",
-                                          shinycssloaders::withSpinner(image = "www/running_olive.gif", tmapOutput("mapolio"))),
+                                          shinycssloaders::withSpinner(tmapOutput("mapolio"))),
                                       )
                                     )
                                     
@@ -477,6 +457,9 @@ app_ui <- function(request) {
                                                       direction = "vertical", justified = TRUE, status = "primary"
                                     ),
                                     hr(),
+                                    conditionalPanel(condition = "input.tabboxpoltot  == 'tabdtpoltot' || (input.tabboxpoltot == 'tabpoltotgraph' && input.boxpoltotgraph  == 'boxscattpoltot')",
+                                      materialSwitch(inputId = "summpoltot", label = "Sintetizza i dati", status = "primary")
+                                    ),
                                     conditionalPanel(
                                       condition = "input.tabboxpoltot  == 'tabpoltotgraph'",
                                       h4(strong("Impostazioni grafici")),
@@ -502,7 +485,7 @@ app_ui <- function(request) {
                                         hr(),
                                         selectInput("colpoltotmap1", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
                                         selectInput("yearpoltotmap1", "Seleziona l'anno", choices = "", multiple = FALSE),
-                                        selectInput("numpoltotmap1", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE),
+                                        selectInput("numpoltotmap1", "Scegli il numero di campionamento", choices = "", multiple = FALSE),
                                         hr(),
                                         div(actionButton("addmappoltot2", label = "Aggiungi seconda mappa"), align = "center"),
                                       ),
@@ -510,7 +493,7 @@ app_ui <- function(request) {
                                         br(),
                                         selectInput("colpoltotmap2", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
                                         selectInput("yearpoltotmap2", "Seleziona l'anno", choices = "", multiple = FALSE),
-                                        selectInput("numpoltotmap2", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE),                                                     
+                                        selectInput("numpoltotmap2", "Scegli il numero di campionamento", choices = "", multiple = FALSE),                                                     
                                       )
                                     )
                                   ), 
@@ -526,7 +509,6 @@ app_ui <- function(request) {
                                                  br(),
                                                  mod_render_NAbox_ui("naboxpoltot")
                                                  
-                                                 
                                                )
                                       ), #end of tabpanel tabella
                                       
@@ -539,7 +521,7 @@ app_ui <- function(request) {
                                                    box(width=NULL, status = "primary",
                                                      fluidRow(
                                                        column(3, selectInput("selyearscattertot", "Seleziona l'anno", choices = "", multiple = FALSE)),
-                                                       column(3, selectInput("numtot", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)),
+                                                       column(3, selectInput("numtot", "Scegli il numero di campionamento", choices = "", multiple = FALSE)),
                                                        column(3, selectInput("selectfilltot", "Colonna da usare come riempimento", choices = "", multiple = FALSE))
                                                      )),
                                                    shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("totscatplot"))
@@ -557,10 +539,10 @@ app_ui <- function(request) {
                                       #tabpanel mappa
                                       tabPanel(tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")), value = "tabpoltotmap",
                                         conditionalPanel(condition = "input.updatepoltotmap != 0", 
-                                          shinycssloaders::withSpinner(image = "www/running_olive.gif", tmapOutput("poltotmap1"))),
+                                          shinycssloaders::withSpinner(tmapOutput("poltotmap1"))),
                                         conditionalPanel(condition = "input.addmappoltot2 != 0", 
                                           hr(),
-                                          shinycssloaders::withSpinner(image = "www/running_olive.gif", tmapOutput("poltotmap2")))
+                                          shinycssloaders::withSpinner(tmapOutput("poltotmap2")))
                                       )
                                       
                                     ) #end of tabbox poltot
@@ -575,17 +557,22 @@ app_ui <- function(request) {
                                 sidebarLayout(
                                   sidebarPanel(width = 2,
                                     radioGroupButtons("selfilepolind", "Seleziona i polifenoli da analizzare", 
-                                                      choiceValues = list("foglie", "drupe", "olio", "posa", "sansa"),
+                                                      choiceValues = list("foglie", "drupe", "olio", "posa"),
                                                       choiceNames = list(
                                                         paste(shiny::icon("leaf",  style='font-size:16px;'), HTML("<b style=font-size:16px>&nbsp;Foglie</b>")),
                                                         paste(tags$img(src = "www/olive_icon2.png", height = "22px", width = "22px"), HTML("<b style=font-size:16px>&nbsp;Drupe</b>")),
                                                         paste(tags$img(src = "www/olive_oil.png", height = "22px", width = "22px"), HTML("<b style=font-size:16px>&nbsp;Olio</b>")),
-                                                        paste(tags$img(src = "www/posa.png", height = "22px", width = "22px"), HTML("<b style=font-size:16px>&nbsp;Posa</b>")),
-                                                        paste(tags$img(src = "www/sansa3.png", height = "23px", width = "23px"), HTML("<b style=font-size:16px>&nbsp;Sansa</b>"))),
+                                                        paste(tags$img(src = "www/posa.png", height = "22px", width = "22px"), HTML("<b style=font-size:16px>&nbsp;Posa</b>"))
+                                                        ),
                                                       direction = "vertical", justified = TRUE, status = "primary"
                                     ),
                                     hr(),
-                                    
+                                    conditionalPanel(
+                                      condition = "input.tabboxpolind  == 'tabdtpolind' || input.tabboxpolind == 'tabpolindpca' || 
+                                      (input.tabboxpolind == 'tabpolindgraph' && input.boxpolindgraph  == 'boxscattpolind' )",
+                                      materialSwitch(inputId = "summpolind", label = "Sintetizza i dati", status = "primary")
+                                    ), 
+
                                     conditionalPanel(
                                       condition = "input.tabboxpolind  == 'tabpolindgraph'",
                                       h4(strong("Impostazioni grafici")),
@@ -596,22 +583,25 @@ app_ui <- function(request) {
                                                        selectInput("selectyind", "Seleziona la colonna Y", choices = "", multiple = FALSE)
                                       ),
                                       
+                                      # Boxplot ______________________________________________________
+                                      conditionalPanel(condition = "input.boxpolindgraph == 'boxboxplotpolind'",
+                                                       selectInput("selectyboxind", "Seleziona un polifenolo", choices = "", multiple = FALSE)
+                                      ),
+                                      
                                       # Barplot ____________________________________________________________
                                       conditionalPanel(condition = "input.boxpolindgraph == 'boxbarpolind'",
-                                        selectInput("selectxindbar", "Seleziona la colonna X", choices = "", multiple = FALSE),
-                                        selectInput("selectyindbar", "Seleziona la colonna Y", choices = "", multiple = FALSE),
+                                        selectInput("selectyindbar", "Seleziona un polifenolo", choices = "", multiple = FALSE),
                                         selectInput("selectfillindbar", "Colonna da usare come riempimento", choices = c("N_campionamento", "Cultivar_principale"), selected = "N_campionamento"),
                                         hr(),
                                         checkboxGroupInput("checkcampind", "Seleziona campionamento", choices = "")
                                       ),
                                     
                                     # Heatmap _______________________________________________________
-                                    conditionalPanel(
-                                      condition = "input.boxpolindgraph == 'boxheatpolind'",
+                                    conditionalPanel(condition = "input.boxpolindgraph == 'boxheatpolind'",
                                       div(actionButton("updateheat", label = "Carica!", class = "btn btn-primary btn-lg", width = "140px", style='padding:5px; font-size:150%; font-weight: bold;'), align= "center"),
                                       br(),
                                       h4(strong("Dati")),
-                                      selectInput("numheat", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE),
+                                      selectInput("numheat", "Scegli il numero di campionamento", choices = "", multiple = FALSE),
                                       selectInput("selyearheatind", "Seleziona l'anno", choices = "", multiple = FALSE),
                                       
                                       hr(),
@@ -652,12 +642,21 @@ app_ui <- function(request) {
                                         
                                     ), #end of conditional heatmap
                                       
+                                    conditionalPanel(condition = "input.boxpolindgraph == 'boxspiderpolind'",
+                                      selectInput("selyearspiderpolind", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                      selectInput("selcampspiderpolind", "Seleziona il numero di campionamento", choices = "", multiple = FALSE),
+                                      selectInput("selcodspiderpolind", "Seleziona un'azienda", choices = "", multiple = FALSE),
+                                      awesomeCheckbox("addcodspiderpolind", "Aggiungi seconda azienda", value = FALSE),
+                                      conditionalPanel(condition = "input.addcodspiderpolind == true",
+                                                       selectInput("selcodspiderpolind2", "Seleziona un'azienda", choices = "", multiple = FALSE)
+                                      )
+                                    ),
                                       
                                     # Correlation _________________________________________________________________
                                     conditionalPanel(
                                       condition = "input.boxpolindgraph == 'boxcorrpolind'",
                                       selectInput("selyearcorrind", "Seleziona l'anno", choices = "", multiple = FALSE),
-                                      selectInput("numcorr", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)
+                                      selectInput("numcorr", "Scegli il numero di campionamento", choices = "", multiple = FALSE)
                                     ),
                                     ), #end of conditional panel dei grafici
                                     
@@ -667,7 +666,7 @@ app_ui <- function(request) {
                                     conditionalPanel(
                                       condition = "input.tabboxpolind == 'tabpolindpca'",
                                       selectInput("selyearpca", "Seleziona l'anno", choices = "", multiple = FALSE),
-                                      selectInput("numpca", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE),
+                                      selectInput("numpca", "Scegli il numero di campionamento", choices = "", multiple = FALSE),
                                       radioGroupButtons(inputId = "selcorpca", label = "Matrice:", choices = c("Correlazione" = TRUE, "Covarianza" = FALSE), 
                                                         individual = TRUE, checkIcon = list(yes = tags$i(class = "fa fa-circle", style = "color: steelblue"),no = tags$i(class = "fa fa-circle-o", style = "color: steelblue")))
                                     ),
@@ -680,7 +679,7 @@ app_ui <- function(request) {
                                         hr(),
                                         selectInput("colpolindmap1", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
                                         selectInput("yearpolindmap1", "Seleziona l'anno", choices = "", multiple = FALSE),
-                                        selectInput("numpolindmap1", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE),
+                                        selectInput("numpolindmap1", "Scegli il numero di campionamento", choices = "", multiple = FALSE),
                                         hr(),
                                         div(actionButton("addmappolind2", label = "Aggiungi seconda mappa"), align = "center"),
                                       ),
@@ -688,7 +687,7 @@ app_ui <- function(request) {
                                         br(),
                                         selectInput("colpolindmap2", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
                                         selectInput("yearpolindmap2", "Seleziona l'anno", choices = "", multiple = FALSE),
-                                        selectInput("numpolindmap2", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE),                                                     
+                                        selectInput("numpolindmap2", "Scegli il numero di campionamento", choices = "", multiple = FALSE),                                                     
                                       )
                                     )
                                       
@@ -716,13 +715,21 @@ app_ui <- function(request) {
                                             box(width=NULL, status = "primary",
                                               fluidRow(
                                                 column(3, selectInput("selyearscatterind", "Seleziona l'anno", choices = "", multiple = FALSE)),
-                                                column(3, selectInput("numind", "Scegli il numero di campionamento", choices = c("1" = "R1", "2" = "R2"), selected = "R1", multiple = FALSE)),
+                                                column(3, selectInput("numind", "Scegli il numero di campionamento", choices = "", multiple = FALSE)),
                                                 column(3, selectInput("selectfillind", "Colonna da usare come riempimento", choices = "", multiple = FALSE))
                                               )),
                                             shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("scatterindpol"))
                                           ), #end of tabpanel scatterplot
 
-                                          
+                                          tabPanel("Boxplot", value = "boxboxplotpolind",
+                                                   box(width=NULL, status = "primary",
+                                                       fluidRow(
+                                                         column(3, selectInput("selyearboxind", "Seleziona l'anno", choices = "", multiple = FALSE)),
+                                                         column(3, selectInput("numboxind", "Scegli il numero di campionamento", choices = "", multiple = FALSE)),
+                                                         column(3, selectInput("selectfillboxind", "Colonna da usare come riempimento", choices = "", multiple = FALSE))
+                                                       )),
+                                                   shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("boxplotindpol"))
+                                          ), 
                                           
                                           tabPanel("Barplot", value = "boxbarpolind",
                                                    shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("barplotind"))
@@ -731,14 +738,20 @@ app_ui <- function(request) {
                                                  
                                                  
                                           tabPanel("Heatmap", value = "boxheatpolind",
-                                            htmlOutput("heatmap_output")
+                                            InteractiveComplexHeatmap::InteractiveComplexHeatmapOutput("heatmap_polind_output", layout = "1|(2-3)", width1 = 850, height1 = 550)
                                           ),
                                                  
-                                                 
-                                                 
+
                                           tabPanel("Correlation Plot", value = "boxcorrpolind",
                                             shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("corrplotind"))
-                                          ) #end of tabpanel correlation
+                                          ), #end of tabpanel correlation
+                                          
+                                          
+                                          tabPanel(
+                                            "Spiderplot",
+                                            value = "boxspiderpolind",
+                                            div(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotOutput("spider_polind", width = "100%",height = "600px")), align = "center"),
+                                          )
                                                  
                                         ) #end of tabsetpanel
                                       ), #end of tabPanel Grafici
@@ -755,36 +768,36 @@ app_ui <- function(request) {
                                                        column(3, box(width = NULL, status = "primary",
                                                                    awesomeRadio("selbiplotpolind", "Seleziona tipo di grafico", choices = c("Biplot", "Plot")))),
                                                        column(4, box(width = NULL, status = "primary", 
-                                                                   selectInput("colbiplot", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Cultivar_principale", "Areale", "Provincia")))),
+                                                                   selectInput("colbiplot", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Cultivar_principale", "Azienda", "Provincia", "Areale")))),
                                                        column(4, box(width = NULL, status = "primary",
                                                                    awesomeCheckboxGroup("shpbiplot", "Aggiungi geometria", choices = "Provincia", inline = TRUE)
                                                      ))),
                                                    fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("biplot", height = "500px"))))
                                           ),
                                           
-                                          
                                           tabPanel("Screeplot",
                                             br(),
                                             shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("screeplot", width = "75%"))
                                           ),
                                                              
-
                                           tabPanel("Loadings",
-                                            br(),
-                                            fluidRow(column(4, box(width = NULL, status = "primary", uiOutput("sliderpc")))),
-                                            fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("loadings")))
-                                            ),
-                                                             
-
+                                            fluidPage(
+                                              br(),
+                                              fluidRow(column(4, box(width = NULL, status = "primary", uiOutput("sliderpc")))),
+                                              fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("loadings")))
+                                            )
+                                          ),
+                                          
                                           tabPanel("Plot 3D",
-                                            br(),
-                                            fluidRow(
-                                              column(4, box(width = NULL, status = "primary", 
-                                                            selectInput("col3dind", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Provincia", "Cultivar_principale", "Areale"))))
-                                            ),
-                                            fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("pca3dpolind", height = "500px")))
+                                            fluidPage(
+                                              br(),
+                                              fluidRow(
+                                                column(4, box(width = NULL, status = "primary", 
+                                                              selectInput("col3dind", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Provincia", "Cultivar_principale", "Areale"))))
+                                              ),
+                                              fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("pca3dpolind", height = "500px")))
+                                            )
                                           )
-
                                         ) #end of tabsetpanel
                                       ), #end of tabpanel PCA
                                       
@@ -809,24 +822,37 @@ app_ui <- function(request) {
                                                    
                                               fluidRow(column(12, box(width=NULL, status = "primary", DT::DTOutput("prov3"))))
                                             ),
-                                            conditionalPanel(condition = "input.prov3_rows_selected == 0",
-                                                             p(strong(h4("Per favore seleziona un'azienda dalla tabella", align = "center")))
-                                            ),
                                             
-                                            conditionalPanel(condition = "input.prov3_rows_selected != 0",
-                                              column(8, 
-                                                fluidRow(
-                                                  box(width=NULL, status = "primary", title = "Cromatogramma", align= "center", uiOutput("phcromat"))
-                                                ),
-                                                fluidRow(
-                                                  box(width=NULL, status = "primary", title = "Polifenoli",align = "center", 
-                                                      
-                                                      #inserire qui i dati numerici dei polifenoli
-
-                                                  )
+                                            
+                                            
+                                            column(8,
+                                              
+                                              column(6, offset = 3,
+                                                conditionalPanel(condition = "input.prov3_rows_selected == 0",
+                                                box(width = NULL, background = "yellow", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 27px"), h4(strong("Seleziona un'azienda dalla tabella"), style = "color: white"), style = "text-align: justify;  text-align: center;")
+                                              ),
+                                                #R1 e olio/posa
+                                                conditionalPanel(condition = "input.prov3_rows_selected != 0 && output.check_crompolind == 'no'",
+                                                  box(width = NULL, background = "yellow", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 27px"), h4(strong("I dati sull'olio e sulla posa riguardano solamente il secondo campionamento."), style = "color: white"), style = "text-align: justify;  text-align: center;")
                                                 )
-                                              )
-                                            )
+                                              ),
+                                              
+                                              #non R1 e olio/posa  
+                                              conditionalPanel(condition = "input.prov3_rows_selected != 0 && output.check_crompolind == 'yes'",
+                                                          
+                                                  fluidRow(box(width=NULL, status = "primary", title = "Cromatogramma", align= "center", uiOutput("phcromat"))),
+                                                  fluidRow(
+                                                    box(width=4, status = "primary", title = "Polifenoli",align = "center", 
+                                                        
+                                                        #inserire qui i dati numerici dei polifenoli
+                                                        
+                                                    )
+                                                  )
+                                              ) #end of conditional panel !=0
+                                              
+                                              
+                                            ) #end of column 8
+                                            
                                           ) #end of fluidRow
                                         )
                                         
@@ -836,10 +862,10 @@ app_ui <- function(request) {
                                       
                                       tabPanel(tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")), value = "tabpolindmap",
                                         conditionalPanel(condition = "input.updatepolindmap != 0", 
-                                          shinycssloaders::withSpinner(image = "www/running_olive.gif", tmapOutput("polindmap1"))),
+                                          shinycssloaders::withSpinner(tmapOutput("polindmap1"))),
                                         conditionalPanel(condition = "input.addmappolind2 != 0", 
                                           hr(),
-                                          shinycssloaders::withSpinner(image = "www/running_olive.gif", tmapOutput("polindmap2")))
+                                          shinycssloaders::withSpinner(tmapOutput("polindmap2")))
                                       )
                                       
                                       
@@ -852,12 +878,11 @@ app_ui <- function(request) {
                               ), #end of tabitem "inpolsub"
                               
                            
-                              ####### Tab polifenoli LCxLC ##########
+                              # ####### Tab polifenoli LCxLC ##########
                               tabItem(tabName = "lcpolsub",
-                                
                                 sidebarLayout(
                                   sidebarPanel(width = 2,
-                                    radioGroupButtons("selfilepollc", "Seleziona i polifenoli da analizzare", 
+                                    radioGroupButtons("selfilepollc", "Seleziona i polifenoli da analizzare",
                                       choiceValues = list("foglie", "drupe", "olio", "posa", "sansa"),
                                       choiceNames = list(
                                         paste(shiny::icon("leaf",  style='font-size:16px;'), HTML("<b style=font-size:16px>&nbsp;Foglie</b>")),
@@ -868,16 +893,16 @@ app_ui <- function(request) {
                                       direction = "vertical", justified = TRUE, status = "primary"
                                     ),
                                     hr(),
-                                    
+
                                     # Tabella
                                     conditionalPanel(condition = "input.tabboxlcxlc == 'tabdtlc'",
                                       awesomeRadio("dttypelc", "Tipo di visualizzazione", choices = c("Wide", "Long"))
-                                      ),                                    
-                                    
+                                      ),
+
                                     #Grafici
                                     conditionalPanel(condition = "input.tabboxlcxlc == 'tabgraphlc'",
                                       h4(strong("Impostazioni grafici")),
-                                      
+
                                       #scatterplot e barplot
                                       conditionalPanel(condition = "input.boxlcgraph == 'tabpanscattlc' || input.boxlcgraph == 'tabpanbarlc'",
                                         awesomeRadio("lcdatatypescatt", "Filtra i dati per:", choices = c("Azienda", "Polifenolo", "Cultivar principale")),
@@ -899,16 +924,16 @@ app_ui <- function(request) {
                                         ),
                                         selectInput("numscattlc", "Scegli il numero di campionamento", choices = ""),
                                         selectInput("fillscattlc", "Scegli colonna riempimento", choices = "")
-                                      ), 
-                                      
+                                      ),
+
                                       conditionalPanel(condition = "input.boxlcgraph == 'tabpanbarlc' && input.lcdatatypescatt == 'Cultivar principale'",
                                       awesomeRadio("bartypelc", "Tipo di barplot", choices = c("Affiancato" = "dodge", "Impilato" = "stack")),
                                       selectInput("lcselpolbar", "Polifenoli da mostrare", choices = "")
                                       ),
-                                      
+
                                       # HEATMAP
                                       conditionalPanel(condition = "input.boxlcgraph == 'tabpanheatlc'",
-                                        
+
                                         div(actionButton("updateheatlc", label = "Carica!", class = "btn btn-primary btn-lg", width = "140px", style='padding:5px; font-size:150%; font-weight: bold;'), align= "center"),
                                         br(),
                                         h4(strong("Dati")),
@@ -919,7 +944,7 @@ app_ui <- function(request) {
                                         selectInput("selscaleheatlc", "Scala i dati:", choices = c("No" = "none", "Per riga" = "row", "Per colonna" = "column"), selected = "none"),
                                         hr(),
                                         h4(strong("Opzioni dendrogramma")),
-                                        
+
                                         ###voglio il dendrograma su riga o colonna o entrambi?
                                         h5(strong("Scegli dove mostrare il dendrogramma")),
                                         fluidRow(
@@ -931,58 +956,55 @@ app_ui <- function(request) {
                                                          selectInput("seldistheatlc", "Funzione di distanza:", choices = c("euclidean", "maximum", "manhattan", "canberra", "minkowski"), selected = "euclidean"),
                                                          selectInput("selhclustheatlc", "Metodo clustering:", choices = c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty", "median", "centroid"), selected = "complete"),
                                         ),
-                                        
+
                                         conditionalPanel(condition = "input.rowdendlc == 0",
                                                          h5(strong("Ordinare i dati per annotazione?")),
                                                          awesomeCheckbox("heatsortlc", label = "Ordina", value = TRUE)
                                         ),
-                                        
+
                                         conditionalPanel(condition = "input.rowdendlc == 1",
                                                          hr(),
                                                          h4(strong("Dendrogramma su riga")),
                                                          sliderInput("sliderrowheatlc", "Numero cluster:", min = 2, max = 10, value = 2),
                                         ),
-                                        
+
                                         conditionalPanel(condition = "input.columndendlc == 1",
                                                          hr(),
                                                          h4(strong("Dendrogramma su colonna")),
                                                          uiOutput("slidercolheatlc"),
                                         )
                                       )
-                                      
-                                      
-                                      
+
+
+
                                     ), #end of conditionalpanel grafici
-                                    
-                                    # PCA 
+
+                                    # PCA
                                     conditionalPanel(condition = "input.tabboxlcxlc == 'tabpcalc'",
                                       #selectInput("selyearpca", "Seleziona l'anno", choices = "", multiple = FALSE),
                                       selectInput("numcamppcalc", "Scegli il numero di campionamento", choices = "", multiple = FALSE),
                                       awesomeCheckbox("scalepcalc", "Scala i dati", value = TRUE)
-                                      
-                                    ),
-                                    
-                                    
 
-                                    
-                                    
+                                    )
                                   ), #end of sidebarpanel
-                                  
+
+
+
                                   mainPanel(width=10,
                                     tabBox(id = "tabboxlcxlc", width=NULL,
-                                           
+
                                       tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")), value = "tabdtlc",
                                                box(width = NULL, status = "primary", style = "overflow-x: scroll;",
                                                                    DT::DTOutput("dtlcxlc")),
                                                mod_render_NAbox_ui("naboxlc")
                                       ),
-                                      
+
 
                                       ### Galleria
                                       tabPanel(tagList(shiny::icon("images"), HTML("&nbsp;Galleria")), value = "tablccroma",
                                                fluidPage(
                                                  fluidRow(
-                                                   column(4, 
+                                                   column(4,
                                                           fluidRow(
                                                             column(6,
                                                                    box(width = NULL, status = "primary",
@@ -990,22 +1012,22 @@ app_ui <- function(request) {
                                                                                        individual = TRUE, checkIcon = list(yes = tags$i(class = "fa fa-circle", style = "color: steelblue"), no = tags$i(class = "fa fa-circle-o", style = "color: steelblue")))
                                                                    )
                                                             )
-                                                          ), 
-                                                          
+                                                          ),
+
                                                           fluidRow(column(12, box(width=NULL, status = "primary", style = "overflow-x: scroll;", DT::DTOutput("dtfotolc"))))
                                                    ),
                                                    conditionalPanel(condition = "input.dtfotolc_rows_selected == 0",
                                                                     p(strong(h4("Per favore seleziona un'azienda dalla tabella", align = "center")))
                                                    ),
-                                                   
+
                                                    conditionalPanel(condition = "input.dtfotolc_rows_selected != 0",
-                                                                    column(8, 
+                                                                    column(8,
                                                                       fluidRow(
                                                                         box(width=NULL, status = "primary", title = "Cromatogramma", align= "center", uiOutput("phcromatlc"))
                                                                       ),
                                                                       fluidRow(
                                                                         column(10, offset = 1,
-                                                                          box(width=NULL, status = "primary",title = "Polifenoli",align = "center", 
+                                                                          box(width=NULL, status = "primary",title = "Polifenoli",align = "center",
                                                                             DTOutput("poliffotolc"))
                                                                                )
                                                                       )
@@ -1014,8 +1036,8 @@ app_ui <- function(request) {
                                                  ) #end of fluidRow
                                                )
                                       ), #end of tabpanel Galleria
-                                      
-                                      
+
+
                                       ##### Grafici
                                       tabPanel(tagList(shiny::icon("chart-bar"), HTML("&nbsp;Grafici")), value = "tabgraphlc",
                                         tabsetPanel(id = "boxlcgraph",
@@ -1023,25 +1045,25 @@ app_ui <- function(request) {
                                           tabPanel("Scatter plot", value = "tabpanscattlc",
                                                    shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("scatterlc", height = "550px"))
                                           ),
-                                          
+
                                           #barplot
                                           tabPanel("Barplot", value = "tabpanbarlc",
                                                    shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("barplotlc", height = "550px"))
                                           ),
-                                          
+
                                           tabPanel("Heatmap", value = "tabpanheatlc",
-                                                   br(),
-                                                   htmlOutput("heatmap_outputlc")
+                                            br(),
+                                            InteractiveComplexHeatmap::InteractiveComplexHeatmapOutput("heatmap_lc_output", layout = "1|(2-3)", width1 = 1150, height1 = 700)
                                           )
                                         )
-                                            
+
                                         ), # end of tabpanel grafici
-                                      
-                                      
+
+
                                       ###### PCA
                                       tabPanel(tagList(shiny::icon("chart-line"), HTML("&nbsp;PCA")), value = "tabpcalc",
                                                tabsetPanel(
-                                                 
+
                                                  tabPanel("Plot",
                                                           br(),
                                                           fluidPage(
@@ -1049,7 +1071,7 @@ app_ui <- function(request) {
                                                             column(3,box(width = NULL, status = "primary",
                                                                     awesomeRadio("selbiplotlc", "Seleziona tipo di grafico", choices = c("Biplot", "Plot"))
                                                               )),
-                                                            column(4, box(width = NULL, status = "primary", 
+                                                            column(4, box(width = NULL, status = "primary",
                                                                           selectInput("colbiplotlc", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Cultivar_principale", "Areale", "Provincia")))),
                                                             column(4, box(width = NULL, status = "primary",
                                                                           awesomeCheckboxGroup("shpbiplotlc", "Aggiungi geometria", choices = "Provincia", inline = TRUE)
@@ -1057,43 +1079,43 @@ app_ui <- function(request) {
                                                           ),
                                                           fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("biplotlc", height = "500px"))))
                                                  ),
-                                                 
+
                                                  tabPanel("Screeplot",
                                                           br(),
                                                           shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("screeplotlc", width = "75%"))
                                                  ),
-                                                 
-                                                 
+
+
                                                  tabPanel("Loadings",
                                                           br(),
                                                           fluidPage(
                                                           fluidRow(column(4, box(width = NULL, status = "primary", uiOutput("sliderpclc")))),
                                                           fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("loadingslc", height = "550px"))))
                                                  ),
-                                                 
-                                                 
-                                                 
+
+
+
                                                  tabPanel("Plot 3D",
                                                           br(),
                                                           fluidPage(
                                                           fluidRow(
-                                                            column(4, box(width = NULL, status = "primary", 
+                                                            column(4, box(width = NULL, status = "primary",
                                                                           selectInput("col3dlc", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Provincia", "Cultivar_principale", "Areale"))))
                                                           ),
                                                           fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("pca3dlc", height = "500px"))))
                                                  )
-                                                 
+
                                                ) #end of tabsetpanel
                                       ) #end of tabpanel PCA
-                                      
-                                      
-                                      
+
+
+
                                     ) #end of tabbox
                                   ) #end of mainpanel
-                                  
+
                                 )
                               ), #end of tabitem "lcpolsub"
-                            
+
 
                               ##### Tab morfometria #####
                               tabItem(tabName = "anmorfosub",
@@ -1414,9 +1436,9 @@ app_ui <- function(request) {
                                           ), 
                                           
                                           tabPanel("Heatmap", value = "tabpanheatmorfo",
-                                                   br(),
-                                                   htmlOutput("heatmap_outputmorfo")
-                                                   ),
+                                            br(),
+                                            InteractiveComplexHeatmap::InteractiveComplexHeatmapOutput("heatmap_morfo_output", layout = "1|(2-3)", width1 = 850, height1 = 600)
+                                          ),
                                           tabPanel("Correlation plot", value = "tabpancorrmorfo",
                                             br(),
                                             shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("corrplotmorfo"))
@@ -1671,10 +1693,10 @@ app_ui <- function(request) {
                                       #tabpanel mappa
                                       tabPanel(tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")), value = "tabmapmor",
                                               conditionalPanel(condition = ("input.upmapmorfo != 0"),
-                                                shinycssloaders::withSpinner(image = "www/running_olive.gif", tmapOutput("mapmorfo1")),
+                                                shinycssloaders::withSpinner(tmapOutput("mapmorfo1")),
                                               conditionalPanel(condition = "input.addmapmorfo2 != 0",
                                                 hr(),
-                                                shinycssloaders::withSpinner(image = "www/running_olive.gif", tmapOutput("mapmorfo2"))
+                                                shinycssloaders::withSpinner(tmapOutput("mapmorfo2"))
                                               )
                                               ))
                                     ) #end of tabBox

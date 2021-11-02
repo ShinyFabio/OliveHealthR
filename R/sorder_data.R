@@ -4,7 +4,7 @@
 #' 
 #' 
 #' @param data The main dataframe with "Provincia" and other information columns (use data()).
-#' @param data2 The second dataframe that has to be sorted and joined with data. (e.g. datapolind()). Data must has "Codice_azienda" and "Azienda" and nothing more (NO Provincia or Cultivar or ID_foglie). So only those 2 char columns and all double columns.
+#' @param data2 The second dataframe that has to be sorted and joined with data. (e.g. datapolind()). Data must has "Codice_azienda", "Azienda" "N_campionamento", and "Anno" and nothing more (NO Provincia or Cultivar or ID_foglie). So only those 3 char columns and all double columns (polifenols.
 #' @param year Data will be filtered by "Anno" (e.g. "2020"). The default is NULL (data will not be filtered by year but only by n_camp).
 #' @param n_camp Data will be filtered by "N_campionamento" (e.g. "R2").
 #' @param heat_sort Option for ordering data (TRUE or FALSE).
