@@ -1456,11 +1456,10 @@ app_server <- function( input, output, session ) {
       }
       g2 = rbind("Max" = max, "Min" = 0, radr)
       lab = c(0, max*2/10, max*4/10, max*6/10, max*8/10, max)
-      create_beautiful_radarchart(
-        g2, 
-        caxislabels = lab, 
-        color = grDevices::hcl.colors(2, palette = "Dynamic"), 
-        title = paste("Log2 dei polifenoli individuali di", input$selcodspiderpolind))
+      create_beautiful_radarchart(g2, 
+                                  caxislabels = lab, 
+                                  color = grDevices::hcl.colors(2, palette = "Dynamic"), 
+                                  title = paste("Log2+1 dei polifenoli individuali di", input$selcodspiderpolind))
     }else{
       radardata = radardata %>% dplyr::filter(Codice_azienda == input$selcodspiderpolind | Codice_azienda == input$selcodspiderpolind2) %>%
         column_to_rownames("Codice_azienda") %>% dplyr::select(where(is.double))
@@ -1475,7 +1474,7 @@ app_server <- function( input, output, session ) {
         g2, 
         caxislabels = lab, 
         color = grDevices::hcl.colors(2, palette = "Dynamic"), 
-        title = paste("Log2 dei polifenoli individuali di", input$selcodspiderpolind, "e", input$selcodspiderpolind2))
+        title = paste("Log2+1 dei polifenoli individuali di", input$selcodspiderpolind, "e", input$selcodspiderpolind2))
       
     }
     
