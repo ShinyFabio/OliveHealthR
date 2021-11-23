@@ -11,6 +11,6 @@ oliocampionamento2020 = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/
 oliocampionamento2020$Data_campionamento = lubridate::as_date(oliocampionamento2020$Data_campionamento)
 oliocampionamento2020$Olio = factor(oliocampionamento2020$Olio, levels = c("SI", "NO"), ordered = FALSE)
 oliocampionamento2020$Sansa  = factor(oliocampionamento2020$Sansa, levels = c("SI", "NO"), ordered = FALSE)
-
+oliocampionamento2020$Anno = factor(oliocampionamento2020$Anno)
 
 usethis::use_data(oliocampionamento2020, overwrite = TRUE)

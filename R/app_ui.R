@@ -842,10 +842,8 @@ app_ui <- function(request) {
                                                           
                                                   fluidRow(box(width=NULL, status = "primary", title = "Cromatogramma", align= "center", uiOutput("phcromat"))),
                                                   fluidRow(
-                                                    box(width=4, status = "primary", title = "Polifenoli",align = "center", 
-                                                        
-                                                        #inserire qui i dati numerici dei polifenoli
-                                                        
+                                                    box(width=NULL, status = "primary", title = "Polifenoli",align = "center", style = "overflow-x: scroll;",
+                                                        DTOutput("tabcromatpolind")
                                                     )
                                                   )
                                               ) #end of conditional panel !=0
@@ -1683,9 +1681,6 @@ app_ui <- function(request) {
                                               ) #end of first fluidrow
                                             )
                                           )  
-                                          
-
-                                      
                                       ) #end of tabset panel
                                     ),
                                       
@@ -1704,7 +1699,27 @@ app_ui <- function(request) {
                                   ) #end of mainpanel
                                 ) #end of sidebarlayout
                                 
-                              )#end of tabitem morfo
+                              ), #end of tabitem morfo
+                              
+                              ##### Tab integrazione dati ####
+                              tabItem(tabName = "integrdati",
+                                tabsetPanel(
+                                  
+                                  tabPanel("Dati meteo",
+                                    sidebarLayout(
+                                      sidebarPanel(
+                                        width = 2,
+                                        fileInput("file_ncdf", "File meteo (.nc)", accept = ".nc"),
+                                        selectInput("varmeteo", "Variabile meteo", choices = "")
+                                      ),
+                                      mainPanel(
+                                        width = 10,
+                                        shinycssloaders::withSpinner(imageOutput("mapmeteo"), image = "www/running_olive.gif")
+                                      )
+                                    )
+                                  )
+                                )
+                              )
                               
                             )#end of tabitems
                           )#end of dashboardbody

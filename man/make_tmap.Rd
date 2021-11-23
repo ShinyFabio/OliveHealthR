@@ -7,7 +7,7 @@
 make_tmap(data, dotlegend, shp = campania, palette = NULL)
 }
 \arguments{
-\item{data}{A dataframe with the coordinates columns(UTM_33T_N and UTM_33T_E) and relatives infos.}
+\item{data}{A dataframe with the coordinates columns(UTM_33T_N and UTM_33T_E) and relative infos.}
 
 \item{dotlegend}{An informative column used for the legend and for the mapping of the dots (e.g. "Polifenoli_totali" or "Azienda").}
 

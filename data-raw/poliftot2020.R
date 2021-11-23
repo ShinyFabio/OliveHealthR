@@ -32,11 +32,12 @@ drupe$Presenza_larve = readr::parse_factor(as.character(drupe$Presenza_larve), l
 drupe = within(drupe, levels(Presenza_larve)[levels(Presenza_larve) == "0"] <- "Non individuabili")
 drupe = within(drupe, levels(Presenza_larve)[levels(Presenza_larve) == "1"] <- "Poche larve")
 drupe = within(drupe, levels(Presenza_larve)[levels(Presenza_larve) == "2"] <- "Molte larve")
+drupe$Anno = factor(drupe$Anno)
 
 
 #summarizare ancora
-drupe_summ =  drupe %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno, Presenza_larve) %>% 
-  dplyr::summarise(dplyr::across("Polifenoli (mg/g drupe)", mean, na.rm = T)) %>% dplyr::ungroup()
+# drupe_summ =  drupe %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno, Presenza_larve) %>% 
+#   dplyr::summarise(dplyr::across("Polifenoli (mg/g drupe)", mean, na.rm = T)) %>% dplyr::ungroup()
 
 
 #### foglie ####
@@ -57,15 +58,18 @@ foglie = foglie %>% dplyr::filter(Polifenoli_replicati_mg.ml_CV < 30)
 foglie = foglie %>% dplyr::mutate("Polifenoli (mg/g foglie)" = Polifenoli_replicati_mg.ml_media * ml_estrazione / g_foglie_estrazione) %>%
   dplyr::select("Codice_azienda", "N_campionamento", "Anno", "Estrazione", "Polifenoli (mg/g foglie)")
 
+
+foglie$Anno = factor(foglie$Anno)
+
 #summarizare ancora
-foglie_summ = foglie %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno) %>% 
- dplyr::summarise(dplyr::across("Polifenoli (mg/g foglie)", mean, na.rm = T)) %>% dplyr::ungroup()
+# foglie_summ = foglie %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno) %>% 
+#  dplyr::summarise(dplyr::across("Polifenoli (mg/g foglie)", mean, na.rm = T)) %>% dplyr::ungroup()
 
 
 #### olio ####
 #header del file:
 #Codice_azienda	| Tipo_olio | Anno |	Estrazione | Replicato | Polifenoli_replicati_mg.ml | ml_estrazione | g_olio_estrazione
-olio = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/polifenoli veri/polif_tot_olio.xlsx", delim = ";", na = "", col_names = TRUE, local = readr::locale(decimal_mark = ",", date_format = "%Y", encoding = "windows-1252")) %>% 
+olio = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/polifenoli veri/polif_tot_olio.xlsx") %>% 
   janitor::remove_empty("rows")
 
 olio = olio %>% tidyr::unite(col = cod_rep, Codice_azienda , Estrazione , remove = FALSE) %>% 
@@ -80,9 +84,11 @@ olio = olio %>% dplyr::filter(Polifenoli_replicati_mg.ml_CV < 30)
 olio = olio %>% dplyr::mutate("Polifenoli (mg/kg olio)" = Polifenoli_replicati_mg.ml_media * 1000 * ml_estrazione / g_olio_estrazione) %>%
   dplyr::select("Codice_azienda", "N_campionamento", "Tipo_olio", "Anno", "Estrazione", "Polifenoli (mg/kg olio)")
 
+olio$Anno = factor(olio$Anno)
+
 #summarizare ancora
-olio_summ = olio %>% dplyr::group_by(Codice_azienda, Tipo_olio, Anno, N_campionamento) %>% 
- dplyr::summarise(dplyr::across("Polifenoli (mg/kg olio)", mean, na.rm = T)) %>% dplyr::ungroup()
+# olio_summ = olio %>% dplyr::group_by(Codice_azienda, Tipo_olio, Anno, N_campionamento) %>% 
+#  dplyr::summarise(dplyr::across("Polifenoli (mg/kg olio)", mean, na.rm = T)) %>% dplyr::ungroup()
 
 
 #### posa ####
@@ -103,9 +109,11 @@ posa = posa %>% dplyr::filter(Polifenoli_replicati_mg.ml_CV < 30)
 posa = posa %>% dplyr::mutate("Polifenoli (mg/kg posa)" = Polifenoli_replicati_mg.ml_media * 1000* ml_estrazione / g_posa_estrazione) %>%
   dplyr::select("Codice_azienda", "N_campionamento", "Tipo_olio", "Anno", "Estrazione", "Polifenoli (mg/kg posa)")
 
+posa$Anno = factor(posa$Anno)
+
 #summarizare ancora
-posa_summ <- posa %>% dplyr::group_by(Codice_azienda, Tipo_olio, Anno, N_campionamento) %>% 
-  dplyr::summarise(dplyr::across("Polifenoli (mg/kg posa)", mean, na.rm = T)) %>% dplyr::ungroup()
+# posa_summ <- posa %>% dplyr::group_by(Codice_azienda, Tipo_olio, Anno, N_campionamento) %>% 
+#   dplyr::summarise(dplyr::across("Polifenoli (mg/kg posa)", mean, na.rm = T)) %>% dplyr::ungroup()
 
 
 #### sansa ####
@@ -126,15 +134,17 @@ sansa = sansa %>% dplyr::filter(Polifenoli_replicati_mg.ml_CV < 30)
 sansa = sansa %>% dplyr::mutate("Polifenoli (mg/kg sansa)" = Polifenoli_replicati_mg.ml_media * 1000 * ml_estrazione / g_sansa_estrazione) %>%
   dplyr::select("Codice_azienda", "N_campionamento", "Tipo_olio", "Anno", "Estrazione", "Polifenoli (mg/kg sansa)")
 
+sansa$Anno = factor(sansa$Anno)
+
 #summarizare ancora
-sansa_summ <- sansa %>% dplyr::group_by(Codice_azienda, Tipo_olio, Anno, N_campionamento) %>% 
-  dplyr::summarise(dplyr::across("Polifenoli (mg/kg sansa)", mean, na.rm = T)) %>% dplyr::ungroup()
+# sansa_summ <- sansa %>% dplyr::group_by(Codice_azienda, Tipo_olio, Anno, N_campionamento) %>% 
+#   dplyr::summarise(dplyr::across("Polifenoli (mg/kg sansa)", mean, na.rm = T)) %>% dplyr::ungroup()
 
 #### unione ####
 
 poliftot2020 = list("Foglie" = foglie, "Drupe" = drupe, "Olio" = olio, "Posa" = posa, "Sansa" = sansa)
 
-poliftot2020_summ = list("Foglie" = foglie_summ, "Drupe" = drupe_summ, "Olio" = olio_summ, "Posa" = posa_summ, "Sansa" = sansa_summ)
+#poliftot2020_summ = list("Foglie" = foglie_summ, "Drupe" = drupe_summ, "Olio" = olio_summ, "Posa" = posa_summ, "Sansa" = sansa_summ)
 
 usethis::use_data(poliftot2020, overwrite = TRUE)
-usethis::use_data(poliftot2020_summ, overwrite = TRUE)
+#usethis::use_data(poliftot2020_summ, overwrite = TRUE)

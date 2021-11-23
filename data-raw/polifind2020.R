@@ -18,10 +18,11 @@ drupe_ind = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/polifenoli v
 
 drupe_ind = drupe_ind %>% dplyr::mutate(dplyr::across(8:14, ~.x * Fattore_diluizione * ml_estrazione / g_drupe_estrazione), .keep ="unused")
 #sono ug/g
+drupe_ind$Anno = factor(drupe_ind$Anno)
 
 #summarizare ancora
-drupe_ind_summ =  drupe_ind %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno) %>% 
-  dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% dplyr::ungroup()
+# drupe_ind_summ =  drupe_ind %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno) %>% 
+#   dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% dplyr::ungroup()
 
 
 #### foglie ####
@@ -35,9 +36,11 @@ foglie_ind = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/polifenoli 
 foglie_ind = foglie_ind %>% dplyr::mutate(dplyr::across(8:14, ~.x * Fattore_diluizione * ml_estrazione / g_foglie_estrazione), .keep ="unused")
 #sono ug/g
 
+foglie_ind$Anno = factor(foglie_ind$Anno)
+
 #summarizare ancora
-foglie_ind_summ =  foglie_ind %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno) %>% 
-  dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% dplyr::ungroup()
+# foglie_ind_summ =  foglie_ind %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno) %>% 
+#   dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% dplyr::ungroup()
 
 
 #### olio ####
@@ -51,9 +54,11 @@ olio_ind = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/polifenoli ve
 olio_ind = olio_ind %>% dplyr::mutate(dplyr::across(9:14, ~.x * Fattore_diluizione * ml_estrazione * 1000/ g_olio_estrazione), .keep ="unused")
 #sono mg/kg
 
+olio_ind$Anno = factor(olio_ind$Anno)
+
 #summarizare ancora
-olio_ind_summ =  olio_ind %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno, Tipo_olio) %>% 
-  dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% dplyr::ungroup()
+# olio_ind_summ =  olio_ind %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno, Tipo_olio) %>% 
+#   dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% dplyr::ungroup()
 
 
 #### posa ####
@@ -67,16 +72,18 @@ posa_ind = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/polifenoli ve
 posa_ind = posa_ind %>% dplyr::mutate(dplyr::across(9:14, ~.x * Fattore_diluizione * ml_estrazione *1000/ g_posa_estrazione), .keep ="unused")
 #sono mg/kg
 
+posa_ind$Anno = factor(posa_ind$Anno)
+
 #summarizare ancora
-posa_ind_summ =  posa_ind %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno, Tipo_olio) %>% 
-  dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% dplyr::ungroup()
+# posa_ind_summ =  posa_ind %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno, Tipo_olio) %>% 
+#   dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% dplyr::ungroup()
 
 
 #### unione ####
 
 polifind2020 = list("Foglie" = foglie_ind, "Drupe" = drupe_ind, "Olio" = olio_ind, "Posa" = posa_ind)
 
-polifind2020_summ = list("Foglie" = foglie_ind_summ, "Drupe" = drupe_ind_summ, "Olio" = olio_ind_summ, "Posa" = posa_ind_summ)
+#polifind2020_summ = list("Foglie" = foglie_ind_summ, "Drupe" = drupe_ind_summ, "Olio" = olio_ind_summ, "Posa" = posa_ind_summ)
 
 usethis::use_data(polifind2020, overwrite = TRUE)
-usethis::use_data(polifind2020_summ, overwrite = TRUE)
+#usethis::use_data(polifind2020_summ, overwrite = TRUE)

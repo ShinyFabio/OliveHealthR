@@ -14,7 +14,7 @@
 #' @import ggfortify
 #' @import htmltools
 #' @import scales
-#' @importFrom tidyr unite starts_with separate gather drop_na
+#' @importFrom tidyr unite starts_with separate gather drop_na pivot_longer
 #' @importFrom tibble column_to_rownames rownames_to_column
 #' @importFrom grid gpar
 #' @importFrom sp SpatialPointsDataFrame CRS
@@ -39,6 +39,7 @@
 #' @importFrom janitor remove_empty
 #' @importFrom DataEditR dataEditUI dataEditServer
 #' @importFrom shinyBS bsModal
+#' @import gifski
 #' @noRd
 
 
@@ -172,13 +173,12 @@ app_server <- function( input, output, session ) {
                      tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;"))
             )))
     }else{
-      years = oliocampionamento2020$Data_campionamento %>% lubridate::year() %>% na.omit() %>% unique()
       box(width = 12, background = "green",
           fluidPage(
             fluidRow(
               column(9, 
                      h4(strong("Olio: "),style = "color: white"),
-                     h5("Anni presenti:  ", strong(paste(years, collapse = ", ")), style = "color: white")),
+                     h5("Anni presenti:  ", strong(paste(levels(oliocampionamento2020$Anno), collapse = ", ")), style = "color: white")),
               column(3, style = "padding-right: 0px; text-align: right;",
                      tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;"))
             )))
@@ -208,13 +208,12 @@ app_server <- function( input, output, session ) {
                      tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;"))
             )))
     }else{
-      years = oliocampionamento2020$Data_campionamento %>% lubridate::year() %>% na.omit() %>% unique()
       box(width = 12, background = "green",
           fluidPage(
             fluidRow(
               column(9, 
                      h4(strong("Analisi sensoriali: "),style = "color: white"),
-                     h5("Anni presenti:  ", strong(paste(years, collapse = ", ")), style = "color: white")),
+                     h5("Anni presenti:  ", strong(paste(levels(assaggi2020$Anno), collapse = ", ")), style = "color: white")),
               column(3, style = "padding-right: 0px; text-align: right;",
                      tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;"))
             )))
@@ -250,11 +249,11 @@ app_server <- function( input, output, session ) {
             fluidRow(
               column(9, 
                      h4(strong("Polifenoli totali: "),style = "color: white"),
-                     h5("Foglie (", strong(paste(unique(poliftot2020$Foglie$Anno), collapse = ", "),")"), style = "color: white"),
-                     h5("Drupe (", strong(paste(unique(poliftot2020$Drupe$Anno), collapse = ", "),")"), style = "color: white"),
-                     h5("Olio (", strong(paste(unique(poliftot2020$Olio$Anno), collapse = ", "),")"), style = "color: white"),
-                     h5("Posa (", strong(paste(unique(poliftot2020$Posa$Anno), collapse = ", "),")"), style = "color: white"),
-                     h5("Sansa (", strong(paste(unique(poliftot2020$Sansa$Anno), collapse = ", "),")"), style = "color: white")
+                     h5("Foglie (", strong(paste(levels(poliftot2020$Foglie$Anno), collapse = ", "),")"), style = "color: white"),
+                     h5("Drupe (", strong(paste(levels(poliftot2020$Drupe$Anno), collapse = ", "),")"), style = "color: white"),
+                     h5("Olio (", strong(paste(levels(poliftot2020$Olio$Anno), collapse = ", "),")"), style = "color: white"),
+                     h5("Posa (", strong(paste(levels(poliftot2020$Posa$Anno), collapse = ", "),")"), style = "color: white"),
+                     h5("Sansa (", strong(paste(levels(poliftot2020$Sansa$Anno), collapse = ", "),")"), style = "color: white")
                      ),
               column(3, style = "padding-right: 0px; text-align: right;", br(), br(),
                      tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;"))
@@ -291,10 +290,10 @@ app_server <- function( input, output, session ) {
             fluidRow(
               column(9, 
                      h4(strong("Polifenoli individuali: "),style = "color: white"),
-                     h5("Foglie (", strong(paste(unique(polifind2020$Foglie$Anno), collapse = ", "),")"), style = "color: white"),
-                     h5("Drupe (", strong(paste(unique(polifind2020$Drupe$Anno), collapse = ", "),")"), style = "color: white"),
-                     h5("Olio (", strong(paste(unique(polifind2020$Olio$Anno), collapse = ", "),")"), style = "color: white"),
-                     h5("Posa (", strong(paste(unique(polifind2020$Posa$Anno), collapse = ", "),")"), style = "color: white")
+                     h5("Foglie (", strong(paste(levels(polifind2020$Foglie$Anno), collapse = ", "),")"), style = "color: white"),
+                     h5("Drupe (", strong(paste(levels(polifind2020$Drupe$Anno), collapse = ", "),")"), style = "color: white"),
+                     h5("Olio (", strong(paste(levels(polifind2020$Olio$Anno), collapse = ", "),")"), style = "color: white"),
+                     h5("Posa (", strong(paste(levels(polifind2020$Posa$Anno), collapse = ", "),")"), style = "color: white")
               ),
               column(3, style = "padding-right: 0px; text-align: right;", br(), br(),
                      tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;"))
@@ -907,7 +906,7 @@ app_server <- function( input, output, session ) {
       tempdata = poliftot()$Sansa
     }
     #ATTENZIONE QUESTO VA FATTO DOPO L'UNIONE DI PIù ANNI (quelli che verranno). rbind funziona ma il dataEditR non so
-    tempdata$Anno = factor(tempdata$Anno, ordered = TRUE)
+    #tempdata$Anno = factor(tempdata$Anno, ordered = TRUE)
     return(tempdata)
   })
   
@@ -937,7 +936,7 @@ app_server <- function( input, output, session ) {
     } else if(input$selfilepoltot == "drupe"){
       datapoltot1() %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno, Presenza_larve) %>% 
         dplyr::summarise(dplyr::across("Polifenoli (mg/g drupe)", mean, na.rm = T)) %>% dplyr::ungroup()
-    } else if (input$selfilepoltot == "olio"){  #olio posa e sansa
+    } else if (input$selfilepoltot == "olio"){
       datapoltot1() %>% dplyr::group_by(Codice_azienda, N_campionamento, Tipo_olio, Anno) %>% 
         dplyr::summarise(dplyr::across("Polifenoli (mg/kg olio)", mean, na.rm = T)) %>% dplyr::ungroup()
     } else if(input$selfilepoltot == "posa"){
@@ -1149,7 +1148,7 @@ app_server <- function( input, output, session ) {
       start = 6
     }
     #ATTENZIONE QUESTO VA FATTO DOPO L'UNIONE DI PIù ANNI (quelli che verranno). rbind funziona ma il dataEditR non so
-    tempdata$Anno = factor(tempdata$Anno, ordered = TRUE)
+    #tempdata$Anno = factor(tempdata$Anno, ordered = TRUE)
     
     #aggiunto unità di misura
     for(i in seq(start,length(tempdata))){
@@ -1642,7 +1641,7 @@ app_server <- function( input, output, session ) {
   #crea la tabella
   output$prov3 = DT::renderDT({
     req(datapolind_cromat())
-    datapolind_cromat() %>% dplyr::select(c("Azienda", "Codice_azienda")) %>% unique()
+    datapolind_cromat() %>% dplyr::select(c("Azienda", "Codice_azienda")) %>% unique() #ho messo unique perchè R1 e R2
     }, selection = "single", server = FALSE, rownames = FALSE, options = list("pageLength" = 15))
 
 
@@ -1658,6 +1657,8 @@ app_server <- function( input, output, session ) {
     }else{"yes"}
   })
   outputOptions(output, 'check_crompolind', suspendWhenHidden = FALSE)
+  
+  
   
 
 
@@ -1678,6 +1679,20 @@ app_server <- function( input, output, session ) {
   })
 
 
+
+  #crea la tabella dei polifenoli dell'azienda selezionata
+  output$tabcromatpolind = DT::renderDT({
+    req(input$prov3_rows_selected)
+    nroww=input$prov3_rows_selected
+    #vedo quale azienda ho selezionato. Mi serve per il filtro su datapolind() (ci sono i replicati non posso farlo direttamente)
+    azienda1 = datapolind_cromat() %>% dplyr::select("Codice_azienda") %>% unique()
+    azienda = azienda1[nroww,]
+    
+    ncamp = ifelse(input$campcromatph == "1_campionamento", "R1", "R2")
+    #prendo un'azienda filtro e tolgo le colonne in più. Se è vuota, NULL
+    datapolind() %>% dplyr::filter( N_campionamento == ncamp) %>% dplyr::filter(Codice_azienda  %in% azienda) %>% 
+      dplyr::select(Estrazione, where(is.double))
+  })
   
   #################  POLIFENOLI LCxLC ###################
 
@@ -3133,6 +3148,54 @@ app_server <- function( input, output, session ) {
     make_tmap(data =  datam, dotlegend = column)
   })
   
+  
+  
+  ##### MAPPA METEO #####
+  
+  data_meteo = reactive({
+    req(data(), input$file_ncdf)
+    makedata_meteo(ncfile = input$file_ncdf$datapath, dati_aziende = data())
+  })
+  
+
+  
+  observeEvent(data_meteo(),{
+    updateSelectInput(session, "varmeteo", choices = names(data_meteo()))
+  })
+
+  output$mapmeteo = renderImage({
+    req(data_meteo(), input$varmeteo)
+    data2 = dplyr::left_join(data_meteo()[[input$varmeteo]], data(), by = "Codice_azienda")
+
+    utmcoord23 = sf::st_as_sf(data2, coords = c("UTM_33T_E", "UTM_33T_N" ), crs= 32633)
+
+    if(input$varmeteo == "tp"){
+      namevar = "Total precipitation (m)"
+    }else if(input$varmeteo == "swvl2"){
+      namevar = "Volumetric soil water level 2 (7 -28 cm)"
+    }else if(input$varmeteo == "swvl3"){
+      namevar = "Volumetric soil water level 3 (28-100 cm)"
+    }else{
+      namevar = input$varmeteo
+    }
+    
+    utm_long = utmcoord23 %>% tidyr::pivot_longer(cols = 2:9, names_to = "month", values_to = namevar)
+    utm_long$month = factor(utm_long$month, ordered =T, levels = unique(utm_long$month))
+    sf::st_crs(campania) = 32633
+    anim = tm_shape(campania)+ tm_polygons(col= "provincia", alpha = 0.8) + tm_shape(utm_long) +
+      tm_dots(col = namevar, scale = 4.5) + tm_facets(along= "month", free.coords = FALSE)
+
+    outfile <- tempfile(fileext='.gif')
+    
+    tmap_animation(anim, "outfile.gif",delay = 130)
+    
+    list(src = "outfile.gif",
+         contentType = 'image/gif'
+         # width = 400,
+         # height = 300,
+         # alt = "This is alternate text"
+    )
+  }, deleteFile = TRUE)
   
  
 }
