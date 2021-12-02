@@ -458,7 +458,7 @@ app_ui <- function(request) {
                                     ),
                                     hr(),
                                     conditionalPanel(condition = "input.tabboxpoltot  == 'tabdtpoltot' || (input.tabboxpoltot == 'tabpoltotgraph' && input.boxpoltotgraph  == 'boxscattpoltot')",
-                                      materialSwitch(inputId = "summpoltot", label = "Sintetizza i dati", status = "primary")
+                                      materialSwitch(inputId = "summpoltot", label = "Sintetizza i dati", value = TRUE, status = "primary")
                                     ),
                                     conditionalPanel(
                                       condition = "input.tabboxpoltot  == 'tabpoltotgraph'",
@@ -570,7 +570,7 @@ app_ui <- function(request) {
                                     conditionalPanel(
                                       condition = "input.tabboxpolind  == 'tabdtpolind' || input.tabboxpolind == 'tabpolindpca' || 
                                       (input.tabboxpolind == 'tabpolindgraph' && input.boxpolindgraph  == 'boxscattpolind' )",
-                                      materialSwitch(inputId = "summpolind", label = "Sintetizza i dati", status = "primary")
+                                      materialSwitch(inputId = "summpolind", label = "Sintetizza i dati", value = TRUE, status = "primary")
                                     ), 
 
                                     conditionalPanel(
@@ -918,7 +918,7 @@ app_ui <- function(request) {
                                         ),
                                         conditionalPanel(condition = "input.lcdatatypescatt == 'Cultivar principale'",
                                           selectInput("lcselcultscatt", "Scegli la cultivar principale", choices = ""),
-                                          awesomeCheckbox("sintscattlc", "Sintetizza i dati", value = FALSE)
+                                          awesomeCheckbox("sintscattlc", "Sintetizza i dati", value = TRUE)
                                         ),
                                         selectInput("numscattlc", "Scegli il numero di campionamento", choices = ""),
                                         selectInput("fillscattlc", "Scegli colonna riempimento", choices = "")
@@ -1136,7 +1136,7 @@ app_ui <- function(request) {
                                       selectInput("selyeardtmorfo", "Seleziona l'anno", choices = "", multiple = FALSE),
                                       numericInput("selroundmorfo", "Numero di digits", value = 3),
                                       hr(),
-                                      materialSwitch(inputId = "summarizetab", label = "Sintetizza i dati", status = "primary"),
+                                      materialSwitch(inputId = "summarizetab", label = "Sintetizza i dati", value = TRUE, status = "primary"),
                                       conditionalPanel(condition = "input.summarizetab == true",
                                         awesomeCheckboxGroup("selectdtmorfo", "Seleziona la colonna da usare per la sintesi", choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale", "N_campionamento"), selected = "Codice_azienda")
                                       )
@@ -1158,7 +1158,7 @@ app_ui <- function(request) {
                                     #scatterplot
                                     conditionalPanel(
                                       condition = "input.boxmorfograph == 'tabpanscattmorfo'",
-                                      materialSwitch(inputId = "summarizescatt", label = "Sintetizza i dati", status = "primary"),
+                                      materialSwitch(inputId = "summarizescatt", label = "Sintetizza i dati", value = TRUE, status = "primary"),
                                       conditionalPanel(condition = "input.summarizescatt == true",
                                                        selectInput("selectsummscatt", "Seleziona la colonna da usare per la sintesi", choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale"), multiple = TRUE),
                                                        hr(),
@@ -1245,7 +1245,7 @@ app_ui <- function(request) {
                                     condition = "input.tabboxmorfo == 'tabpcamor'",
                                     selectInput("selyearpcamorfo", "Seleziona l'anno", choices = "", multiple = FALSE),
                                     selectInput("numpcamorfo", "Scegli il numero di campionamento", choices = "", multiple = FALSE),
-                                    materialSwitch(inputId = "summarizepcamorfo", label = "Sintetizza i dati", status = "primary"),
+                                    materialSwitch(inputId = "summarizepcamorfo", label = "Sintetizza i dati", value = TRUE, status = "primary"),
                                     radioGroupButtons(inputId = "selcorpcamorfo", label = "Matrice:", choices = c("Correlazione" = TRUE, "Covarianza" = FALSE),
                                                       individual = TRUE, checkIcon = list(yes = tags$i(class = "fa fa-circle", style = "color: steelblue"),no = tags$i(class = "fa fa-circle-o", style = "color: steelblue")))
 
@@ -1703,18 +1703,41 @@ app_ui <- function(request) {
                               
                               ##### Tab integrazione dati ####
                               tabItem(tabName = "integrdati",
-                                tabsetPanel(
+                                tabBox(width = 12,
                                   
                                   tabPanel("Dati meteo",
                                     sidebarLayout(
                                       sidebarPanel(
                                         width = 2,
                                         fileInput("file_ncdf", "File meteo (.nc)", accept = ".nc"),
-                                        selectInput("varmeteo", "Variabile meteo", choices = "")
+                                        selectInput("varmeteo", "Variabile meteo", choices = ""),
+                                        selectInput("selyearmeteo", "Seleziona anno", choices = "Tutti")
+                                        
                                       ),
                                       mainPanel(
                                         width = 10,
-                                        shinycssloaders::withSpinner(imageOutput("mapmeteo"), image = "www/running_olive.gif")
+                                        tabsetPanel(
+                                          tabPanel("Mappa",
+                                            shinycssloaders::withSpinner(imageOutput("mapmeteo"), image = "www/running_olive.gif"),
+                                          ),
+                                          tabPanel("Plot",
+                                            box(width=NULL, status = "primary",
+                                                fluidRow(
+                                                  column(3, awesomeRadio("type_lineplot", "Tipo di grafico", choices = c("Statico","Animato"))),
+                                                  column(3, selectInput("selcod_plotmeteo", "Scegli una o più aziende", choices = "", multiple = TRUE))
+                                                )),
+                                            conditionalPanel(
+                                              condition = "input.type_lineplot == 'Statico'",
+                                              shinycssloaders::withSpinner(plotly::plotlyOutput("ggline_meteo"), image = "www/running_olive.gif")
+                                            ),
+                                            conditionalPanel(
+                                              condition = "input.type_lineplot == 'Animato'",
+                                              shinycssloaders::withSpinner(imageOutput("plotline_animated"), image = "www/running_olive.gif")
+                                            )
+                                          )
+                                        )
+                                        
+                                        
                                       )
                                     )
                                   )

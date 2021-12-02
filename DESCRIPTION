@@ -43,7 +43,8 @@ Imports:
     shinycssloaders,
     rhandsontable,
     gifski,
-    ncdf4
+    ncdf4,
+    gganimate
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.2

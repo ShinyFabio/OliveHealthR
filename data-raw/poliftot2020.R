@@ -26,7 +26,8 @@ drupe = drupe %>% dplyr::filter(Polifenoli_replicati_mg.ml_CV < 30)
 
 #calcolare i mg/g di drupe
 drupe = drupe %>% dplyr::mutate("Polifenoli (mg/g drupe)" = Polifenoli_replicati_mg.ml_media * ml_estrazione / g_drupe_estrazione) %>%
-  dplyr::select("Codice_azienda", "N_campionamento", "Anno", "Estrazione", "Presenza_larve", "Polifenoli (mg/g drupe)")
+  dplyr::select("Codice_azienda", "N_campionamento", "Anno", "Estrazione", "Presenza_larve", "Polifenoli (mg/g drupe)") %>% 
+  dplyr::mutate(across(where(is.double), round,3))
 
 drupe$Presenza_larve = readr::parse_factor(as.character(drupe$Presenza_larve), levels = c("0","1","2"), ordered = TRUE)
 drupe = within(drupe, levels(Presenza_larve)[levels(Presenza_larve) == "0"] <- "Non individuabili")
@@ -56,8 +57,8 @@ foglie = foglie %>% dplyr::filter(Polifenoli_replicati_mg.ml_CV < 30)
 
 #calcolare i mg/g di foglie
 foglie = foglie %>% dplyr::mutate("Polifenoli (mg/g foglie)" = Polifenoli_replicati_mg.ml_media * ml_estrazione / g_foglie_estrazione) %>%
-  dplyr::select("Codice_azienda", "N_campionamento", "Anno", "Estrazione", "Polifenoli (mg/g foglie)")
-
+  dplyr::select("Codice_azienda", "N_campionamento", "Anno", "Estrazione", "Polifenoli (mg/g foglie)") %>% 
+  dplyr::mutate(across(where(is.double), round,3))
 
 foglie$Anno = factor(foglie$Anno)
 
@@ -82,7 +83,8 @@ olio = olio %>% dplyr::filter(Polifenoli_replicati_mg.ml_CV < 30)
 
 #calcolare i mg/kg di olio
 olio = olio %>% dplyr::mutate("Polifenoli (mg/kg olio)" = Polifenoli_replicati_mg.ml_media * 1000 * ml_estrazione / g_olio_estrazione) %>%
-  dplyr::select("Codice_azienda", "N_campionamento", "Tipo_olio", "Anno", "Estrazione", "Polifenoli (mg/kg olio)")
+  dplyr::select("Codice_azienda", "N_campionamento", "Tipo_olio", "Anno", "Estrazione", "Polifenoli (mg/kg olio)") %>% 
+  dplyr::mutate(across(where(is.double), round,3))
 
 olio$Anno = factor(olio$Anno)
 
@@ -107,7 +109,8 @@ posa = posa %>% dplyr::filter(Polifenoli_replicati_mg.ml_CV < 30)
 
 #calcolare i mg/g di posa
 posa = posa %>% dplyr::mutate("Polifenoli (mg/kg posa)" = Polifenoli_replicati_mg.ml_media * 1000* ml_estrazione / g_posa_estrazione) %>%
-  dplyr::select("Codice_azienda", "N_campionamento", "Tipo_olio", "Anno", "Estrazione", "Polifenoli (mg/kg posa)")
+  dplyr::select("Codice_azienda", "N_campionamento", "Tipo_olio", "Anno", "Estrazione", "Polifenoli (mg/kg posa)") %>% 
+  dplyr::mutate(across(where(is.double), round,3))
 
 posa$Anno = factor(posa$Anno)
 
@@ -129,10 +132,11 @@ sansa = sansa %>% tidyr::unite(col = cod_rep, Codice_azienda , Estrazione , remo
 #rimuovo i campioni con CV > 30
 message("Ci sono ", sum(sansa$Polifenoli_replicati_mg.ml_CV > 30, na.rm = TRUE), " campioni con CV > 30")
 sansa = sansa %>% dplyr::filter(Polifenoli_replicati_mg.ml_CV < 30)
-
+round(sansa)
 #calcolare i mg/g di sansa
 sansa = sansa %>% dplyr::mutate("Polifenoli (mg/kg sansa)" = Polifenoli_replicati_mg.ml_media * 1000 * ml_estrazione / g_sansa_estrazione) %>%
-  dplyr::select("Codice_azienda", "N_campionamento", "Tipo_olio", "Anno", "Estrazione", "Polifenoli (mg/kg sansa)")
+  dplyr::select("Codice_azienda", "N_campionamento", "Tipo_olio", "Anno", "Estrazione", "Polifenoli (mg/kg sansa)") %>% 
+  dplyr::mutate(across(where(is.double), round,3))
 
 sansa$Anno = factor(sansa$Anno)
 

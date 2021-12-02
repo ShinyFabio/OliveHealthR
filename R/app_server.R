@@ -29,7 +29,7 @@
 #' @importFrom dendextend color_branches
 #' @importFrom sf st_as_sf st_crs
 #' @importFrom VIM aggr
-#' @importFrom stringr str_replace_all
+#' @importFrom stringr str_replace_all str_sort
 #' @importFrom factoextra fviz_nbclust fviz_cluster fviz_dend fviz_silhouette eclust
 #' @importFrom cluster pam clara
 #' @importFrom gridExtra grid.arrange
@@ -40,6 +40,7 @@
 #' @importFrom DataEditR dataEditUI dataEditServer
 #' @importFrom shinyBS bsModal
 #' @import gifski
+#' @importFrom gganimate anim_save animate transition_reveal
 #' @noRd
 
 
@@ -696,7 +697,7 @@ app_server <- function( input, output, session ) {
   
   #scelgo l'azienda
   observeEvent(yearcalendar(), {
-    updateSelectInput(session, "selaziendacalend", choices = c("Tutte", unique(yearcalendar()$Codice_azienda)), selected = "Tutte")
+    updateSelectInput(session, "selaziendacalend", choices = c("Tutte", stringr::str_sort(unique(yearcalendar()$Codice_azienda))), selected = "Tutte")
   })
   
   joinfiltered = reactive({
@@ -730,10 +731,16 @@ app_server <- function( input, output, session ) {
       dplyr::distinct() %>% dplyr::select(-all_dup)
     
     #ora mi creo il vettore finale contenente i NA dove non ci sta nulla e lo unisco agli "eventi"
-    totspecial =  dplyr::left_join(tibble(day = rep(1:totaldays)), ggg, by = "day") 
+    totspecial =  dplyr::left_join(tibble(day = rep(1:totaldays)), ggg, by = "day") %>% 
+      dplyr::mutate(color = ifelse(campione == "Campionamento drupe e foglie", "#C7A76C", 
+                                   ifelse(campione == "Campionamento olio", "#5CBD92", "#7DB0DD")))
     
-    ncolors = grDevices::hcl.colors(length(row.names(table(totspecial$campione))), palette = "Harmonic")
-    #creo il calendario
+    ncolors = totspecial$color %>% na.omit() %>% unique()
+    
+    if(length(ncolors) == 3){
+      ncolors = ncolors[c(1,3,2)]
+    }
+    
     calendR::calendR(year = input$selyearcalend, special.days = totspecial$campione,  
       special.col = ncolors, legend.pos = "right", mbg.col = 4, day.size = 5, months.size = 15, bg.col = "#f4f4f4", 
       lty = 0, months.col = "white") + ggplot2::theme(legend.key.size = unit(5, units = "mm"), # Keys size
@@ -1039,7 +1046,7 @@ app_server <- function( input, output, session ) {
   ###modificare la colonna campionamento con unite (R1_2020)
   datapoltotyearunite = reactive({
     req(datapoltot_summ())
-    datapoltot_summ() %>% tidyr::unite(col = N_campionamento, N_campionamento, Anno, remove = TRUE)
+    datapoltot_summ() %>% tidyr::unite(col = N_campionamento, N_campionamento, Anno, remove = FALSE)
   })
   
 
@@ -1056,9 +1063,8 @@ app_server <- function( input, output, session ) {
   output$barplottot = plotly::renderPlotly({
     req(datapoltotyearunite())
     data = datapoltotyearunite() %>% dplyr::filter(N_campionamento %in% input$checkcamptot)
-    data_err = datapoltot1() %>% tidyr::unite(col = N_campionamento, N_campionamento, Anno, remove = FALSE) %>% 
+    data_err = datapoltot() %>% tidyr::unite(col = N_campionamento, N_campionamento, Anno, remove = FALSE) %>% 
       dplyr::filter(N_campionamento %in% input$checkcampind)
-    
     
     #con group risolvo il problema dell'unica barra di errore anche se ci sono due barre
     temp2=ggplot(data, aes_string(x = "Codice_azienda", y = paste0("`",input$selectytotbar, "`"), fill = paste0("`",input$selectfilltotbar, "`"), group = "N_campionamento")) +
@@ -1068,12 +1074,6 @@ app_server <- function( input, output, session ) {
       theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank())
     plotly::ggplotly(temp2) %>% plotly::layout(legend = list(title = list(text = "N_campionamento")))
     
-    
-    
-    # temp2=ggplot(data) + 
-    #   geom_col(mapping = aes_string(x = paste0("`",input$selectxtotbar, "`"), y = paste0("`",input$selectytotbar, "`"), fill = paste0("`",input$selectfilltotbar, "`")), position = position_dodge2(preserve = "single")) + 
-    #   theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) #+ ylab(ylabtot()) + xlab(xlabtot())
-    # plotly::ggplotly(temp2) %>% plotly::layout(legend = list(title = list(text = "N_campionamento")))
   })
   
   
@@ -1315,7 +1315,6 @@ app_server <- function( input, output, session ) {
     updateSelectInput(session, "selectyindbar", choices=colnames(dplyr::select(datapolind_summ(), where(is.double))))
     updateCheckboxGroupInput(session, "checkcampind", choices = unique(datapolindyearunite()$N_campionamento),  selected = unique(datapolindyearunite()$N_campionamento))
   })
-
 
 
 
@@ -3161,11 +3160,16 @@ app_server <- function( input, output, session ) {
   
   observeEvent(data_meteo(),{
     updateSelectInput(session, "varmeteo", choices = names(data_meteo()))
+    updateSelectInput(session, "selyearmeteo", choices = c("Tutti",unique(lubridate::year(data_meteo()[[1]]$Tempo))))
+    updateSelectInput(session, "selcod_plotmeteo", choices = unique(data_meteo()[[1]]$Codice_azienda), selected = unique(data_meteo()[[1]]$Codice_azienda)[1])
   })
 
   output$mapmeteo = renderImage({
     req(data_meteo(), input$varmeteo)
     data2 = dplyr::left_join(data_meteo()[[input$varmeteo]], data(), by = "Codice_azienda")
+    if(input$selyearmeteo != "Tutti"){
+      data2 = data2 %>% dplyr::filter(lubridate::year(Tempo) == input$selyearmeteo)
+    }
 
     utmcoord23 = sf::st_as_sf(data2, coords = c("UTM_33T_E", "UTM_33T_N" ), crs= 32633)
 
@@ -3179,11 +3183,11 @@ app_server <- function( input, output, session ) {
       namevar = input$varmeteo
     }
     
-    utm_long = utmcoord23 %>% tidyr::pivot_longer(cols = 2:9, names_to = "month", values_to = namevar)
-    utm_long$month = factor(utm_long$month, ordered =T, levels = unique(utm_long$month))
+    #utm_long = utmcoord23 %>% tidyr::pivot_longer(cols = 2:9, names_to = "month", values_to = namevar)
+    #utm_long$month = factor(utm_long$month, ordered =T, levels = unique(utm_long$month))
     sf::st_crs(campania) = 32633
-    anim = tm_shape(campania)+ tm_polygons(col= "provincia", alpha = 0.8) + tm_shape(utm_long) +
-      tm_dots(col = namevar, scale = 4.5) + tm_facets(along= "month", free.coords = FALSE)
+    anim = tm_shape(campania)+ tm_polygons(col= "provincia", alpha = 0.8) + tm_shape(utmcoord23) +
+      tm_dots(col = "Misura", scale = 4.5) + tm_facets(along= "Tempo", free.coords = FALSE)
 
     outfile <- tempfile(fileext='.gif')
     
@@ -3197,5 +3201,47 @@ app_server <- function( input, output, session ) {
     )
   }, deleteFile = TRUE)
   
+  
+  
+  ####grafici
+  output$ggline_meteo = renderPlotly({
+    req(data_meteo(), input$varmeteo)
+    validate(need(input$selcod_plotmeteo != "", "Seleziona almeno un'azienda."))
+    meteo = data_meteo()[[input$varmeteo]] %>% dplyr::filter(Codice_azienda %in% input$selcod_plotmeteo)
+    if(input$selyearmeteo != "Tutti"){
+      meteo = meteo %>% dplyr::filter(lubridate::year(Tempo) == input$selyearmeteo)
+    }
+    
+    temp = ggplot(data = meteo, aes(x = Tempo, y = Misura)) +
+      geom_line(aes(color = Codice_azienda, group = Codice_azienda))
+    plotly::ggplotly(temp)
+  })
+  
+  
+  output$plotline_animated = renderImage({
+    req(data_meteo(), input$varmeteo)
+    validate(need(input$selcod_plotmeteo != "", "Seleziona almeno un'azienda."))
+    meteo = data_meteo()[[input$varmeteo]] %>% dplyr::filter(Codice_azienda  %in% input$selcod_plotmeteo)
+    if(input$selyearmeteo != "Tutti"){
+      meteo = meteo %>% dplyr::filter(lubridate::year(Tempo) == input$selyearmeteo)
+    }
+    
+    h = ggplot(data = meteo, aes(x = Tempo, y = Misura)) +
+      geom_line(aes(color = Codice_azienda, group = Codice_azienda)) + 
+      gganimate::transition_reveal(id = Tempo, along = Tempo)
+    
+    outfile <- tempfile(fileext='.gif')
+    gganimate::anim_save("outfile.gif", gganimate::animate(h, height = 650, width =900,nframes = 100))
+    
+    
+    list(src = "outfile.gif",
+         contentType = 'image/gif'
+         # width = 400,
+         # height = 300,
+         # alt = "This is alternate text"
+    )
+  }, deleteFile = TRUE)
+  
+
  
 }

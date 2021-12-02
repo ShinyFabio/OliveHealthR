@@ -48,22 +48,24 @@ makedata_meteo = function(ncfile,
   for(m in names(nt2$var)){
     
     for(k in 1:length(time_label)){ #lungo le date
-      prec2 = data.frame(Codice_azienda = NULL, temp = NULL)
+      #prec2 = data.frame(Codice_azienda = NULL, temp = NULL)
+      prec2 = data.frame(Codice_azienda = NULL, Misura = NULL, Tempo = NULL)
       tot_prec2 = ncdf4::ncvar_get(nt2, m, start = c(1,1,k), count = c(-1,-1, 1))
       for(i in coordinates$Codice_azienda){
-        cod = coordinates %>% dplyr::filter(Codice_azienda == i) 
+        cod = coordinates %>% dplyr::filter(Codice_azienda == i)
         anom = t(tot_prec2)
         colnames(anom) = round(long, 1)
         rownames(anom) = round(lat, 1)
         prec = anom[as.character(round(cod$Lat,1)),as.character(round(cod$Long,1))]
-        tobind = data.frame(Codice_azienda = i, temp = prec)
+        #tobind = data.frame(Codice_azienda = i, temp = prec)
+        tobind = data.frame(Codice_azienda = i, Misura = prec, Tempo = time2[k])
         prec2 = rbind(prec2, tobind)
       }
-      colnames(prec2) = c("Codice_azienda", time_label[k])
+      #colnames(prec2) = c("Codice_azienda", time_label[k])
       if(k == 1){
         precfin = prec2
       }else{
-        precfin = cbind(precfin, dplyr::select(prec2,2))
+        precfin = rbind(precfin, prec2)#dplyr::select(prec2,2) #invece che cbind
       }
     }
     all_measure[m] = list(precfin)
