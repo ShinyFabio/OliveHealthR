@@ -93,6 +93,18 @@ being uploaded. For now OliveHealthR accepts 4 different csv files, one
 is mandatory and contains all the info about the companies (name, id,
 coordinates…), the others 3 are different type of data.
 
+## How to update the package
+
+In order to update the package just run this code:
+
+``` r
+devtools::update_packages("OliveHealthR", upgrade = "always")
+```
+
+Se R ti chiede di installare i pacchetti che richiedono compilazione
+clicca su “No”. Una volta completata l’installazione, dovrai riscaricare
+le foto (vedi step 6 dell’installazione).
+
 ### “File aziende (.csv)”
 
 The most important file is “2\_Dati\_monitoraggio.csv”. In order to make
