@@ -53,7 +53,7 @@ foglie_ind$Anno = factor(foglie_ind$Anno)
 olio_ind = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/polifenoli veri/polifenoli_HPLC_olio.xlsx") %>% 
   janitor::remove_empty("rows")
 
-olio_ind = olio_ind %>% dplyr::mutate(dplyr::across(9:14, ~.x * Fattore_diluizione * ml_estrazione * 1000/ g_olio_estrazione), .keep ="unused") %>% 
+olio_ind = olio_ind %>% dplyr::mutate(dplyr::across(9:14, ~.x * Fattore_diluizione * ml_estrazione/ g_olio_estrazione), .keep ="unused") %>% 
   dplyr::mutate(across(where(is.double), round,3))
 #sono mg/kg
 
@@ -72,7 +72,7 @@ olio_ind$Anno = factor(olio_ind$Anno)
 posa_ind = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/polifenoli veri/polifenoli_HPLC_posa.xlsx") %>% 
   janitor::remove_empty("rows")
 
-posa_ind = posa_ind %>% dplyr::mutate(dplyr::across(9:14, ~.x * Fattore_diluizione * ml_estrazione *1000/ g_posa_estrazione), .keep ="unused") %>% 
+posa_ind = posa_ind %>% dplyr::mutate(dplyr::across(9:14, ~.x * Fattore_diluizione * ml_estrazione / g_posa_estrazione), .keep ="unused") %>% 
   dplyr::mutate(across(where(is.double), round,3))
 #sono mg/kg
 

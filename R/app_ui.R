@@ -66,7 +66,7 @@ app_ui <- function(request) {
                ##### Lista menuItem #### 
                tabPanel(title = "Codice", value = "panel2", 
                         shinyBS::bsModal("keybutton_modal", "Inserisci codice", trigger = "keybutton", size = "small",
-                                         br(),textInput("ins_passw", label = "", value = "Scrivi qui...")),
+                                         br(),textInput("ins_passw", label = "", placeholder = "Scrivi qui il codice.")),
                         dashboardPage(
                           dashboardHeader(title = "OliveHealthR", 
                             tags$li(class = "dropdown",
@@ -1711,27 +1711,51 @@ app_ui <- function(request) {
                                         width = 2,
                                         fileInput("file_ncdf", "File meteo (.nc)", accept = ".nc"),
                                         selectInput("varmeteo", "Variabile meteo", choices = ""),
-                                        selectInput("selyearmeteo", "Seleziona anno", choices = "Tutti")
-                                        
+                                        conditionalPanel(
+                                          condition = "input.tabsetmeteo == 'tabpanmeteomap'",
+                                          awesomeRadio("type_mapmeteo", "Tipo di mappa", choices = c("Statica","Animata")),
+                                          selectInput("selyearmeteo", "Seleziona anno", choices = "")
+                                        ),
+                                        conditionalPanel(
+                                          condition = "input.tabsetmeteo == 'tabpanplotomap'",
+                                          awesomeRadio("meteoplot_tipoconf", "Tipo di confronto", choices = c("Tra anni", "Tra aziende"))
+                                        )
+
                                       ),
                                       mainPanel(
                                         width = 10,
-                                        tabsetPanel(
-                                          tabPanel("Mappa",
-                                            shinycssloaders::withSpinner(imageOutput("mapmeteo"), image = "www/running_olive.gif"),
+                                        tabsetPanel(id = "tabsetmeteo",
+                                          tabPanel("Mappa", value = "tabpanmeteomap",
+                                            conditionalPanel(condition = "input.type_mapmeteo == 'Animata'",
+                                              shinycssloaders::withSpinner(imageOutput("mapmeteo"), image = "www/running_olive.gif")
+                                            ),
+                                            conditionalPanel(
+                                              condition = "input.type_mapmeteo == 'Statica'",
+                                              shinycssloaders::withSpinner(tmapOutput("mapmeteo2"))
+                                            )
                                           ),
-                                          tabPanel("Plot",
+                                          
+                                          tabPanel("Plot", value = "tabpanplotomap",
                                             box(width=NULL, status = "primary",
                                                 fluidRow(
-                                                  column(3, awesomeRadio("type_lineplot", "Tipo di grafico", choices = c("Statico","Animato"))),
-                                                  column(3, selectInput("selcod_plotmeteo", "Scegli una o più aziende", choices = "", multiple = TRUE))
+                                                  conditionalPanel(
+                                                    condition = "input.meteoplot_tipoconf == 'Tra aziende'",
+                                                    column(2, awesomeRadio("type_lineplot", "Tipo di grafico", choices = c("Statico","Animato"))),
+                                                    column(3, selectInput("selyearplotmeteo", "Seleziona anno", choices = "Tutti")),
+                                                    column(3, selectInput("selcod_plotmeteo", "Scegli una o più aziende", choices = "", multiple = TRUE))
+                                                  ),
+                                                  conditionalPanel(
+                                                    condition = "input.meteoplot_tipoconf == 'Tra anni'",
+                                                    column(3, selectInput("selcod_plotmeteo2", "Scegli un'azienda", choices = ""))
+                                                  )
+                                                  
                                                 )),
                                             conditionalPanel(
                                               condition = "input.type_lineplot == 'Statico'",
                                               shinycssloaders::withSpinner(plotly::plotlyOutput("ggline_meteo"), image = "www/running_olive.gif")
                                             ),
                                             conditionalPanel(
-                                              condition = "input.type_lineplot == 'Animato'",
+                                              condition = "input.type_lineplot == 'Animato' && input.meteoplot_tipoconf == 'Tra aziende'",
                                               shinycssloaders::withSpinner(imageOutput("plotline_animated"), image = "www/running_olive.gif")
                                             )
                                           )

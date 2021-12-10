@@ -386,12 +386,14 @@ app_server <- function( input, output, session ) {
   
   ############## Cultivar principale #################
   output$numcult = renderText({
+    req(data())
     cult = data() %>% dplyr::select(Cultivar_principale) %>% table() %>% length()
     HTML(paste("Nel dataset sono presenti", "<b>", cult, "</b>", "cultivar ripartite secondo il seguente grafico:"))
   })
   
   #####grafico cultivar con scelta del tipo di grafico   
   output$cultplot = renderUI({
+    req(data())
     if(input$selplotcult == 1){
       output$pie1 = plotly::renderPlotly({
         data() %>% plotly::plot_ly(labels = ~Cultivar_principale, type= "pie", textposition = 'inside', textinfo = 'label+value',
@@ -418,7 +420,9 @@ app_server <- function( input, output, session ) {
   
 
   #creo datmap1 senza le colonne UTM
-  datmap1 = reactive({data() %>% dplyr::select(!starts_with("UTM"))
+  datmap1 = reactive({
+    req(data())
+    data() %>% dplyr::select(!starts_with("UTM"))
   })
   
 
@@ -469,6 +473,7 @@ app_server <- function( input, output, session ) {
 
   #selezionare colonna X da plottare
   showcolumnx = reactive({
+    req(datadrupe())
     Olv_select_col(data = datadrupe(), input = input$selectx)
   })  
   
@@ -480,11 +485,13 @@ app_server <- function( input, output, session ) {
   
   ###selezionare colonna Y da plottare
   showcolumny = reactive({
+    req(datadrupe())
     Olv_select_col(data = datadrupe(), input = input$selecty)
   }) 
   
   ###selezionare colonna per il riempimento
   fillcolumn = reactive({
+    req(datadrupe())
     Olv_select_col(data = datadrupe(), input = input$selectfill)
   }) 
   
@@ -494,6 +501,7 @@ app_server <- function( input, output, session ) {
     updateSelectInput(session, "selyearscatter", choices = row.names(table(dplyr::select(dtdrupanno(), "Anno"))))
   })
   dtplotyear2 = reactive({
+    req(dtdrupanno())
     dtdrupanno() %>% dplyr::filter(Anno == input$selyearscatter)
   })
   
@@ -506,6 +514,7 @@ app_server <- function( input, output, session ) {
   
   ###grafico classico (scatter plot)   , position = "jitter" , alpha = 0.7
   output$plotxy = plotly::renderPlotly({
+    req(dtdrupfilt2())
     temp = ggplot(data = dtdrupfilt2()) +
       geom_count(mapping = aes_string(x = colnames(showcolumnx()), y = colnames(showcolumny()), colour = colnames(fillcolumn()))) +
       scale_size_continuous(range = c(3,9)) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
@@ -545,6 +554,7 @@ app_server <- function( input, output, session ) {
   
   ###grafico a barre
   output$barplot1 = plotly::renderPlotly({
+    req(colorcamp())
     temp2=ggplot(data=colorcamp()) + 
       geom_col(mapping = aes_string(x = colnames(showcolumnx()), y = colnames(showcolumny()), fill = "N_campionamento"), position = position_dodge2(preserve = "single")) + 
       theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank())
@@ -586,6 +596,7 @@ app_server <- function( input, output, session ) {
   
   #foto foglie
   output$phfoglia = renderUI({
+    req(selprov())
     x = paste(selprov(), "foglie", sep="_")
     foglia = paste0(x,".jpg")
     tags$img(src = foglia, width = "75%", height = "75%")
@@ -593,6 +604,7 @@ app_server <- function( input, output, session ) {
   
   #foto drupe
   output$phdrupa = renderUI({
+    req(selprov())
     x = paste(selprov(), "drupe", sep="_")
     drupa = paste0(x, ".jpg")
     tags$img(src = drupa, width = "75%", height = "75%")
@@ -653,6 +665,7 @@ app_server <- function( input, output, session ) {
   
   
   joinfilecalendar = reactive({
+    req(drupe(), oliocamp())
     drupdate = dplyr::select(drupe(), Codice_azienda, Data_campionamento, N_campionamento) %>% dplyr::mutate(campione = "Campionamento drupe e foglie") %>% tidyr::drop_na()
     oliodate = dplyr::select(oliocamp(), Codice_azienda, Data_campionamento, N_campionamento) %>% dplyr::mutate(campione = "Campionamento olio") %>% tidyr::drop_na()
     
@@ -803,6 +816,7 @@ app_server <- function( input, output, session ) {
 
   ###grafico classico (scatter plot)   
   output$scattplotassagg = plotly::renderPlotly({
+    req(dataassaggi())
     dtassaggiyear = dataassaggi() %>% dplyr::filter(Anno == input$selyearscatterassagg)
     x = Olv_select_col(data = dataassaggi(), input = input$selectxassaggiscatt)
     y = Olv_select_col(data = dataassaggi(), input = input$selectyassaggiscatt)
@@ -810,6 +824,9 @@ app_server <- function( input, output, session ) {
     temp = ggplot(data = dtassaggiyear) +
       geom_count(mapping = aes_string(x = colnames(x), y = colnames(y), colour = colnames(fill))) +
        theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+    if(is.double(dplyr::pull(dtassaggiyear, colnames(fill))) == TRUE){
+      temp = temp + scale_colour_gradient(high = "#132B43", low = "#56B1F7")
+    }
     plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
   })
   
@@ -819,6 +836,7 @@ app_server <- function( input, output, session ) {
 
   ###grafico a barre
   output$barplotassagg = plotly::renderPlotly({
+    req(dataassaggi())
     x = Olv_select_col(data = dataassaggi(), input = input$selectxassaggibar)
     y = Olv_select_col(data = dataassaggi(), input = input$selectyassaggibar)
     assaggiyear = dataassaggi() %>% dplyr::filter(Anno == input$selyearbarassagg)
@@ -840,6 +858,7 @@ app_server <- function( input, output, session ) {
   
   # Spider plot
   output$assaggispider = renderPlot({
+    req(dataassaggi())
     #seleziono anno, prendo solo cod.az e mediana e cod diventa rownames
     radardata = dataassaggi() %>% dplyr::filter(Anno == input$selyearspiderassaggi) %>% 
       dplyr::select(Codice_azienda, starts_with("Mediana")) %>% column_to_rownames("Codice_azienda")
@@ -865,7 +884,10 @@ app_server <- function( input, output, session ) {
   
   ############## Foto Allegati
   #crea la tabella
-  output$dtallegato = DT::renderDT(dplyr::select(assaggidataph(), c("Azienda", "Codice_azienda", "Tipo_olio")), selection = "single", server = FALSE, rownames = FALSE, options = list("pageLength" = 15))
+  output$dtallegato = DT::renderDT({
+    req(assaggidataph())
+    dplyr::select(assaggidataph(), c("Azienda", "Codice_azienda", "Tipo_olio"))
+    }, selection = "single", server = FALSE, rownames = FALSE, options = list("pageLength" = 15))
   
   
   #aggiorna il selectinput "selyearfoto" in base agli anni presenti e seleziono
@@ -1037,6 +1059,9 @@ app_server <- function( input, output, session ) {
       geom_count(aes_string(x = paste0("`",input$selectxtot, "`"), y = paste0("`",input$selectytot, "`"), colour = paste0("`",input$selectfilltot, "`")), 
                  size = 2) + 
       theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+    if(is.double(dplyr::pull(data, input$selectfilltot)) == TRUE){
+      temp = temp + scale_colour_gradient(high = "#132B43", low = "#56B1F7")
+    }
     plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$selectfilltot)))
   })
   
@@ -1268,12 +1293,12 @@ app_server <- function( input, output, session ) {
     data = dataforselect_polind() %>% dplyr::filter(Anno == input$selyearscatterind) %>% 
       dplyr::filter(N_campionamento == input$numind)
       
-
-
     temp = ggplot(data) +
       geom_count(aes_string(x = paste0("`",input$selectxind, "`"), y = paste0("`",input$selectyind, "`"), colour = paste0("`",input$selectfillind, "`")), 
-                 size = 2) + 
-      theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+                 size = 2) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+    if(is.double(dplyr::pull(data, input$selectfillind)) == TRUE){
+      temp = temp + scale_colour_gradient(high = "#132B43", low = "#56B1F7")
+      }
     plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$selectfillind)))
   })
 
@@ -1291,8 +1316,7 @@ app_server <- function( input, output, session ) {
   output$boxplotindpol = renderPlotly({
     req(datapolind())
     data = datapolind() %>% dplyr::filter(Anno == input$selyearboxind) %>% dplyr::filter(N_campionamento == input$numboxind)
-    
-    
+
     temp = ggplot(data, aes_string(x = "Codice_azienda", y = paste0("`",input$selectyboxind, "`"), fill = paste0("`",input$selectfillboxind, "`"))) + 
       geom_boxplot() + geom_jitter(width = 0.3) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
     plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$selectfillboxind)))
@@ -1349,6 +1373,7 @@ app_server <- function( input, output, session ) {
 
 
   dtheatsorted = reactive({
+    req(datapolind_summ())
     data_pol = datapolind_summ()
     #rimuovo le unità di misura dai nomi
     names(data_pol) <- stringr::str_remove(names(data_pol), ' .*')
@@ -1375,6 +1400,7 @@ app_server <- function( input, output, session ) {
 
   #creo l'heatmap
   dataheat = reactive({
+    req(dtheatsorted())
     if(input$selfilepolind == "foglie" || input$selfilepolind == "drupe"){
       unit = "ug/g"
     } else{  #olio e posa
@@ -1475,8 +1501,7 @@ app_server <- function( input, output, session ) {
         title = paste("Log2+1 dei polifenoli individuali di", input$selcodspiderpolind, "e", input$selcodspiderpolind2))
       
     }
-    
-    
+
   })
 
 
@@ -1536,6 +1561,7 @@ app_server <- function( input, output, session ) {
 
   ###screeplot
   output$screeplot <- plotly::renderPlotly({
+    req(pcadati())
     pca = pcadati()
     var = cumsum(100*pca$sdev^2/sum(pca$sdev^2))
     var = as.data.frame(cbind(var)) %>% tibble::rownames_to_column()
@@ -1673,6 +1699,7 @@ app_server <- function( input, output, session ) {
 
   #foto cromatogramma drupe
   output$phcromat = renderUI({
+    req(selprovcromat())
     croma = paste0(selprovcromat(),".png")
     tags$img(src = croma)
   })
@@ -1759,6 +1786,7 @@ app_server <- function( input, output, session ) {
   ###### data wide con polifenoli sulle colonne
   ###### File del tipo Codice_azienda | Cultivar_principale | Azienda | Areale | N_campionamento | Peak_01.. | Peak_02_...
   lcwidepolif = reactive({
+    req(datalcxlc())
     temp = datalcxlc() %>% tidyr::gather(Codice_azienda, Quantificazione, colnames(datalcxlc()[,6:length(datalcxlc())])) %>%
       dplyr::select(Codice_azienda, everything())
     #creo una seconda colonna PEAK2
@@ -1793,6 +1821,7 @@ app_server <- function( input, output, session ) {
 
   #crea la tabella
   output$dtfotolc = DT::renderDT({
+    req(lcwidepolif())
     ncamp = ifelse(input$ncampcromatlc == "1_campionamento", "R1", "R2")
     lcwidepolif() %>% filter(N_campionamento == ncamp) %>% dplyr::select(c("Codice_azienda", "Cultivar_principale", "Azienda"))
     }, selection = "single", server = FALSE, rownames = FALSE)
@@ -1858,6 +1887,7 @@ app_server <- function( input, output, session ) {
 
 
   datalcgraph = reactive({
+    req(datalcgraphcamp())
     datancamp = datalcgraphcamp() %>% dplyr::filter(N_campionamento == input$numscattlc)
 
     if(input$lcdatatypescatt == "Polifenolo"){
@@ -1908,7 +1938,7 @@ app_server <- function( input, output, session ) {
 
   #aggiungo na.omit() nei colori così se ci sono NA non li conta nella scelta dei colori e non da errore
   output$scatterlc = renderPlotly({
-
+    req(datalcgraph())
     if(input$logscattlc == TRUE){
       datalogg = dplyr::mutate_if(datalcgraph(), is.numeric, log2)
       yname = "Log2 quantificazione (mg/Kg)"
@@ -1925,21 +1955,27 @@ app_server <- function( input, output, session ) {
         geom_count(mapping = aes_string(x = "Codice_azienda", y = input$lcselpolifscatt, shape = "Presenza", color = input$fillscattlc)) + #,color = grDevices::hcl.colors(length(na.omit(dplyr::select(datalcgraph(),input$lcselpolifscatt))), palette = "Dynamic")
         scale_shape_manual(values=c(10, 1, 16),drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) +
         theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + ylab(paste(input$lcselpolifscatt, "(mg/Kg)"))
+      if(is.double(dplyr::pull(datalogg, input$fillscattlc)) == TRUE){
+        temp = temp + scale_colour_gradient(high = "#132B43", low = "#56B1F7")
+      }
       plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = "Presenza")))
     }else{
       temp = ggplot(data = datalogg, aes_string(label = "Quantificazione")) +
         geom_count(mapping = aes_string(x = "Compounds", y = "Quantificazione", shape = "Presenza", color = input$fillscattlc), size = size_points, position = pos_jitter) + #, color = grDevices::hcl.colors(length(na.omit(datalcgraph()$Quantificazione)), palette = "Dynamic")
         scale_shape_manual(values=c(10, 1, 16), drop = FALSE, labels = c("<LOQ", "Assente", "Presente")) +
         theme(axis.text.x = element_text(angle = 315, hjust = 0), legend.title = element_blank()) + ylab(yname)
+      if(is.double(dplyr::pull(datalogg, input$fillscattlc)) == TRUE){
+        temp = temp + scale_colour_gradient(high = "#132B43", low = "#56B1F7")
+      }
       plotly::ggplotly(temp, tooltip = c("Compounds", "Presenza", "label", input$fillscattlc)) %>% plotly::layout(legend = list(title = list(text = "Legenda")))
     }
-
 
   })
 
 
   # Barplot
   output$barplotlc = renderPlotly({
+    req(datalcgraph())
     if(input$logscattlc == TRUE){
       datalogg = dplyr::mutate_if(datalcgraph(), is.numeric, log2)
       yname = "Log2 quantificazione (mg/Kg)"
@@ -1982,6 +2018,7 @@ app_server <- function( input, output, session ) {
   })
 
   lcheatsorted = reactive({
+    req(lcwidepolif())
     #dato che qui codice_azienda è diverso, non posso usare sorderdata() ma devo farlo a mano.
     #Filtro e tolgo Azienda e areale e poi faccio scegliere uno tra provincia e cultivar
     if(input$cultheatlc != "Tutte"){
@@ -2020,6 +2057,7 @@ app_server <- function( input, output, session ) {
 
   #creo l'heatmap
   dataheatlc = reactive({
+    req(lcheatsorted())
     make_heatmap(
       datasorted = lcheatsorted(),
       add_annot = input$selectannotlc,
@@ -2120,7 +2158,6 @@ app_server <- function( input, output, session ) {
       temp = autoplot(pcadatiLC(), data = datilabel, shape = input$shpbiplotlc, colour = input$colbiplotlc, title = "Plot")
     }
 
-
     plotly::ggplotly(temp)
   })
 
@@ -2149,7 +2186,7 @@ app_server <- function( input, output, session ) {
   #scegli i dati in base alla selezione
   
   datamorfo = reactive({
-    req(data())
+    req(data(), morfom())
     if(input$selfilemorfo == "foglie"){
       tempdata = morfom()$Foglie
     } else if(input$selfilemorfo == "drupe"){
@@ -2225,7 +2262,10 @@ app_server <- function( input, output, session ) {
   ################# Foto campioni ############
   
   #crea la tabella
-  output$dtfotomorfo = DT::renderDT(dplyr::select(data(), c("Codice_azienda", "Cultivar_principale", "Azienda")), selection = "single", server = FALSE, rownames = FALSE)
+  output$dtfotomorfo = DT::renderDT({
+    req(data())
+    dplyr::select(data(), c("Codice_azienda", "Cultivar_principale", "Azienda"))
+    }, selection = "single", server = FALSE, rownames = FALSE)
   
   
   #aggiorna il selectinput "selyearfotomorfo" in base agli anni presenti e seleziono
@@ -2378,6 +2418,9 @@ app_server <- function( input, output, session ) {
       geom_count(size = 2)  + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
     
     #in jitter se voglio colorare i punti aggiungo aes_string(color = paste0("`",colnames(fill),"`"))
+    if(is.double(dplyr::pull(dt, colnames(fill))) == TRUE){
+      temp = temp + scale_colour_gradient(high = "#132B43", low = "#56B1F7")
+    }
     plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
   })
   
@@ -2453,6 +2496,7 @@ app_server <- function( input, output, session ) {
   
 
   dtheatsortedmorfo = reactive({
+    req(datamorfoheat())
     sorder_data(
       data = data(),
       data2 = datamorfoheat(),
@@ -2598,6 +2642,7 @@ app_server <- function( input, output, session ) {
 
   ###screeplot
   output$screeplotmorfo <- plotly::renderPlotly({
+    req(pcadatimorfo())
     pca = pcadatimorfo()
     var = cumsum(100*pca$sdev^2/sum(pca$sdev^2))
     var = as.data.frame(cbind(var)) %>% tibble::rownames_to_column()
@@ -2718,6 +2763,7 @@ app_server <- function( input, output, session ) {
   })
   
   datamorfoyeartest = reactive({
+    req(datamorfo())
     datamorfo() %>% dplyr::filter(Anno == input$selyearttestmorfo)
   })
   
@@ -2760,6 +2806,7 @@ app_server <- function( input, output, session ) {
   })
   
   output$shapiro1 = renderPrint({
+    req(shapiro1data())
     shapiro1data()
   })
   
@@ -2774,6 +2821,7 @@ app_server <- function( input, output, session ) {
   })
   
   output$shapiro2 = renderPrint({
+    req(shapiro2data())
     shapiro2data()
   })
   
@@ -2904,6 +2952,7 @@ app_server <- function( input, output, session ) {
   
   #data filtered or not
   datachisqmorfo = reactive({
+    req(datamorfo())
     if(!is.null(input$chisqtestfilt)){
       datamorfo() %>% dplyr::filter(Cultivar_principale %in% input$chisqtestfilt)
     }else{
@@ -2953,6 +3002,7 @@ app_server <- function( input, output, session ) {
   
 
   output$chisqmorfoprint = renderPrint({
+    req(chisqmorfo())
     chisqmorfo()
     })
 
@@ -2964,7 +3014,6 @@ app_server <- function( input, output, session ) {
       col2 = grDevices::colorRampPalette(c("#053061", "#2166AC", "#4393C3", "#92C5DE", "#D1E5F0", "#FFFFFF", "#FDDBC7", "#F4A582", "#D6604D", "#B2182B", "#67001F"))
       corrplot::corrplot(t(chisqmorfo()$residuals), is.cor = FALSE, mar = c(1, 1, 1, 1), col = col2(200), tl.srt = 45, title = "Corrplot dei residui",cl.lim = c(-max(abs(chisqmorfo()$residuals)), max(abs(chisqmorfo()$residuals))))
     }
-
   })
 
   
@@ -2995,6 +3044,7 @@ app_server <- function( input, output, session ) {
   })
   
   output$shapiroanova1 = renderPrint({
+    req(shapiroanova1data())
     shapiroanova1data()
   })
   
@@ -3061,6 +3111,7 @@ app_server <- function( input, output, session ) {
   
   #variabile che mi dice se il test è significativo
   signiftestmorfo = reactive({
+    req(anova1morfo())
     anovasumm = summary(anova1morfo())
     if(round(anovasumm[[1]][["Pr(>F)"]][[1]], digits = 4) <= input$pvalanovamorfo ||  kruskmorfodata()$p.value <= input$pvalanovamorfo){
       "significativo"
@@ -3071,6 +3122,7 @@ app_server <- function( input, output, session ) {
   
   #output per l'ui
   output$signiftestmorfoui = reactive({
+    req(signiftestmorfo())
     signiftestmorfo()
   })
   outputOptions(output, 'signiftestmorfoui', suspendWhenHidden = FALSE)
@@ -3160,10 +3212,44 @@ app_server <- function( input, output, session ) {
   
   observeEvent(data_meteo(),{
     updateSelectInput(session, "varmeteo", choices = names(data_meteo()))
-    updateSelectInput(session, "selyearmeteo", choices = c("Tutti",unique(lubridate::year(data_meteo()[[1]]$Tempo))))
+    if(input$type_mapmeteo == "Animata"){
+      updateSelectInput(session, "selyearmeteo", choices = c("Tutti",unique(lubridate::year(data_meteo()[[1]]$Tempo))))
+    }else{
+      updateSelectInput(session, "selyearmeteo", choices = unique(lubridate::year(data_meteo()[[1]]$Tempo)))
+    }
     updateSelectInput(session, "selcod_plotmeteo", choices = unique(data_meteo()[[1]]$Codice_azienda), selected = unique(data_meteo()[[1]]$Codice_azienda)[1])
+    
+    updateSelectInput(session, "selcod_plotmeteo2", choices = unique(data_meteo()[[1]]$Codice_azienda), selected = unique(data_meteo()[[1]]$Codice_azienda)[1])
+
+    updateSelectInput(session, "selyearplotmeteo", choices = c("Tutti",unique(lubridate::year(data_meteo()[[1]]$Tempo))))
   })
 
+  
+  output$mapmeteo2 = renderTmap({
+    req(data_meteo(), input$varmeteo)
+    
+    g3 = data_meteo()[[input$varmeteo]] %>% dplyr::filter(lubridate::year(Tempo) == input$selyearmeteo) %>% 
+      dplyr::group_by(Codice_azienda) %>% dplyr::summarise(Misura = mean(Misura)) 
+    data2 = dplyr::left_join(g3, data(), by = "Codice_azienda")
+   
+    #utmcoord23 = sf::st_as_sf(data2, coords = c("UTM_33T_E", "UTM_33T_N" ), crs= 32633)
+    
+    if(input$varmeteo == "tp"){
+      namevar = "Total precipitation (m)"
+    }else if(input$varmeteo == "swvl2"){
+      namevar = "Volumetric soil water level 2 (7 -28 cm)"
+    }else if(input$varmeteo == "swvl3"){
+      namevar = "Volumetric soil water level 3 (28-100 cm)"
+    }else{
+      namevar = input$varmeteo
+    }
+    make_tmap(data = data2, dotlegend = dplyr::select(data2, Misura))
+    #sf::st_crs(campania) = 32633
+    # tm_shape(campania) + tm_polygons(col= "provincia", alpha = 0.8) + tm_shape(utmcoord23) +
+    #   tm_dots(col = dplyr::select(data2,Misura), scale = 4.5)
+  })
+  
+  
   output$mapmeteo = renderImage({
     req(data_meteo(), input$varmeteo)
     data2 = dplyr::left_join(data_meteo()[[input$varmeteo]], data(), by = "Codice_azienda")
@@ -3206,15 +3292,31 @@ app_server <- function( input, output, session ) {
   ####grafici
   output$ggline_meteo = renderPlotly({
     req(data_meteo(), input$varmeteo)
-    validate(need(input$selcod_plotmeteo != "", "Seleziona almeno un'azienda."))
-    meteo = data_meteo()[[input$varmeteo]] %>% dplyr::filter(Codice_azienda %in% input$selcod_plotmeteo)
-    if(input$selyearmeteo != "Tutti"){
-      meteo = meteo %>% dplyr::filter(lubridate::year(Tempo) == input$selyearmeteo)
+    #validate(need(input$selcod_plotmeteo != "", "Seleziona almeno un'azienda."))
+    
+    
+    if(input$meteoplot_tipoconf == "Tra aziende"){
+      meteo = data_meteo()[[input$varmeteo]] %>% dplyr::filter(Codice_azienda %in% input$selcod_plotmeteo)
+      if(input$selyearplotmeteo != "Tutti"){
+        meteo = meteo %>% dplyr::filter(lubridate::year(Tempo) == input$selyearplotmeteo)
+      }
+      
+      temp = ggplot(data = meteo, aes(x = Tempo, y = Misura)) +
+        geom_line(aes(color = Codice_azienda, group = Codice_azienda)) +
+        geom_point(aes(color = Codice_azienda, group = Codice_azienda))
+      plotly::ggplotly(temp)
+      
+    }else{
+      meteo = data_meteo()[[input$varmeteo]] %>% dplyr::filter(Codice_azienda %in% input$selcod_plotmeteo2)
+      #confronto tra aziende: scelgo l'azienda e mi mostra gli anni (o tutti o solo alcuni)
+      meteo =  cbind(meteo, Year = as.factor(lubridate::year(meteo$Tempo)))
+      meteo = cbind(meteo, Mese = lubridate::month(meteo$Tempo, label = T))
+      
+      temp = ggplot(data = meteo, aes(x = Mese, y = Misura,color = Year, group = Year)) +
+        geom_line() + geom_point()
+      plotly::ggplotly(temp)
     }
     
-    temp = ggplot(data = meteo, aes(x = Tempo, y = Misura)) +
-      geom_line(aes(color = Codice_azienda, group = Codice_azienda))
-    plotly::ggplotly(temp)
   })
   
   
@@ -3222,13 +3324,13 @@ app_server <- function( input, output, session ) {
     req(data_meteo(), input$varmeteo)
     validate(need(input$selcod_plotmeteo != "", "Seleziona almeno un'azienda."))
     meteo = data_meteo()[[input$varmeteo]] %>% dplyr::filter(Codice_azienda  %in% input$selcod_plotmeteo)
-    if(input$selyearmeteo != "Tutti"){
-      meteo = meteo %>% dplyr::filter(lubridate::year(Tempo) == input$selyearmeteo)
+    if(input$selyearplotmeteo != "Tutti"){
+      meteo = meteo %>% dplyr::filter(lubridate::year(Tempo) == input$selyearplotmeteo)
     }
     
     h = ggplot(data = meteo, aes(x = Tempo, y = Misura)) +
       geom_line(aes(color = Codice_azienda, group = Codice_azienda)) + 
-      gganimate::transition_reveal(id = Tempo, along = Tempo)
+      gganimate::transition_reveal(Tempo)
     
     outfile <- tempfile(fileext='.gif')
     gganimate::anim_save("outfile.gif", gganimate::animate(h, height = 650, width =900,nframes = 100))
