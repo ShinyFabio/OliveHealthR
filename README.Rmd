@@ -70,6 +70,7 @@ sudo apt-get install libxt-dev                                                #f
 sudo apt install libudunits2-dev                                              #for {units} library
 sudo apt install libgdal-dev                                                  #for {sf} library
 sudo apt install libmagick++-dev                                              #for {magick} library
+sudo apt-get install libc6
 
 ```
 

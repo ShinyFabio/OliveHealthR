@@ -2,7 +2,7 @@
 #' 
 #' @description This function render a tmap using a shapefile (campania) as background and a table with coordinates for the points. 
 #' 
-#' @param ncfile Path of the ncfile. "C:\\Users\\fabio\\Desktop\\OliveHealthR\\data-raw\\precipitazioni\\precipit_e_altro_20_21.nc"
+#' @param ncfile ncfile opened with ncdf4::nc_open()
 #' @param data A dataframe with the coordinates columns(UTM_33T_N and UTM_33T_E) and relative infos. Use data()
 #' 
 #' 
@@ -11,7 +11,7 @@
 #' @importFrom sf st_as_sf st_crs st_transform st_coordinates
 #' @importFrom dplyr select rename
 #' @importFrom lubridate as_date month year
-#' @importFrom ncdf4 nc_open ncvar_get
+#' @importFrom ncdf4 ncvar_get
 #' 
 #' @examples \dontrun{
 #' 
@@ -33,10 +33,9 @@ makedata_meteo = function(ncfile,
   coordinates = cbind(df_sf, sf::st_coordinates(df_sf$geometry)) %>% dplyr::select(-geometry) %>% dplyr::rename(Long = X, Lat = Y)
 
   ###ntcd file
-  nt2 = ncdf4::nc_open(ncfile)
-  lat = ncdf4::ncvar_get(nt2, "latitude") #nord/sud
-  long = ncdf4::ncvar_get(nt2, "longitude") #est/ovest
-  time2 = ncdf4::ncvar_get(nt2, "time")
+  lat = ncdf4::ncvar_get(ncfile, "latitude") #nord/sud
+  long = ncdf4::ncvar_get(ncfile, "longitude") #est/ovest
+  time2 = ncdf4::ncvar_get(ncfile, "time")
   time2 = as.Date(time2/24, origin = "1900-01-01", tz = "UTC")
   
   timemon = time2 %>% lubridate::as_date() %>% lubridate::month(label = TRUE, abbr = FALSE)
@@ -45,12 +44,11 @@ makedata_meteo = function(ncfile,
 
   #precipitazioni totali
   all_measure = list()
-  for(m in names(nt2$var)){
+  for(m in names(ncfile$var)){
     
     for(k in 1:length(time_label)){ #lungo le date
-      #prec2 = data.frame(Codice_azienda = NULL, temp = NULL)
       prec2 = data.frame(Codice_azienda = NULL, Misura = NULL, Tempo = NULL)
-      tot_prec2 = ncdf4::ncvar_get(nt2, m, start = c(1,1,k), count = c(-1,-1, 1))
+      tot_prec2 = ncdf4::ncvar_get(ncfile, m, start = c(1,1,k), count = c(-1,-1, 1))
       for(i in coordinates$Codice_azienda){
         cod = coordinates %>% dplyr::filter(Codice_azienda == i)
         anom = t(tot_prec2)
@@ -61,7 +59,6 @@ makedata_meteo = function(ncfile,
         tobind = data.frame(Codice_azienda = i, Misura = prec, Tempo = time2[k])
         prec2 = rbind(prec2, tobind)
       }
-      #colnames(prec2) = c("Codice_azienda", time_label[k])
       if(k == 1){
         precfin = prec2
       }else{
@@ -71,6 +68,8 @@ makedata_meteo = function(ncfile,
     all_measure[m] = list(precfin)
   }
   
+  #porto i m di acqua in mm di acqua
+  all_measure$tp$Misura = all_measure$tp$Misura *1000
   return(all_measure)
   
 }

@@ -41,6 +41,7 @@
 #' @importFrom shinyBS bsModal
 #' @import gifski
 #' @importFrom gganimate anim_save animate transition_reveal
+#' @importFrom ncdf4 nc_open
 #' @noRd
 
 
@@ -87,7 +88,7 @@ app_server <- function( input, output, session ) {
                 h4(strong("File aziende: "),style = "color: white"),
                 h5("Nessun file aziende presente in database!", style = "color: white")),
               column(3, style = "padding-right: 0px; text-align: right;",
-                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;"))
+                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;padding-right: 15px;"))
             )
           )
       )
@@ -100,7 +101,7 @@ app_server <- function( input, output, session ) {
                 h4(strong("File aziende: "),style = "color: white"),
                 h5(strong(n_az), " aziende coinvolte", style = "color: white")),
               column(3, style = "padding-right: 0px; text-align: right;",
-                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;"))
+                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;padding-right: 15px;"))
             )
           )
       )
@@ -108,7 +109,7 @@ app_server <- function( input, output, session ) {
   })
   
   #carica il file
-  data2 = eventReactive(input$load_files,{
+  data = eventReactive(input$load_files,{
     if(exists("data_aziende") != FALSE){
       showNotification(tagList(icon("check"), HTML("&nbsp;File aziende caricato!")), type = "message")
       data_aziende
@@ -117,7 +118,7 @@ app_server <- function( input, output, session ) {
     }
   })
 
-  data = mod_update_data_server("updataaziende", original_data = data2, type_data = "azienda")
+  #data = mod_update_data_server("updataaziende", original_data = data2, type_data = "azienda")
 
 
   ###Schede campionamento 
@@ -132,10 +133,10 @@ app_server <- function( input, output, session ) {
                      h4(strong("Drupe e foglie: "),style = "color: white"),
                      h5("Nessun file presente in database!", style = "color: white")),
               column(3, style = "padding-right: 0px; text-align: right;",
-                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;"))
+                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;padding-right: 15px;"))
             )))
     }else{
-      years = drupecamp2020$Data_campionamento %>% lubridate::year() %>% na.omit() %>% unique()
+      years = drupecamp2020$Anno %>% na.omit() %>% unique()
       box(width = 12, background = "green",
           fluidPage(
             fluidRow(
@@ -143,7 +144,7 @@ app_server <- function( input, output, session ) {
                      h4(strong("Drupe e foglie: "),style = "color: white"),
                      h5("Anni presenti:  ", strong(paste(years, collapse = ", ")), style = "color: white")),
               column(3, style = "padding-right: 0px; text-align: right;",
-                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;"))
+                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;padding-right: 15px;"))
             )))
     }
   })
@@ -171,7 +172,7 @@ app_server <- function( input, output, session ) {
                      h4(strong("Olio: "),style = "color: white"),
                      h5("Nessun file presente in database!", style = "color: white")),
               column(3, style = "padding-right: 0px; text-align: right;",
-                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;"))
+                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;padding-right: 15px;"))
             )))
     }else{
       box(width = 12, background = "green",
@@ -181,7 +182,7 @@ app_server <- function( input, output, session ) {
                      h4(strong("Olio: "),style = "color: white"),
                      h5("Anni presenti:  ", strong(paste(levels(oliocampionamento2020$Anno), collapse = ", ")), style = "color: white")),
               column(3, style = "padding-right: 0px; text-align: right;",
-                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;"))
+                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;padding-right: 15px;"))
             )))
     }
   })
@@ -206,7 +207,7 @@ app_server <- function( input, output, session ) {
                      h4(strong("Analisi sensoriali: "),style = "color: white"),
                      h5("Nessun file presente in database!", style = "color: white")),
               column(3, style = "padding-right: 0px; text-align: right;",
-                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;"))
+                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;padding-right: 15px;"))
             )))
     }else{
       box(width = 12, background = "green",
@@ -216,7 +217,7 @@ app_server <- function( input, output, session ) {
                      h4(strong("Analisi sensoriali: "),style = "color: white"),
                      h5("Anni presenti:  ", strong(paste(levels(assaggi2020$Anno), collapse = ", ")), style = "color: white")),
               column(3, style = "padding-right: 0px; text-align: right;",
-                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;"))
+                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;padding-right: 15px;"))
             )))
     }
   })
@@ -242,7 +243,7 @@ app_server <- function( input, output, session ) {
                      h4(strong("Polifenoli totali: "),style = "color: white"),
                      h5("Nessun file presente in database!", style = "color: white")),
               column(3, style = "padding-right: 0px; text-align: right;",
-                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;"))
+                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;padding-right: 15px;"))
             )))
     }else{
       box(width = 12, background = "green",
@@ -257,7 +258,7 @@ app_server <- function( input, output, session ) {
                      h5("Sansa (", strong(paste(levels(poliftot2020$Sansa$Anno), collapse = ", "),")"), style = "color: white")
                      ),
               column(3, style = "padding-right: 0px; text-align: right;", br(), br(),
-                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;"))
+                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;padding-right: 15px;"))
             )))
     }
   })
@@ -283,7 +284,7 @@ app_server <- function( input, output, session ) {
                      h4(strong("Polifenoli individuali: "),style = "color: white"),
                      h5("Nessun file presente in database!", style = "color: white")),
               column(3, style = "padding-right: 0px; text-align: right;",
-                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;"))
+                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;padding-right: 15px;"))
             )))
     }else{
       box(width = 12, background = "green",
@@ -297,7 +298,7 @@ app_server <- function( input, output, session ) {
                      h5("Posa (", strong(paste(levels(polifind2020$Posa$Anno), collapse = ", "),")"), style = "color: white")
               ),
               column(3, style = "padding-right: 0px; text-align: right;", br(), br(),
-                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;"))
+                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;padding-right: 15px;"))
             )))
     }
   })
@@ -336,7 +337,7 @@ app_server <- function( input, output, session ) {
                      h4(strong("Morfometria: "),style = "color: white"),
                      h5("Nessun file presente in database!", style = "color: white")),
               column(3, style = "padding-right: 0px; text-align: right;",
-                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;"))
+                     tags$i(class = "fas fa-exclamation-triangle", style="font-size: 50px;padding-top: 5px;padding-right: 15px;"))
             )))
     }else{
       box(width = 12, background = "green",
@@ -350,7 +351,7 @@ app_server <- function( input, output, session ) {
                      h5("Rapporti (", strong(paste(unique(morfometria2020$Rapporti$Anno), collapse = ", "),")"), style = "color: white")
               ),
               column(3, style = "padding-right: 0px; text-align: right;", br(), br(),
-                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;"))
+                     tags$i(class = "fas fa-check", style="font-size: 50px;padding-top: 5px;padding-right: 15px;"))
             )))
     }
   })
@@ -461,13 +462,6 @@ app_server <- function( input, output, session ) {
   })
   
 
-  #crea la colonna anno
-  dtdrupanno = reactive({
-    req(datadrupemap())
-    datadrupemap() %>% dplyr::mutate(Anno = lubridate::year(Data_campionamento)) #cambiato datadrupe
-  })
-  
-
   ##########  Grafici datadrupe  #########
   
 
@@ -497,12 +491,12 @@ app_server <- function( input, output, session ) {
   
   
   #aggiorna il selectinput , "selyearscatter" in base agli anni presenti e filtra
-  observeEvent(dtdrupanno(), {
-    updateSelectInput(session, "selyearscatter", choices = row.names(table(dplyr::select(dtdrupanno(), "Anno"))))
+  observeEvent(datadrupe(), {
+    updateSelectInput(session, "selyearscatter", choices = unique(datadrupe()$Anno))
   })
   dtplotyear2 = reactive({
-    req(dtdrupanno())
-    dtdrupanno() %>% dplyr::filter(Anno == input$selyearscatter)
+    req(datadrupe())
+    datadrupe() %>% dplyr::filter(Anno == input$selyearscatter)
   })
   
   
@@ -527,8 +521,7 @@ app_server <- function( input, output, session ) {
   ###modificare la colonna campionamento con unite (R1_2020)
   dtnumyunite = reactive({
     req(datadrupe())
-    datadrupe() %>% dplyr::mutate(Anno = lubridate::year(Data_campionamento)) %>% 
-      tidyr::unite(col = N_campionamento, N_campionamento, Anno, remove = TRUE)
+    datadrupe() %>% tidyr::unite(col = N_campionamento, N_campionamento, Anno, remove = TRUE)
     
   })
   
@@ -567,7 +560,7 @@ app_server <- function( input, output, session ) {
   #### mappa (datadrupe)##
   
 
-  mod_render_map_server("modulo_mappa_datadrupe", datamap = datadrupemap, datacol = drupe, extract_year = TRUE, extract_ncamp = TRUE)
+  mod_render_map_server("modulo_mappa_datadrupe", datamap = datadrupemap, datacol = drupe, extract_year = FALSE, extract_ncamp = TRUE)
   
   
   ################# Foto campioni ############
@@ -578,8 +571,8 @@ app_server <- function( input, output, session ) {
   
 
   #aggiorna il selectinput "selyearfoto" in base agli anni presenti e seleziono
-  observeEvent(dtdrupanno(), {
-    updateSelectInput(session, "selyearfoto", choices = row.names(table(dplyr::select(dtdrupanno(), "Anno"))))
+  observeEvent(datadrupe(), {
+    updateSelectInput(session, "selyearfoto", choices = unique(datadrupe()$Anno))
   })
   
   
@@ -963,7 +956,7 @@ app_server <- function( input, output, session ) {
       datapoltot1() %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno) %>% 
         dplyr::summarise(dplyr::across("Polifenoli (mg/g foglie)", mean, na.rm = T)) %>% dplyr::ungroup()
     } else if(input$selfilepoltot == "drupe"){
-      datapoltot1() %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno, Presenza_larve) %>% 
+      datapoltot1() %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno) %>% 
         dplyr::summarise(dplyr::across("Polifenoli (mg/g drupe)", mean, na.rm = T)) %>% dplyr::ungroup()
     } else if (input$selfilepoltot == "olio"){
       datapoltot1() %>% dplyr::group_by(Codice_azienda, N_campionamento, Tipo_olio, Anno) %>% 
@@ -1013,11 +1006,11 @@ app_server <- function( input, output, session ) {
   
   #aggiusto i data eliminando tutte le colonne non numeriche
   nadatapoltot = reactive({
-    req(datapoltot_summ1())
+    req(datapoltot_summ())
     if(input$summpoltot == TRUE){
-      data = datapoltot_summ1() 
+      data = datapoltot_summ() 
     } else{
-      data = datapoltot1()
+      data = datapoltot()
     }
     data %>% dplyr::select(where(is.double))
   })
@@ -1046,6 +1039,8 @@ app_server <- function( input, output, session ) {
     updateSelectInput(session, "selyearscattertot", choices = row.names(table(dplyr::select(dataforselect_poltot(), "Anno"))))
     updateSelectInput(session, "numtot", choices = unique(na.omit(dataforselect_poltot()$N_campionamento)))
   })
+  
+
   
 
 
@@ -1078,18 +1073,19 @@ app_server <- function( input, output, session ) {
   ###aggiornare il checkbox in base al numero dei campionamenti
   observeEvent(datapoltotyearunite(), {
     updateCheckboxGroupInput(session, "checkcamptot", choices = unique(datapoltotyearunite()$N_campionamento),  selected = unique(datapoltotyearunite()$N_campionamento))
-    updateSelectInput(session, "selectxtotbar", choices = colnames(datapoltotyearunite()))
     updateSelectInput(session, "selectytotbar", choices = colnames(datapoltotyearunite()))
   })
   
 
+
+  
 
   ###grafico a barre
   output$barplottot = plotly::renderPlotly({
     req(datapoltotyearunite())
     data = datapoltotyearunite() %>% dplyr::filter(N_campionamento %in% input$checkcamptot)
     data_err = datapoltot() %>% tidyr::unite(col = N_campionamento, N_campionamento, Anno, remove = FALSE) %>% 
-      dplyr::filter(N_campionamento %in% input$checkcampind)
+      dplyr::filter(N_campionamento %in% input$checkcamptot)
     
     #con group risolvo il problema dell'unica barra di errore anche se ci sono due barre
     temp2=ggplot(data, aes_string(x = "Codice_azienda", y = paste0("`",input$selectytotbar, "`"), fill = paste0("`",input$selectfilltotbar, "`"), group = "N_campionamento")) +
@@ -1442,9 +1438,13 @@ app_server <- function( input, output, session ) {
     updateSelectInput(session, "selcodspiderpolind", choices = unique(datapolind_summ()$Codice_azienda))
     updateSelectInput(session, "selcampspiderpolind", choices = unique(na.omit(datapolind_summ()$N_campionamento)))
     updateSelectInput(session, "selcodspiderpolind2", choices = unique(datapolind_summ()$Codice_azienda))
+    
+    #più anni spider
+    updateSelectInput(session, "selcodspidind", choices = unique(datapolind_summ()$Codice_azienda))
   })
 
 
+  
   ###creo il corrplot
   output$corrplotind = plotly::renderPlotly({
     req(datapolind_summ())
@@ -1465,42 +1465,68 @@ app_server <- function( input, output, session ) {
 
   ##### SPIDERPLOT polifenoli ind #####
   
+  aziendaspidind = reactive({
+    req(input$selcodspidind, datapolind_summ())
+    datapolind_summ() %>% dplyr::filter(Codice_azienda == input$selcodspidind)
+  })
+  
+  observeEvent(aziendaspidind(),{
+    updateSelectInput(session, "selcampspidind", choices = unique(na.omit(aziendaspidind()$N_campionamento)))
+  })
+  
+  
   output$spider_polind = renderPlot({
     req(datapolind_summ())
-    radardata = datapolind_summ() %>% dplyr::filter(Anno == input$selyearspiderpolind) %>% 
-      dplyr::filter(N_campionamento == input$selcampspiderpolind)
     
-    if(input$addcodspiderpolind == FALSE){
-      radardata = radardata %>% dplyr::filter(Codice_azienda == input$selcodspiderpolind) %>%
-      column_to_rownames("Codice_azienda") %>% dplyr::select(where(is.double))
-      radr = (radardata+1) %>% log2() #%>% dplyr::mutate(across(.cols = everything(),  ~ ifelse(.x == "-Inf", 0, .x)))
-      max = round(max(radr))
-      while(max%%5 != 0){
-        max = max+1
+    ###Tra aziende
+    if(input$type_spidind == "Tra aziende"){
+      radardata = datapolind_summ() %>% dplyr::filter(Anno == input$selyearspiderpolind) %>% 
+        dplyr::filter(N_campionamento == input$selcampspiderpolind)
+      if(input$addcodspiderpolind == FALSE){
+        radardata = radardata %>% dplyr::filter(Codice_azienda == input$selcodspiderpolind) %>%
+          tibble::column_to_rownames("Codice_azienda") %>% dplyr::select(where(is.double))
+        radr = (radardata+1) %>% log2() #%>% dplyr::mutate(across(.cols = everything(),  ~ ifelse(.x == "-Inf", 0, .x)))
+        max = round(max(radr))
+        while(max%%5 != 0){max = max+1}
+        g2 = rbind("Max" = max, "Min" = 0, radr)
+        lab = c(0, max*2/10, max*4/10, max*6/10, max*8/10, max)
+        create_beautiful_radarchart(g2, 
+                                    caxislabels = lab, 
+                                    color = grDevices::hcl.colors(2, palette = "Dynamic"), 
+                                    title = paste("Log2+1 dei polifenoli individuali di", input$selcodspiderpolind))
+      }else{
+        radardata = radardata %>% dplyr::filter(Codice_azienda == input$selcodspiderpolind | Codice_azienda == input$selcodspiderpolind2) %>%
+          tibble::column_to_rownames("Codice_azienda") %>% dplyr::select(where(is.double))
+        radr = (radardata+1) %>% log2() #%>% dplyr::mutate(across(.cols = everything(),  ~ ifelse(.x == "-Inf", 0, .x)))
+        max = round(max(radr))
+        while(max%%5 != 0){max = max+1}
+        g2 = rbind("Max" = max, "Min" = 0, radr)
+        lab = c(0, max*2/10, max*4/10, max*6/10, max*8/10, max)
+        create_beautiful_radarchart(
+          g2, 
+          caxislabels = lab, 
+          color = grDevices::hcl.colors(2, palette = "Dynamic"), 
+          title = paste("Log2+1 dei polifenoli individuali di", input$selcodspiderpolind, "e", input$selcodspiderpolind2))
       }
-      g2 = rbind("Max" = max, "Min" = 0, radr)
-      lab = c(0, max*2/10, max*4/10, max*6/10, max*8/10, max)
-      create_beautiful_radarchart(g2, 
-                                  caxislabels = lab, 
-                                  color = grDevices::hcl.colors(2, palette = "Dynamic"), 
-                                  title = paste("Log2+1 dei polifenoli individuali di", input$selcodspiderpolind))
     }else{
-      radardata = radardata %>% dplyr::filter(Codice_azienda == input$selcodspiderpolind | Codice_azienda == input$selcodspiderpolind2) %>%
-        column_to_rownames("Codice_azienda") %>% dplyr::select(where(is.double))
-      radr = (radardata+1) %>% log2() #%>% dplyr::mutate(across(.cols = everything(),  ~ ifelse(.x == "-Inf", 0, .x)))
+      ###Tra anni
+      radardata = aziendaspidind() %>% dplyr::filter(N_campionamento == input$selcampspidind) %>%
+        dplyr::group_by(Codice_azienda, N_campionamento, Anno) %>% 
+        dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% dplyr::ungroup() %>%
+        tidyr::unite("Codice_azienda", Codice_azienda, Anno, sep = "_") %>%
+        tibble::column_to_rownames("Codice_azienda") %>% dplyr::select(where(is.double))
+      radr = (radardata +1)%>% log2() #%>% dplyr::mutate(across(.cols = everything(),  ~ ifelse(.x == "-Inf", 0, .x)))
       max = round(max(radr))
-      while(max%%5 != 0){
-        max = max+1
-      }
+      while(max%%5 != 0){max = max+1}
       g2 = rbind("Max" = max, "Min" = 0, radr)
       lab = c(0, max*2/10, max*4/10, max*6/10, max*8/10, max)
       create_beautiful_radarchart(
         g2, 
         caxislabels = lab, 
         color = grDevices::hcl.colors(2, palette = "Dynamic"), 
-        title = paste("Log2+1 dei polifenoli individuali di", input$selcodspiderpolind, "e", input$selcodspiderpolind2))
-      
+        title = paste("Log2+1 dei polifenoli individuali di", input$selcodspidind))
     }
+
 
   })
 
@@ -3204,14 +3230,18 @@ app_server <- function( input, output, session ) {
   ##### MAPPA METEO #####
   
   data_meteo = reactive({
-    req(data(), input$file_ncdf)
-    makedata_meteo(ncfile = input$file_ncdf$datapath, dati_aziende = data())
+    req(data())
+    destpath = base::system.file(package = "OliveHealthR")
+    destpath = paste0(destpath, "/data_precipitazioni/precipitazioni_2020_2021.nc")
+    nc_meteofile = ncdf4::nc_open(destpath)
+    
+    makedata_meteo(ncfile = nc_meteofile, dati_aziende = data())
   })
   
 
   
   observeEvent(data_meteo(),{
-    updateSelectInput(session, "varmeteo", choices = names(data_meteo()))
+    #updateSelectInput(session, "varmeteo", choices = names(data_meteo()))
     if(input$type_mapmeteo == "Animata"){
       updateSelectInput(session, "selyearmeteo", choices = c("Tutti",unique(lubridate::year(data_meteo()[[1]]$Tempo))))
     }else{
@@ -3234,19 +3264,16 @@ app_server <- function( input, output, session ) {
    
     #utmcoord23 = sf::st_as_sf(data2, coords = c("UTM_33T_E", "UTM_33T_N" ), crs= 32633)
     
-    if(input$varmeteo == "tp"){
-      namevar = "Total precipitation (m)"
-    }else if(input$varmeteo == "swvl2"){
-      namevar = "Volumetric soil water level 2 (7 -28 cm)"
-    }else if(input$varmeteo == "swvl3"){
-      namevar = "Volumetric soil water level 3 (28-100 cm)"
-    }else{
-      namevar = input$varmeteo
-    }
-    make_tmap(data = data2, dotlegend = dplyr::select(data2, Misura))
-    #sf::st_crs(campania) = 32633
-    # tm_shape(campania) + tm_polygons(col= "provincia", alpha = 0.8) + tm_shape(utmcoord23) +
-    #   tm_dots(col = dplyr::select(data2,Misura), scale = 4.5)
+    namevar = ifelse(input$varmeteo == "tp", "Precipitazioni totali (mm)", 
+                     ifelse(input$varmeteo == "swvl2", "Volume d'acqua nel suolo (7-28cm) (m3/m-3)", 
+                            "Volume d'acqua nel suolo (28-100cm) (m3/m-3)"))
+    
+    
+    utmcoord23 = sf::st_as_sf(data2, coords = c("UTM_33T_E", "UTM_33T_N" ), crs= 32633)
+    sf::st_crs(campania) = 32633
+    
+    tm_shape(campania)+ tm_polygons(col= "provincia", alpha = 0.8) + tm_shape(utmcoord23) +
+      tm_dots(col = colnames(dplyr::select(data2, Misura)), scale = 1.5, title = namevar, popup.vars = TRUE)
   })
   
   
@@ -3259,21 +3286,16 @@ app_server <- function( input, output, session ) {
 
     utmcoord23 = sf::st_as_sf(data2, coords = c("UTM_33T_E", "UTM_33T_N" ), crs= 32633)
 
-    if(input$varmeteo == "tp"){
-      namevar = "Total precipitation (m)"
-    }else if(input$varmeteo == "swvl2"){
-      namevar = "Volumetric soil water level 2 (7 -28 cm)"
-    }else if(input$varmeteo == "swvl3"){
-      namevar = "Volumetric soil water level 3 (28-100 cm)"
-    }else{
-      namevar = input$varmeteo
-    }
+    namevar = ifelse(input$varmeteo == "tp", "Precipitazioni totali (mm)", 
+                          ifelse(input$varmeteo == "swvl2", "Volume d'acqua nel suolo (7-28cm) (m3/m-3)", 
+                                 "Volume d'acqua nel suolo (28-100cm) (m3/m-3)"))
     
+
     #utm_long = utmcoord23 %>% tidyr::pivot_longer(cols = 2:9, names_to = "month", values_to = namevar)
     #utm_long$month = factor(utm_long$month, ordered =T, levels = unique(utm_long$month))
     sf::st_crs(campania) = 32633
     anim = tm_shape(campania)+ tm_polygons(col= "provincia", alpha = 0.8) + tm_shape(utmcoord23) +
-      tm_dots(col = "Misura", scale = 4.5) + tm_facets(along= "Tempo", free.coords = FALSE)
+      tm_dots(col = "Misura", scale = 4.5, title = namevar) + tm_facets(along= "Tempo", free.coords = FALSE)
 
     outfile <- tempfile(fileext='.gif')
     
@@ -3293,9 +3315,11 @@ app_server <- function( input, output, session ) {
   output$ggline_meteo = renderPlotly({
     req(data_meteo(), input$varmeteo)
     #validate(need(input$selcod_plotmeteo != "", "Seleziona almeno un'azienda."))
+    label_misura = ifelse(input$varmeteo == "tp", "Precipitazioni totali (mm)", 
+                    ifelse(input$varmeteo == "swvl2", "Volume d'acqua nel suolo (7-28cm) (m3/m-3)", 
+                           "Volume d'acqua nel suolo (28-100cm) (m3/m-3)"))
     
-    
-    if(input$meteoplot_tipoconf == "Tra aziende"){
+       if(input$meteoplot_tipoconf == "Tra aziende"){
       meteo = data_meteo()[[input$varmeteo]] %>% dplyr::filter(Codice_azienda %in% input$selcod_plotmeteo)
       if(input$selyearplotmeteo != "Tutti"){
         meteo = meteo %>% dplyr::filter(lubridate::year(Tempo) == input$selyearplotmeteo)
@@ -3303,7 +3327,7 @@ app_server <- function( input, output, session ) {
       
       temp = ggplot(data = meteo, aes(x = Tempo, y = Misura)) +
         geom_line(aes(color = Codice_azienda, group = Codice_azienda)) +
-        geom_point(aes(color = Codice_azienda, group = Codice_azienda))
+        geom_point(aes(color = Codice_azienda, group = Codice_azienda)) + ylab(label_misura)
       plotly::ggplotly(temp)
       
     }else{
@@ -3313,7 +3337,7 @@ app_server <- function( input, output, session ) {
       meteo = cbind(meteo, Mese = lubridate::month(meteo$Tempo, label = T))
       
       temp = ggplot(data = meteo, aes(x = Mese, y = Misura,color = Year, group = Year)) +
-        geom_line() + geom_point()
+        geom_line() + geom_point() +ylab(label_misura)
       plotly::ggplotly(temp)
     }
     
@@ -3343,6 +3367,16 @@ app_server <- function( input, output, session ) {
          # alt = "This is alternate text"
     )
   }, deleteFile = TRUE)
+  
+  
+  ##### confronti meteo  #####
+  
+  observeEvent(input$selvar1conf,{
+    list = c("Campionamento drupe e foglie", "Analisi sensoriali",
+             "Polifenoli totali", "Polifenoli individuali",
+             "Analisi morfometrica", "Dati meteo")
+    updateSelectInput(session, "selvar2conf", choices = list[!list %in% input$selvar1conf])
+  })
   
 
  

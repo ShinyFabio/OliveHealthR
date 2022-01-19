@@ -7,7 +7,7 @@
 makedata_meteo(ncfile, dati_aziende)
 }
 \arguments{
-\item{ncfile}{Path of the ncfile. "C:\\Users\\fabio\\Desktop\\OliveHealthR\\data-raw\\precipitazioni\\precipit_e_altro_20_21.nc"}
+\item{ncfile}{ncfile opened with ncdf4::nc_open()}
 
 \item{data}{A dataframe with the coordinates columns(UTM_33T_N and UTM_33T_E) and relative infos. Use data()}
 }

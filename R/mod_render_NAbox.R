@@ -38,12 +38,17 @@ mod_render_NAbox_ui <- function(id){
     fluidPage(
       fluidRow(
         column(width = 3, shinydashboard::valueBoxOutput(ns("namorfobox"), width = 12)),
-        column(width = 3, br(), uiOutput(ns("namorfobuttui")))),
+        column(width = 3, br(), 
+               conditionalPanel(condition = "output.check_na == 'yes'", ns = ns,
+                 actionButton(ns("namorfobutt"), label = strong("Mostra"), class = "btn btn-warning btn-lg")
+               ))
+        ),
       fluidRow(
+        column(12,
         conditionalPanel(
-          condition = "input.namorfobutt != 0",
+          condition = "input.namorfobutt != 0", ns = ns,
           plotOutput(ns("namorfoplot"), height = "600px")))
-    )
+    ))
     
   )
 }
@@ -70,19 +75,27 @@ mod_render_NAbox_server <- function(id, data, text_size = 0.9, margins = c(12,5,
                    }
                  })
                  
-                 output$namorfobuttui = renderUI({
-                     if (sum(is.na(data())) > 0){
-                       actionButton("namorfobutt", label = strong("Mostra"), class = "btn btn-warning btn-lg")
-                     }
-                   })
+                 # output$namorfobuttui = renderUI({
+                 #     if (sum(is.na(data())) > 0){
+                 #       actionButton("namorfobutt", label = strong("Mostra"), class = "btn btn-warning btn-lg")
+                 #     }
+                 #   })
+                 # 
+                 
+                 output$check_na = reactive({
+                   if (sum(is.na(data())) > 0){
+                     "yes"
+                   }else{"no"}
+                 })
+                 outputOptions(output, 'check_na', suspendWhenHidden = FALSE)
 
-                    output$namorfoplot = renderPlot({
-                     if(sum(is.na(data()) > 0)){
-                       VIM::aggr(data(), cex.axis = text_size, numbers = T, oma = margins)
-                     }
-                    })
-                    
-                    
+                 output$namorfoplot = renderPlot({
+                   if(sum(is.na(data()) > 0)){
+                     VIM::aggr(data(), cex.axis = text_size, numbers = T, oma = margins)
+                   }
+                 })
+                 
+                 
                }
                
   )

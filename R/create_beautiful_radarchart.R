@@ -38,4 +38,6 @@ create_beautiful_radarchart <- function(data, color = "#00AFBB",
     vlcex = 1.3, vlabels = vlabels, seg = 5,
     caxislabels = caxislabels, title = title, ...
   )
+  legend(x=1, y=1.3, legend = rownames(data[-c(1,2),]), bty = "n", pch=20 , col=color , text.col = "black", cex=1.2, pt.cex=3)
+  
 }

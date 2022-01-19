@@ -26,7 +26,7 @@ app_ui <- function(request) {
     # Your application UI logic 
     navbarPage(title = "OliveHealthR", theme = shinytheme("spacelab"), id = "navb1", 
                 #margin-right:auto; margin-left:auto;
-      #tags$head(tags$style(type = "text/css", ".container-fluid{padding-left:0px; padding-right:0px ; }")),         
+      tags$head(tags$style(type = "text/css", ".container-fluid{padding-left:0px; padding-right:0px ; }")),         
       tabPanel(title = "Welcome", value = "panel1",
                tags$img(src = "www/Photo_2.jpg", width = "100%"),
                h2(strong("Cos'è OliveHealthR?"), style = "text-align: center"),
@@ -132,15 +132,15 @@ app_ui <- function(request) {
 
                               ),
                               
-                              ##### tabItem Home ####
+                              ##### tabItem Azienda ####
                               tabItem(tabName = "azienda",
                                 tabsetPanel(
                                   
                                   tabPanel("Tabella",
                                     box(width = NULL, status = "primary", style = "overflow-x: scroll;",
                                         DT::DTOutput("content")
-                                    ), 
-                                    mod_update_data_ui("updataaziende")
+                                    ) 
+                                    #mod_update_data_ui("updataaziende")
                                   ), 
                                   
                                   
@@ -185,8 +185,7 @@ app_ui <- function(request) {
                                     fluidPage(
                                       box(width = NULL, status = "primary", style = "overflow-x: scroll;",
                                           DT::DTOutput("tabledrupscheda")),
-                                      #mod_render_NAbox_ui("naboxpoltot")
-                                      mod_update_data_ui("updatadrupe")
+                                      #mod_update_data_ui("updatadrupe")
                                       
                                     )
                                     
@@ -281,7 +280,6 @@ app_ui <- function(request) {
                                     fluidPage(
                                       box(width = NULL, status = "primary", style = "overflow-x: scroll;",
                                           DT::DTOutput("tableolioscheda")),
-                                      #mod_render_NAbox_ui("naboxpoltot")
                                     )
                                   ),
                                   
@@ -470,7 +468,6 @@ app_ui <- function(request) {
                                       ),
                                       #barplot
                                       conditionalPanel(condition = "input.boxpoltotgraph == 'boxbarpoltot'",
-                                        selectInput("selectxtotbar", "Seleziona la colonna X", choices = "", multiple = FALSE),
                                         selectInput("selectytotbar", "Seleziona la colonna Y", choices = "", multiple = FALSE),
                                         selectInput("selectfilltotbar", "Colonna da usare come riempimento", choices = c("N_campionamento", "Cultivar_principale"), selected = "N_campionamento"),
                                         hr(),
@@ -505,7 +502,7 @@ app_ui <- function(request) {
                                                fluidPage(
                                                  box(width = NULL, status = "primary", style = "overflow-x: scroll;",
                                                      DT::DTOutput("tablepoltot")),
-                                                 mod_update_data_ui("updatapol"),
+                                                 #mod_update_data_ui("updatapol"),
                                                  br(),
                                                  mod_render_NAbox_ui("naboxpoltot")
                                                  
@@ -641,15 +638,27 @@ app_ui <- function(request) {
                                       )
                                         
                                     ), #end of conditional heatmap
-                                      
+                                    
+                                    # Spiderplot __________________________________________
                                     conditionalPanel(condition = "input.boxpolindgraph == 'boxspiderpolind'",
-                                      selectInput("selyearspiderpolind", "Seleziona l'anno", choices = "", multiple = FALSE),
-                                      selectInput("selcampspiderpolind", "Seleziona il numero di campionamento", choices = "", multiple = FALSE),
-                                      selectInput("selcodspiderpolind", "Seleziona un'azienda", choices = "", multiple = FALSE),
-                                      awesomeCheckbox("addcodspiderpolind", "Aggiungi seconda azienda", value = FALSE),
-                                      conditionalPanel(condition = "input.addcodspiderpolind == true",
-                                                       selectInput("selcodspiderpolind2", "Seleziona un'azienda", choices = "", multiple = FALSE)
+                                      awesomeRadio("type_spidind", "Tipo di confronto", choices = c("Tra aziende","Tra anni")),
+                                      #confronto tra aziende
+                                      conditionalPanel(condition = "input.type_spidind == 'Tra aziende'",
+                                        selectInput("selyearspiderpolind", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                        selectInput("selcampspiderpolind", "Seleziona il numero di campionamento", choices = "", multiple = FALSE),
+                                        selectInput("selcodspiderpolind", "Seleziona un'azienda", choices = "", multiple = FALSE),
+                                        awesomeCheckbox("addcodspiderpolind", "Aggiungi seconda azienda", value = FALSE),
+                                        conditionalPanel(condition = "input.addcodspiderpolind == true",
+                                                         selectInput("selcodspiderpolind2", "Seleziona un'azienda", choices = "", multiple = FALSE)
+                                        )
+                                      ),
+                                      #confronto tra anni
+                                      conditionalPanel(
+                                        condition = "input.type_spidind == 'Tra anni'",
+                                        selectInput("selcodspidind", "Seleziona un'azienda", choices = "", multiple = FALSE),
+                                        selectInput("selcampspidind", "Seleziona il numero di campionamento", choices = "", multiple = FALSE)
                                       )
+                                      
                                     ),
                                       
                                     # Correlation _________________________________________________________________
@@ -772,7 +781,7 @@ app_ui <- function(request) {
                                                        column(4, box(width = NULL, status = "primary",
                                                                    awesomeCheckboxGroup("shpbiplot", "Aggiungi geometria", choices = "Provincia", inline = TRUE)
                                                      ))),
-                                                   fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("biplot", height = "500px"))))
+                                                   shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("biplot", height = "500px")))
                                           ),
                                           
                                           tabPanel("Screeplot",
@@ -784,7 +793,7 @@ app_ui <- function(request) {
                                             fluidPage(
                                               br(),
                                               fluidRow(column(4, box(width = NULL, status = "primary", uiOutput("sliderpc")))),
-                                              fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("loadings")))
+                                              shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("loadings"))
                                             )
                                           ),
                                           
@@ -795,7 +804,7 @@ app_ui <- function(request) {
                                                 column(4, box(width = NULL, status = "primary", 
                                                               selectInput("col3dind", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Provincia", "Cultivar_principale", "Areale"))))
                                               ),
-                                              fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("pca3dpolind", height = "500px")))
+                                              shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("pca3dpolind", height = "500px"))
                                             )
                                           )
                                         ) #end of tabsetpanel
@@ -1075,7 +1084,7 @@ app_ui <- function(request) {
                                                                           awesomeCheckboxGroup("shpbiplotlc", "Aggiungi geometria", choices = "Provincia", inline = TRUE)
                                                             ))
                                                           ),
-                                                          fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("biplotlc", height = "500px"))))
+                                                          shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("biplotlc", height = "500px")))
                                                  ),
 
                                                  tabPanel("Screeplot",
@@ -1088,7 +1097,7 @@ app_ui <- function(request) {
                                                           br(),
                                                           fluidPage(
                                                           fluidRow(column(4, box(width = NULL, status = "primary", uiOutput("sliderpclc")))),
-                                                          fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("loadingslc", height = "550px"))))
+                                                          shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("loadingslc", height = "550px")))
                                                  ),
 
 
@@ -1100,7 +1109,7 @@ app_ui <- function(request) {
                                                             column(4, box(width = NULL, status = "primary",
                                                                           selectInput("col3dlc", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Provincia", "Cultivar_principale", "Areale"))))
                                                           ),
-                                                          fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("pca3dlc", height = "500px"))))
+                                                          shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("pca3dlc", height = "500px")))
                                                  )
 
                                                ) #end of tabsetpanel
@@ -1134,11 +1143,32 @@ app_ui <- function(request) {
                                     conditionalPanel(condition = "input.tabboxmorfo == 'tabdtmor'",
                                       h4(strong("Parametri sintesi")),
                                       selectInput("selyeardtmorfo", "Seleziona l'anno", choices = "", multiple = FALSE),
-                                      numericInput("selroundmorfo", "Numero di digits", value = 3),
+                                      numericInput("selroundmorfo", value = 3,
+                                                   label = tags$span("Numero di cifre decimali", 
+                                                       tags$i(class = "glyphicon glyphicon-info-sign", style = "color:#0072B2;",
+                                                         title = "Scegli quante cifre decimali mostrare nella tabella.")) 
+                                                   ),
                                       hr(),
-                                      materialSwitch(inputId = "summarizetab", label = "Sintetizza i dati", value = TRUE, status = "primary"),
+                                      materialSwitch(inputId = "summarizetab", 
+                                                     label = tags$span(
+                                                       "Sintetizza i dati", 
+                                                       tags$i(
+                                                         class = "glyphicon glyphicon-info-sign", 
+                                                         style = "color:#0072B2;",
+                                                         title = "Attenzione! Sintetizzando i dati verranno perse le informazioni 
+                                                         sulla classificazione IOC."
+                                                       )),
+                                                     value = TRUE, status = "primary"),
                                       conditionalPanel(condition = "input.summarizetab == true",
-                                        awesomeCheckboxGroup("selectdtmorfo", "Seleziona la colonna da usare per la sintesi", choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale", "N_campionamento"), selected = "Codice_azienda")
+                                        awesomeCheckboxGroup("selectdtmorfo", 
+                                                             label = tags$span(
+                                                               "Seleziona la colonna da usare per la sintesi", 
+                                                               tags$i(class = "glyphicon glyphicon-info-sign", style = "color:#0072B2;",
+                                                                      title = "La variabile per cui sintetizzare i dati. 
+                                                                      Esempio: con 'Codice_azienda' le misure di ogni azienda sono mediate e si avrà una sola riga per ogni azienda,
+                                                                      mentre se si seleziona 'Cultivar_principale' e 'Provincia' la sintesi è eseguita per queste due variabili 
+                                                                      e, dunque, si avranno cinque valori per ogni cultivar, uno per provincia (es. Ravece-SA, Ravece-AV...).")), 
+                                                             choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale"), selected = "Codice_azienda")
                                       )
                                     ),
                                     
@@ -1359,7 +1389,7 @@ app_ui <- function(request) {
                                     tabBox(id = "tabboxmorfo", width=NULL,
                                       tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")), value = "tabdtmor",
                                                fluidPage(
-                                                 fluidRow(box(width = NULL, status = "primary", style = "overflow-x: scroll;",
+                                                 fluidRow(box(width = 12, status = "primary", style = "overflow-x: scroll;",
                                                    DT::DTOutput("dtmorfo"))),
                    
                                                mod_render_NAbox_ui("naboxmorfo")
@@ -1461,7 +1491,7 @@ app_ui <- function(request) {
                                                            ))
                                                            
                                                          ),
-                                                         fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("biplotmorfo", height = "500px"))))
+                                                         shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("biplotmorfo", height = "500px")))
                                               ),
 
                                               tabPanel("Screeplot",
@@ -1474,7 +1504,7 @@ app_ui <- function(request) {
                                                 fluidPage(
                                                   fluidRow(column(4, box(width = NULL, status = "primary",
                                                                        uiOutput("sliderpcmorfo")))),
-                                                  fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("loadingsmorfo"))))
+                                                  shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("loadingsmorfo")))
                                                 ),
 
 
@@ -1485,7 +1515,7 @@ app_ui <- function(request) {
                                                            column(4, box(width = NULL, status = "primary",
                                                                        selectInput("col3dmorfo", "Seleziona colonna riempimento", choices = c("Codice_azienda", "Provincia", "Cultivar_principale", "Areale"))))
                                                          ), 
-                                                         fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("pca3dmorfo", height = "500px"))))
+                                                         shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("pca3dmorfo", height = "500px")))
                                               )
                                             )
                                             
@@ -1515,7 +1545,7 @@ app_ui <- function(request) {
                                                   )
                                                 )
                                               ), 
-                                              fluidRow(shinycssloaders::withSpinner(image = "www/running_olive.gif", plotOutput("plotclustermorfo", height = "600px")))
+                                              shinycssloaders::withSpinner(image = "www/running_olive.gif", plotOutput("plotclustermorfo", height = "600px"))
                                             )
                                           )
                                           
@@ -1709,8 +1739,18 @@ app_ui <- function(request) {
                                     sidebarLayout(
                                       sidebarPanel(
                                         width = 2,
-                                        fileInput("file_ncdf", "File meteo (.nc)", accept = ".nc"),
-                                        selectInput("varmeteo", "Variabile meteo", choices = ""),
+                                        selectInput("varmeteo", 
+                                                    label = tags$span(
+                                                      "Variabile meteo", 
+                                                      tags$i(
+                                                        class = "glyphicon glyphicon-info-sign", 
+                                                        style = "color:#0072B2;",
+                                                        title = "Per ulteriori informazioni vai qui: 
+                                                        https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-land-monthly-means?tab=overview"
+                                                      )),
+                                                    choices = c("Precipitazioni totali" = "tp", 
+                                                                "Volume d'acqua nel suolo (7-28cm)" = "swvl2", 
+                                                                "Volume d'acqua nel suolo (28-100cm)" = "swvl3")),
                                         conditionalPanel(
                                           condition = "input.tabsetmeteo == 'tabpanmeteomap'",
                                           awesomeRadio("type_mapmeteo", "Tipo di mappa", choices = c("Statica","Animata")),
@@ -1727,7 +1767,8 @@ app_ui <- function(request) {
                                         tabsetPanel(id = "tabsetmeteo",
                                           tabPanel("Mappa", value = "tabpanmeteomap",
                                             conditionalPanel(condition = "input.type_mapmeteo == 'Animata'",
-                                              shinycssloaders::withSpinner(imageOutput("mapmeteo"), image = "www/running_olive.gif")
+                                              fluidPage(
+                                                shinycssloaders::withSpinner(imageOutput("mapmeteo"), image = "www/running_olive.gif"))
                                             ),
                                             conditionalPanel(
                                               condition = "input.type_mapmeteo == 'Statica'",
@@ -1764,9 +1805,91 @@ app_ui <- function(request) {
                                         
                                       )
                                     )
-                                  )
-                                )
-                              )
+                                  ), #end of tabbox dati meteo
+                                  
+                                  tabPanel(
+                                    "Confronti",
+                                    sidebarLayout(
+                                      ##### sidebar confronti #####
+                                      sidebarPanel(
+                                        width = 2,
+                                        ###variabile 1
+                                        h4(strong("Prima variabile")),
+                                        selectInput("selvar1conf", "Seleziona un dato da confrontare", 
+                                                    choices = c("Campionamento drupe e foglie",
+                                                                "Analisi sensoriali",
+                                                                "Polifenoli totali",
+                                                                "Polifenoli individuali",
+                                                                "Analisi morfometrica",
+                                                                "Dati meteo")),
+                                        conditionalPanel(
+                                          condition = "input.selvar1conf == 'Polifenoli totali'",
+                                          selectInput("poltotvar_conf1", "Seleziona i polifenoli totali da confrontare", 
+                                                      choices = c("Foglie", "Drupe", "Olio", "Posa", "Sansa"))
+                                        ),
+                                        conditionalPanel(
+                                          condition = "input.selvar1conf == 'Polifenoli individuali'",
+                                          selectInput("polindvar_conf1", "Seleziona i polifenoli individuali da confrontare", 
+                                                      choices = c("Foglie", "Drupe", "Olio", "Posa"))
+                                        ),
+                                        conditionalPanel(
+                                          condition = "input.selvar1conf == 'Analisi morfometrica'",
+                                          selectInput("morfovar_conf1", "Seleziona la morfometria da confrontare", 
+                                                      choices = c("Foglie", "Drupe", "Endocarpo", "Rapporti"))
+                                        ),
+                                        conditionalPanel(
+                                          condition = "input.selvar1conf == 'Dati meteo'",
+                                          selectInput("meteo_conf1", "Seleziona la variabile meteo da confrontare", 
+                                                      choices = c("Precipitazioni totali" = "tp", 
+                                                                  "Volume d'acqua nel suolo (7-28cm)" = "swvl2", 
+                                                                  "Volume d'acqua nel suolo (28-100cm)" = "swvl3"))
+                                        ),
+                                        
+                                        hr(),
+                                        ####variabile 2
+                                        h4(strong("Seconda variabile")),
+                                        selectInput("selvar2conf", "Seleziona un dato da confrontare", 
+                                                    choices = c("Campionamento drupe e foglie",
+                                                                "Analisi sensoriali",
+                                                                "Polifenoli totali",
+                                                                "Polifenoli individuali",
+                                                                "Analisi morfometrica",
+                                                                "Dati meteo")),
+                                        conditionalPanel(
+                                          condition = "input.selvar2conf == 'Polifenoli totali'",
+                                          selectInput("poltotvar_conf2", "Seleziona i polifenoli totali da confrontare", 
+                                                      choices = c("Foglie", "Drupe", "Olio", "Posa", "Sansa"))
+                                        ),
+                                        conditionalPanel(
+                                          condition = "input.selvar2conf == 'Polifenoli individuali'",
+                                          selectInput("polindvar_conf2", "Seleziona i polifenoli individuali da confrontare", 
+                                                      choices = c("Foglie", "Drupe", "Olio", "Posa"))
+                                        ),
+                                        conditionalPanel(
+                                          condition = "input.selvar2conf == 'Analisi morfometrica'",
+                                          selectInput("morfovar_conf2", "Seleziona la morfometria da confrontare", 
+                                                      choices = c("Foglie", "Drupe", "Endocarpo", "Rapporti"))
+                                        ),
+                                        conditionalPanel(
+                                          condition = "input.selvar2conf == 'Dati meteo'",
+                                          selectInput("meteo_conf2", "Seleziona la variabile meteo da confrontare", 
+                                                      choices = c("Precipitazioni totali" = "tp", 
+                                                                  "Volume d'acqua nel suolo (7-28cm)" = "swvl2", 
+                                                                  "Volume d'acqua nel suolo (28-100cm)" = "swvl3"))
+                                        ),
+                                        hr()
+                                        
+                                        ), #end of sidebarpanel
+                                      
+                                      ####mainpanel confronti ####
+                                      mainPanel(
+                                        
+                                      ) #end of mainpanel confronti
+                                  ) #end of sidebarlayout confronti
+                                  ) #end of tabpanel confronti
+                                  
+                                )# end tabbox integrazione
+                              ) #end tabitem integrazione
                               
                             )#end of tabitems
                           )#end of dashboardbody
