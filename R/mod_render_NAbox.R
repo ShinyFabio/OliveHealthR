@@ -46,7 +46,7 @@ mod_render_NAbox_ui <- function(id){
       fluidRow(
         column(12,
         conditionalPanel(
-          condition = "input.namorfobutt != 0", ns = ns,
+          condition = "output.show_nabox == true", ns = ns,
           plotOutput(ns("namorfoplot"), height = "600px")))
     ))
     
@@ -61,51 +61,59 @@ mod_render_NAbox_ui <- function(id){
 #' @noRd 
 mod_render_NAbox_server <- function(id, data, text_size = 0.9, margins = c(12,5,3,2)){
   
-  moduleServer(id,
-               function(input, output, session){
-                 ns <- session$ns
-                
-                 output$namorfobox = shinydashboard::renderValueBox({
-                   natot = sum(is.na(data()))
-                   tot = sum(table(is.na(data())))
-                   if(natot > 0){
-                     shinydashboard::valueBox(value = p(paste0(natot,"/", tot), style = "color:white; font-size:100%;"), h4("Missing data",  style = "color:white"), icon = icon("exclamation-circle"), color = "yellow")
-                   } else{
-                     shinydashboard::valueBox(value = p(paste0(natot,"/", tot), style = "color:white; font-size:100%;"), h4("Missing data",  style = "color:white"), icon = icon("check"))
-                   }
-                 })
-                 
-                 # output$namorfobuttui = renderUI({
-                 #     if (sum(is.na(data())) > 0){
-                 #       actionButton("namorfobutt", label = strong("Mostra"), class = "btn btn-warning btn-lg")
-                 #     }
-                 #   })
-                 # 
-                 
-                 output$check_na = reactive({
-                   if (sum(is.na(data())) > 0){
-                     "yes"
-                   }else{"no"}
-                 })
-                 outputOptions(output, 'check_na', suspendWhenHidden = FALSE)
+  moduleServer(id, function(input, output, session){
+    ns <- session$ns
+    
+    
+    output$show_nabox = reactive({
+      ifelse(input$namorfobutt %%2 == 1, TRUE, FALSE)
+    })
+    outputOptions(output, "show_nabox", suspendWhenHidden = FALSE)
+    
+    observeEvent(input$namorfobutt,{
+      if(input$namorfobutt %%2 == 1){
+        updateActionButton(session, "namorfobutt", label = "Nascondi")
+      }else{
+        updateActionButton(session, "namorfobutt", label = "Mostra")
+      }
+    })
 
-                 output$namorfoplot = renderPlot({
-                   if(sum(is.na(data()) > 0)){
-                     VIM::aggr(data(), cex.axis = text_size, numbers = T, oma = margins)
-                   }
-                 })
-                 
-                 
-               }
-               
+    output$namorfobox = shinydashboard::renderValueBox({
+      natot = sum(is.na(data()))
+      tot = sum(table(is.na(data())))
+      if(natot > 0){
+        shinydashboard::valueBox(value = p(paste0(natot,"/", tot), style = "color:white; font-size:100%;"), h4("Missing data",  style = "color:white"), icon = icon("exclamation-circle"), color = "yellow")
+      } else{
+        shinydashboard::valueBox(value = p(paste0(natot,"/", tot), style = "color:white; font-size:100%;"), h4("Missing data",  style = "color:white"), icon = icon("check"))
+      }
+    })
+    
+ 
+    
+    output$check_na = reactive({
+      if (sum(is.na(data())) > 0){
+        "yes"
+      }else{"no"}
+    })
+    outputOptions(output, 'check_na', suspendWhenHidden = FALSE)
+    
+    output$namorfoplot = renderPlot({
+      if(sum(is.na(data()) > 0)){
+        VIM::aggr(data(), cex.axis = text_size, numbers = T, oma = margins)
+      }
+    })
+    
+    
+  }
+  
   )
   
 }
-    
+
 ## To be copied in the UI
 # mod_render_NAbox_ui("nome-modulo")
-    
+
 ## To be copied in the server
 # mod_render_NAbox_server("nome-modulo", data = nadatamorfo) #non usare () in data o non funziona
 
- 
+

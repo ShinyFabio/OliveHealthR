@@ -131,12 +131,12 @@ app_ui <- function(request) {
                                 )
 
                               ),
-                              
+
                               ##### tabItem Azienda ####
                               tabItem(tabName = "azienda",
-                                tabsetPanel(
+                                      tabBox(width = 12,
                                   
-                                  tabPanel("Tabella",
+                                  tabPanel(tagList(shiny::icon("table"), HTML("&nbsp;Tabella")),
                                     box(width = NULL, status = "primary", style = "overflow-x: scroll;",
                                         DT::DTOutput("content")
                                     ) 
@@ -144,7 +144,7 @@ app_ui <- function(request) {
                                   ), 
                                   
                                   
-                                  tabPanel("Cultivar",
+                                  tabPanel(tagList(shiny::icon("chart-bar"), HTML("&nbsp;Cultivar")),
                                     box(width=NULL, status = "primary", h4(htmlOutput("numcult"))),
                                     br(),
                                     fluidRow(
@@ -156,7 +156,82 @@ app_ui <- function(request) {
                                     )
                                   ),
                                   
-                                  tabPanel("Mappa",
+                                  
+                                  #### dati meteo
+                                  tabPanel(
+                                    tagList(shiny::icon("cloud-sun-rain"), HTML("&nbsp;Dati meteo")),
+                                    sidebarLayout(
+                                      sidebarPanel(
+                                        width = 2,
+                                        selectInput("varmeteo", 
+                                                    label = tags$span(
+                                                      "Variabile meteo", 
+                                                      tags$i(
+                                                        class = "glyphicon glyphicon-info-sign", 
+                                                        style = "color:#0072B2;",
+                                                        title = "Per ulteriori informazioni vai qui: 
+                                                        https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-land-monthly-means?tab=overview"
+                                                      )),
+                                                    choices = c("Precipitazioni totali" = "tp", 
+                                                                "Volume d'acqua nel suolo (7-28cm)" = "swvl2", 
+                                                                "Volume d'acqua nel suolo (28-100cm)" = "swvl3")),
+                                        conditionalPanel(
+                                          condition = "input.tabsetmeteo == 'tabpanmeteomap'",
+                                          awesomeRadio("type_mapmeteo", "Tipo di mappa", choices = c("Statica","Animata")),
+                                          selectInput("selyearmeteo", "Seleziona anno", choices = "")
+                                        ),
+                                        conditionalPanel(
+                                          condition = "input.tabsetmeteo == 'tabpanplotomap'",
+                                          awesomeRadio("meteoplot_tipoconf", "Tipo di confronto", choices = c("Tra anni", "Tra aziende"))
+                                        )
+                                        
+                                      ),
+                                      mainPanel(
+                                        width = 10,
+                                        tabsetPanel(id = "tabsetmeteo",
+                                                    tabPanel("Mappa", value = "tabpanmeteomap",
+                                                             conditionalPanel(condition = "input.type_mapmeteo == 'Animata'",
+                                                                              fluidPage(
+                                                                                shinycssloaders::withSpinner(imageOutput("mapmeteo"), image = "www/running_olive.gif"))
+                                                             ),
+                                                             conditionalPanel(
+                                                               condition = "input.type_mapmeteo == 'Statica'",
+                                                               shinycssloaders::withSpinner(tmapOutput("mapmeteo2"))
+                                                             )
+                                                    ),
+                                                    
+                                                    tabPanel("Plot", value = "tabpanplotomap",
+                                                             box(width=NULL, status = "primary",
+                                                                 fluidRow(
+                                                                   conditionalPanel(
+                                                                     condition = "input.meteoplot_tipoconf == 'Tra aziende'",
+                                                                     column(2, awesomeRadio("type_lineplot", "Tipo di grafico", choices = c("Statico","Animato"))),
+                                                                     column(3, selectInput("selyearplotmeteo", "Seleziona anno", choices = "Tutti")),
+                                                                     column(3, selectInput("selcod_plotmeteo", "Scegli una o più aziende", choices = "", multiple = TRUE))
+                                                                   ),
+                                                                   conditionalPanel(
+                                                                     condition = "input.meteoplot_tipoconf == 'Tra anni'",
+                                                                     column(3, selectInput("selcod_plotmeteo2", "Scegli un'azienda", choices = ""))
+                                                                   )
+                                                                   
+                                                                 )),
+                                                             conditionalPanel(
+                                                               condition = "input.type_lineplot == 'Statico'",
+                                                               shinycssloaders::withSpinner(plotly::plotlyOutput("ggline_meteo"), image = "www/running_olive.gif")
+                                                             ),
+                                                             conditionalPanel(
+                                                               condition = "input.type_lineplot == 'Animato' && input.meteoplot_tipoconf == 'Tra aziende'",
+                                                               shinycssloaders::withSpinner(imageOutput("plotline_animated"), image = "www/running_olive.gif")
+                                                             )
+                                                    )
+                                        )
+                                      )
+                                    )
+                                  ), #end of tabbox dati meteo
+                                  
+                                  
+                                  
+                                  tabPanel(tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")),
                                     sidebarLayout(
                                       sidebarPanel(width = 3,
                                         div(actionButton("update", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:160%'), align = "center"),
@@ -556,7 +631,7 @@ app_ui <- function(request) {
                                     radioGroupButtons("selfilepolind", "Seleziona i polifenoli da analizzare", 
                                                       choiceValues = list("foglie", "drupe", "olio", "posa"),
                                                       choiceNames = list(
-                                                        paste(shiny::icon("leaf",  style='font-size:16px;'), HTML("<b style=font-size:16px>&nbsp;Foglie</b>")),
+                                                        paste(icon("leaf",  style='font-size:16px;'), HTML("<b style=font-size:16px>&nbsp;Foglie</b>")),
                                                         paste(tags$img(src = "www/olive_icon2.png", height = "22px", width = "22px"), HTML("<b style=font-size:16px>&nbsp;Drupe</b>")),
                                                         paste(tags$img(src = "www/olive_oil.png", height = "22px", width = "22px"), HTML("<b style=font-size:16px>&nbsp;Olio</b>")),
                                                         paste(tags$img(src = "www/posa.png", height = "22px", width = "22px"), HTML("<b style=font-size:16px>&nbsp;Posa</b>"))
@@ -1732,163 +1807,359 @@ app_ui <- function(request) {
                               ), #end of tabitem morfo
                               
                               ##### Tab integrazione dati ####
-                              tabItem(tabName = "integrdati",
-                                tabBox(width = 12,
-                                  
-                                  tabPanel("Dati meteo",
-                                    sidebarLayout(
-                                      sidebarPanel(
-                                        width = 2,
-                                        selectInput("varmeteo", 
-                                                    label = tags$span(
-                                                      "Variabile meteo", 
-                                                      tags$i(
-                                                        class = "glyphicon glyphicon-info-sign", 
-                                                        style = "color:#0072B2;",
-                                                        title = "Per ulteriori informazioni vai qui: 
-                                                        https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-land-monthly-means?tab=overview"
-                                                      )),
-                                                    choices = c("Precipitazioni totali" = "tp", 
-                                                                "Volume d'acqua nel suolo (7-28cm)" = "swvl2", 
-                                                                "Volume d'acqua nel suolo (28-100cm)" = "swvl3")),
-                                        conditionalPanel(
-                                          condition = "input.tabsetmeteo == 'tabpanmeteomap'",
-                                          awesomeRadio("type_mapmeteo", "Tipo di mappa", choices = c("Statica","Animata")),
-                                          selectInput("selyearmeteo", "Seleziona anno", choices = "")
-                                        ),
-                                        conditionalPanel(
-                                          condition = "input.tabsetmeteo == 'tabpanplotomap'",
-                                          awesomeRadio("meteoplot_tipoconf", "Tipo di confronto", choices = c("Tra anni", "Tra aziende"))
-                                        )
+                              tabItem(
+                                tabName = "integrdati",
+                                
+                                sidebarLayout(
+                                  sidebarPanel(
+                                    width = 2,
+                                    h4(strong("Scegli un confronto")),
+                                    radioGroupButtons("conf_type1", "Scegli una prima variabile",
+                                                      choiceValues = list("tot"),
+                                                      choiceNames = list(
+                                                        paste(icon("circle"), HTML("<b>&nbsp;Polifenoli totali</b>"))
+                                                      ),direction = "vertical", justified = TRUE, status = "primary"),
+                                    
+                                    radioGroupButtons("conf_type2", "Scegli una seconda variabile",
+                                                      choiceValues = list("camp", "prec", "ind"),
+                                                      choiceNames = list(
+                                                        paste(icon("circle"), HTML("<b>&nbsp;Schede campionamento</b>")),
+                                                        paste(icon("circle"), HTML("<b>&nbsp;Precipitazioni</b>")),
+                                                        paste(icon("circle"), HTML("<b>&nbsp;Polifenoli individuali</b>"))
+                                                      ),direction = "vertical", justified = TRUE, status = "primary"),
+                                    hr(),
+                                    
+                                    selectInput("conf_selpoltot", "Seleziona una misura", choices = c("Foglie", "Drupe", "Olio", "Posa", "Sansa")),
+                                    conditionalPanel(
+                                      condition = "input.conf_type2 == 'prec'",
+                                      selectInput("varmeteo_conf", "Seleziona misura di precipitazione", choices = c("Precipitazioni totali" = "tp", 
+                                                                                                                  "Volume d'acqua nel suolo (7-28cm)" = "swvl2", 
+                                                                                                                  "Volume d'acqua nel suolo (28-100cm)" = "swvl3"))
+                                    ),
+                                    selectInput("conf_selyear", "Scegli un anno", choices = c("2020", "2021"), multiple = TRUE, selected = "2020"),
+                                    hr(),
+                                    
+                                    #grafici
+                                    conditionalPanel(
+                                      condition = "input.tabboxconf == 'tabpan_graphconf' && input.boxconfgraph == 'tabgraph_scattconf'",
+                                      h4(strong("Impostazioni grafici")),
+                                      selectInput("scattx_conf", "Seleziona la colonna X", choices = ""),
+                                      selectInput("scatty_conf", "Seleziona la colonna Y", choices = ""),
+                                      conditionalPanel(
+                                        condition = "input.conf_selyear.length > 1",
+                                        awesomeCheckbox("scattfacet_conf", "Dividi gli anni in due grafici", value = FALSE)
+                                      )
+                                      
+                                      
+                                    ),
+                                    
+                                    
+                                    #### TEST d'ipotesi
+                                    
+                                    #Test d'ipotesi
+                                    conditionalPanel(
+                                      condition = "input.tabboxconf == 'tabpan_testconf'",
+                                      h4(strong("Opzioni test")),
 
+                                      #Test correlazione
+                                      conditionalPanel(
+                                        condition = "input.boxconftest == 'tabpancorrtest_conf'",
+                                        selectInput("corrtest1_conf", "Variabile dipendente", choices = "", multiple = FALSE),
+                                        selectInput("corrtest2_conf", "Fattore esplicativo", choices = "", multiple = FALSE),
+                                        awesomeRadio("selectcorrtest_conf", "Tipo di test", choices = c("Pearson" = "pearson", "Kendall" = "kendall", "Spearman" = "spearman")),
+                                        hr(),
+                                        selectInput("corrtestfill_conf", "Colonna riempimento", choices = "", multiple = FALSE),
+                                        awesomeCheckbox("numfitcorrtest_conf", "Singolo fit", value = TRUE),
+                                        awesomeCheckbox("selsecorrtest_conf", "Intervallo di confidenza", value = TRUE),
+                                        
                                       ),
-                                      mainPanel(
-                                        width = 10,
-                                        tabsetPanel(id = "tabsetmeteo",
-                                          tabPanel("Mappa", value = "tabpanmeteomap",
-                                            conditionalPanel(condition = "input.type_mapmeteo == 'Animata'",
-                                              fluidPage(
-                                                shinycssloaders::withSpinner(imageOutput("mapmeteo"), image = "www/running_olive.gif"))
-                                            ),
-                                            conditionalPanel(
-                                              condition = "input.type_mapmeteo == 'Statica'",
-                                              shinycssloaders::withSpinner(tmapOutput("mapmeteo2"))
+                                      
+                                      
+                                      #T-test
+                                      conditionalPanel(
+                                        condition = "input.boxconftest == 'tabpanttest_conf'",
+                                        selectInput("catvarttest_conf", "Variabile categorica", choices = "", multiple = FALSE),
+                                        selectInput("culttest1_conf", "Variabile dipendente", choices = "", multiple = FALSE),
+                                        selectInput("culttest2_conf", "Fattore esplicativo", choices = "", multiple = FALSE),
+                                        selectInput("numvarttest_conf", "Variabile numerica da confrontare", choices = "", multiple = FALSE),
+                                        awesomeRadio("selectttest_conf", "Tipo di test", choices = c("T-test", "Wilcoxon-Mann-Whitney")),
+                                        conditionalPanel(condition = "input.selectttest_conf == 'T-test'",
+                                                         awesomeCheckbox("selvarequal_conf", "Omoschedasticità", value = TRUE)
+                                        )
+                                      ),
+                                      
+                                      #Test Anova
+                                      conditionalPanel(
+                                        condition = "input.boxconftest == 'tabpananova_conf'",
+                                        awesomeRadio("selectanovatest_conf", "Tipo di test", choices = c("One-way ANOVA", "Two-way ANOVA")),
+                                        
+                                        conditionalPanel(
+                                          condition = "input.selectanovatest_conf == 'One-way ANOVA'",
+                                          awesomeRadio("selectanovatest2_conf", "Tipo di test", choices = c("ANOVA", "Kruskal-Wallis")),
+                                        ),
+                                        awesomeRadio("pvalanovamorfo_conf", "Livello di significatività", choices = c(0.01, 0.05, 0.1), selected = 0.05),
+                                        selectInput("anovanum_conf", "Variabile numerica", choices = "", multiple = FALSE),
+                                        selectInput("anovacat_conf", "Variabile categorica", choices = "", multiple = FALSE),
+                                        conditionalPanel(condition = "input.selectanovatest_conf == 'Two-way ANOVA'",
+                                                         selectInput("anovacat2_conf", "Seconda variabile categorica", choices = "", multiple = FALSE),
+                                                         awesomeRadio("anova2typemorfo_conf", "Tipo di ANOVA", choices = c("Modello additivo", "Modello con interazione"))
+                                        )
+                                      )
+
+                                      # 
+                                      # #Test indipendenza
+                                      # conditionalPanel(
+                                      #   condition = "input.boxmorfotest == 'tabpanchisqtestmorfo'",
+                                      #   selectInput("chisqtest1", "Variabile descrittiva", choices = c("Codice_azienda", "Provincia", "Cultivar_principale"), multiple = FALSE, selected = "Cultivar_principale"),
+                                      #   selectInput("chisqtest2", "Variabile categorica", choices = "", multiple = FALSE),
+                                      #   awesomeRadio("selectchisqtest", "Tipo di test", choices = c("Test esatto di Fisher", "Test d'indipendenza Chi-quadro")),
+                                      #   awesomeCheckbox("simulatechisq", "Simulazione p-value (Monte Carlo)", value = TRUE),
+                                      #   awesomeRadio("pvalchisqmorfo", "Livello di significatività", choices = c(0.01, 0.05, 0.1), selected = 0.05),
+                                      #   selectInput("chisqtestfilt", "Filtrare i dati (opzionale)", choices = "", multiple = TRUE)
+                                      #   
+                                      #   
+                                      # ),
+                                      # 
+
+                                      
+                                    )
+                                    
+                                    
+                                  ),
+                                  
+                                  mainPanel(width = 10,
+                                    tabBox(id = "tabboxconf", width = NULL,
+                                      
+                                      ###tabella
+                                      tabPanel(tagList(icon("table"), HTML("&nbsp;Tabella")), value = "tabpan_tableconf",
+                                        fluidPage(box(width=12, status = "primary", style = "overflow-x: scroll;", DT::DTOutput("dt_conf")))
+                                      ),
+                                      
+                                      
+                                      ##### confronti grafici ####
+                                      tabPanel(
+                                        tagList(icon("chart-bar"), HTML("&nbsp;Grafici")), value = "tabpan_graphconf",
+                                        tabsetPanel(
+                                          id = "boxconfgraph",
+                                          
+                                          tabPanel(
+                                            "Scatter plot", value = "tabgraph_scattconf",
+                                            fluidPage(
+                                              box(width=NULL, status = "primary",
+                                                  fluidRow(
+                                                    column(3, selectInput("scattnum_conf", "Scegli il numero di campionamento", choices = "", multiple = FALSE)),
+                                                    column(3, selectInput("scattfill_conf", "Colonna da usare come riempimento", choices = "", multiple = FALSE)),
+                                                    column(3, selectInput("scattsize_conf", "Colonna da usare come dimensione", choices = ""))
+                                                  )),
+                                              plotly::plotlyOutput("scatterconf",height = "100%"),
                                             )
+                                            
                                           ),
                                           
-                                          tabPanel("Plot", value = "tabpanplotomap",
-                                            box(width=NULL, status = "primary",
-                                                fluidRow(
-                                                  conditionalPanel(
-                                                    condition = "input.meteoplot_tipoconf == 'Tra aziende'",
-                                                    column(2, awesomeRadio("type_lineplot", "Tipo di grafico", choices = c("Statico","Animato"))),
-                                                    column(3, selectInput("selyearplotmeteo", "Seleziona anno", choices = "Tutti")),
-                                                    column(3, selectInput("selcod_plotmeteo", "Scegli una o più aziende", choices = "", multiple = TRUE))
-                                                  ),
-                                                  conditionalPanel(
-                                                    condition = "input.meteoplot_tipoconf == 'Tra anni'",
-                                                    column(3, selectInput("selcod_plotmeteo2", "Scegli un'azienda", choices = ""))
-                                                  )
-                                                  
-                                                )),
-                                            conditionalPanel(
-                                              condition = "input.type_lineplot == 'Statico'",
-                                              shinycssloaders::withSpinner(plotly::plotlyOutput("ggline_meteo"), image = "www/running_olive.gif")
-                                            ),
-                                            conditionalPanel(
-                                              condition = "input.type_lineplot == 'Animato' && input.meteoplot_tipoconf == 'Tra aziende'",
-                                              shinycssloaders::withSpinner(imageOutput("plotline_animated"), image = "www/running_olive.gif")
+                                          tabPanel(
+                                            "Correlation plot", value = "tabgraph_corrconf",
+                                            fluidPage(
+                                              box(width=NULL, status = "primary",
+                                                  fluidRow(
+                                                    column(3, selectInput("corrnum_conf", "Scegli il numero di campionamento", choices = "", multiple = FALSE)),
+                                                  )),
+                                              plotly::plotlyOutput("corrplotconf")
                                             )
                                           )
-                                        )
-                                        
-                                        
-                                      )
-                                    )
-                                  ), #end of tabbox dati meteo
-                                  
-                                  tabPanel(
-                                    "Confronti",
-                                    sidebarLayout(
-                                      ##### sidebar confronti #####
-                                      sidebarPanel(
-                                        width = 2,
-                                        ###variabile 1
-                                        h4(strong("Prima variabile")),
-                                        selectInput("selvar1conf", "Seleziona un dato da confrontare", 
-                                                    choices = c("Campionamento drupe e foglie",
-                                                                "Analisi sensoriali",
-                                                                "Polifenoli totali",
-                                                                "Polifenoli individuali",
-                                                                "Analisi morfometrica",
-                                                                "Dati meteo")),
-                                        conditionalPanel(
-                                          condition = "input.selvar1conf == 'Polifenoli totali'",
-                                          selectInput("poltotvar_conf1", "Seleziona i polifenoli totali da confrontare", 
-                                                      choices = c("Foglie", "Drupe", "Olio", "Posa", "Sansa"))
-                                        ),
-                                        conditionalPanel(
-                                          condition = "input.selvar1conf == 'Polifenoli individuali'",
-                                          selectInput("polindvar_conf1", "Seleziona i polifenoli individuali da confrontare", 
-                                                      choices = c("Foglie", "Drupe", "Olio", "Posa"))
-                                        ),
-                                        conditionalPanel(
-                                          condition = "input.selvar1conf == 'Analisi morfometrica'",
-                                          selectInput("morfovar_conf1", "Seleziona la morfometria da confrontare", 
-                                                      choices = c("Foglie", "Drupe", "Endocarpo", "Rapporti"))
-                                        ),
-                                        conditionalPanel(
-                                          condition = "input.selvar1conf == 'Dati meteo'",
-                                          selectInput("meteo_conf1", "Seleziona la variabile meteo da confrontare", 
-                                                      choices = c("Precipitazioni totali" = "tp", 
-                                                                  "Volume d'acqua nel suolo (7-28cm)" = "swvl2", 
-                                                                  "Volume d'acqua nel suolo (28-100cm)" = "swvl3"))
-                                        ),
-                                        
-                                        hr(),
-                                        ####variabile 2
-                                        h4(strong("Seconda variabile")),
-                                        selectInput("selvar2conf", "Seleziona un dato da confrontare", 
-                                                    choices = c("Campionamento drupe e foglie",
-                                                                "Analisi sensoriali",
-                                                                "Polifenoli totali",
-                                                                "Polifenoli individuali",
-                                                                "Analisi morfometrica",
-                                                                "Dati meteo")),
-                                        conditionalPanel(
-                                          condition = "input.selvar2conf == 'Polifenoli totali'",
-                                          selectInput("poltotvar_conf2", "Seleziona i polifenoli totali da confrontare", 
-                                                      choices = c("Foglie", "Drupe", "Olio", "Posa", "Sansa"))
-                                        ),
-                                        conditionalPanel(
-                                          condition = "input.selvar2conf == 'Polifenoli individuali'",
-                                          selectInput("polindvar_conf2", "Seleziona i polifenoli individuali da confrontare", 
-                                                      choices = c("Foglie", "Drupe", "Olio", "Posa"))
-                                        ),
-                                        conditionalPanel(
-                                          condition = "input.selvar2conf == 'Analisi morfometrica'",
-                                          selectInput("morfovar_conf2", "Seleziona la morfometria da confrontare", 
-                                                      choices = c("Foglie", "Drupe", "Endocarpo", "Rapporti"))
-                                        ),
-                                        conditionalPanel(
-                                          condition = "input.selvar2conf == 'Dati meteo'",
-                                          selectInput("meteo_conf2", "Seleziona la variabile meteo da confrontare", 
-                                                      choices = c("Precipitazioni totali" = "tp", 
-                                                                  "Volume d'acqua nel suolo (7-28cm)" = "swvl2", 
-                                                                  "Volume d'acqua nel suolo (28-100cm)" = "swvl3"))
-                                        ),
-                                        hr()
-                                        
-                                        ), #end of sidebarpanel
+                                          
+                                          
+                                        ) #end tabset boxconfgraph
+                                      ), #end of tabpanel grafici
                                       
-                                      ####mainpanel confronti ####
-                                      mainPanel(
-                                        
-                                      ) #end of mainpanel confronti
-                                  ) #end of sidebarlayout confronti
-                                  ) #end of tabpanel confronti
-                                  
-                                )# end tabbox integrazione
+                                      
+                                      #####mainpanel test d'ipotesi
+                                      #tabpanel test d'ipotesi
+                                      tabPanel(
+                                        tagList(
+                                          icon("clipboard-check"), HTML("&nbsp;Test d'ipotesi")), value = "tabpan_testconf",
+                                        tabsetPanel(
+                                          id = "boxconftest",
+                                          
+                                          # Test di correlazione
+                                          tabPanel(
+                                            "Test di correlazione", value = "tabpancorrtest_conf",
+                                            conditionalPanel(
+                                              condition = "input.conf_type2 == 'camp'",
+                                              br(),
+                                              fluidPage(helpText("Test di correlazione non disponibile per questo tipo di confronto"))
+                                            ),
+                                            
+                                            conditionalPanel(
+                                              condition = "input.conf_type2 != 'camp'",
+                                              br(), 
+                                              fluidPage(
+                                                fluidRow(
+                                                  column(6, box(width = NULL, title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapirocorr1_conf"))),
+                                                  column(6, box(width = NULL, title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapirocorr2_conf")))
+                                                ),
+                                                
+                                                fluidRow(
+                                                  column(
+                                                    6,
+                                                    conditionalPanel(condition = "input.corrtest1_conf != input.corrtest2_conf",
+                                                                     box(width = NULL, title = strong("Test statistico"), status = "primary", verbatimTextOutput("corrtest_conf"))),
+                                                    conditionalPanel(condition = "input.corrtest1_conf == input.corrtest2_conf",
+                                                                     box(width = NULL, title = strong("Test statistico"), status = "warning", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 20px; color: rgb(243,156,18)"), 
+                                                                         h5(strong("Errore. La variabile dipendente e il fattore esplicativo devono essere diversi.", style = "color: rgb(243,156,18)")), style = "text-align: justify;  text-align: center;"))
+                                                  ),
+                                                  column(6, box(width = NULL, title = strong("Grafico"), status = "primary", 
+                                                                shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("scattcorrtest_conf"))))
+                                                )
+                                              )
+                                            )
+                                          ), #end of tabpanel
+                                          
+                                          
+                                          tabPanel(
+                                            "Confronto tra due gruppi", value = "tabpanttest_conf",
+                                            br(),
+                                            fluidPage(
+                                              fluidRow(
+                                                column(6, box(width = NULL, title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapiro1_conf"))),
+                                                column(6, box(width = NULL, title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapiro2_conf")))
+                                              ),
+                                              fluidRow(
+                                                conditionalPanel(
+                                                  condition = "input.culttest1_conf != input.culttest2_conf && (output.shapttestmorfoui_conf == 'distribuzione normale' || input.selectttest_conf == 'Wilcoxon-Mann-Whitney')",
+                                                  column(6,box(width = NULL, title = strong("Test sulla varianza"), status = "primary", verbatimTextOutput("vartest1_conf"))),
+                                                  column(6,box(width = NULL, title = strong("Test statistico"), status = "primary", verbatimTextOutput("ttest1_conf")))
+                                                ),
+                                                conditionalPanel(
+                                                  condition = "input.culttest1_conf == input.culttest2_conf",
+                                                  column(6, box(width = NULL, title = strong("Test sulla varianza"), status = "warning", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 20px; color: rgb(243,156,18)"),
+                                                                h5(strong("Errore. La variabile dipendente e il fattore esplicativo devono essere diversi.", style = "color: rgb(243,156,18)")), style = "text-align: justify;  text-align: center;")),
+                                                  column(6, box(width = NULL, title = strong("Test statistico"), status = "warning", tags$i(class = "fas fa-exclamation-triangle", style="font-size: 20px; color: rgb(243,156,18)"),
+                                                                h5(strong("Errore. La variabile dipendente e il fattore esplicativo devono essere diversi.", style = "color: rgb(243,156,18)")), style = "text-align: justify;  text-align: center;"))
+                                                ),
+                                                conditionalPanel(
+                                                  condition = "input.culttest1_conf != input.culttest2_conf && output.shapttestmorfoui_conf == 'distribuzione non normale' && input.selectttest_conf == 'T-test'",
+                                                  column(6, offset = 3,
+                                                         box(width = NULL, status = "warning", style = "text-align: justify;  text-align: center;", br(),
+                                                             tags$i(class = "fas fa-exclamation-triangle", style="font-size: 25px; color: rgb(243,156,18)"),
+                                                             h4(strong("Una o più variabili non seguono una distribuzione normale. Scegli il Wilcoxon-Mann-Whitney test.", style = "color: rgb(243,156,18)")),
+                                                             br()
+                                                         )
+                                                  )
+                                                )
+                                              ),
+
+                                              fluidRow(
+                                                column(8, offset = 2, box(width = NULL, title = strong("Grafico"), status = "primary",
+                                                                          shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("boxttest_conf"))))
+                                              )
+                                            ) #end of fluidpage
+                                          ), #end of tabpanel conf 2 gruppi
+
+
+
+                                          # Confronto tra più gruppi
+                                          tabPanel(
+                                            "Confronto tra più gruppi", value = "tabpananova_conf",
+                                            fluidPage(
+                                              fluidRow(
+                                                column(12, box(width = NULL, title = strong("Boxplot"), status = "primary",
+                                                               shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("boxanova_conf"))))
+                                              ),
+                                              
+                                              fluidRow(
+                                                column(6, box(width = NULL, title = strong("Test sulla normalità"), status = "primary", verbatimTextOutput("shapiroanova1_conf"))),
+                                                
+                                                conditionalPanel(
+                                                  condition = "(output.shapanovamorfoui_conf == 'distribuzione normale' && (input.selectanovatest2_conf == 'ANOVA' || input.selectanovatest2_conf == 'Kruskal-Wallis')) || (output.shapanovamorfoui_conf == 'distribuzione non normale' && input.selectanovatest2_conf == 'Kruskal-Wallis')",
+                                                  
+                                                  conditionalPanel(condition = "input.selectanovatest2_conf == 'ANOVA'",
+                                                                   column(6, box(width = NULL, title = strong("Test ANOVA"), status = "primary", verbatimTextOutput("anova1morfoprint_conf")))
+                                                  ),
+                                                  
+                                                  conditionalPanel(condition = "input.selectanovatest2_conf == 'Kruskal-Wallis'",
+                                                                   column(6, box(width = NULL, title = strong("Test Kruskal-Wallis"), status = "primary", verbatimTextOutput("kruskmorfo_conf")))
+                                                  )
+                                                ),
+                                                
+                                                conditionalPanel(condition = "output.shapanovamorfoui_conf == 'distribuzione non normale' && input.selectanovatest2_conf == 'ANOVA'",
+                                                                 column(6, box(width = NULL, title = strong("Test ANOVA"), status = "warning", style = "text-align: justify;  text-align: center;",
+                                                                               tags$i(class = "fas fa-exclamation-triangle", style="font-size: 25px; color: rgb(243,156,18)"),
+                                                                               h4(strong("La variabile numerica non segue la distribuzione normale. Scegli il test Kruskal-Wallis.", style = "color: rgb(243,156,18)")),
+                                                                 ))
+                                                )
+                                              ),
+                                              
+                                              
+                                              conditionalPanel(
+                                                condition = "(output.shapanovamorfoui_conf == 'distribuzione normale' && (input.selectanovatest2_conf == 'ANOVA' || input.selectanovatest2_conf == 'Kruskal-Wallis')) || (output.shapanovamorfoui_conf == 'distribuzione non normale' && input.selectanovatest2_conf == 'Kruskal-Wallis')",
+                                                fluidRow(
+                                                  column(10,offset = 1,
+                                                         box(width = NULL, title = strong("Post-hoc"), status = "primary", style = "text-align: justify;  text-align: center;",
+                                                             conditionalPanel(
+                                                               condition = "output.signiftestmorfoui_conf == 'significativo'",
+                                                               
+                                                               conditionalPanel(condition = "input.selectanovatest2_conf == 'ANOVA'",
+                                                                                h4(strong("Tukey HSD"))),
+                                                               
+                                                               conditionalPanel(condition = "input.selectanovatest2_conf == 'Kruskal-Wallis'",
+                                                                                h4(strong("Dunn Test")),
+                                                               ),
+                                                               shinycssloaders::withSpinner(image = "www/running_olive.gif", plotly::plotlyOutput("posthocmorfograph_conf"))
+                                                             ),
+                                                             
+                                                             conditionalPanel(condition = "output.signiftestmorfoui_conf == 'non significativo'",
+                                                                              tags$i(class = "fas fa-exclamation-triangle", style="font-size: 25px; color: rgb(243,156,18)"),
+                                                                              h4(strong("Il p-value è maggiore del livello di significatività impostato. Non ci sono differenze significative tra le variabili.", style = "color: rgb(243,156,18)"))
+                                                             )
+                                                         )
+                                                  )
+                                                ) #end of fluidrow post-hoc
+                                              )
+                                              
+                                            ) #end of fluidpage
+                                          ), #end of tabpanel più gruppi
+                                          # 
+                                          # 
+                                          # 
+                                          # 
+                                          # #Test d'indipendenza
+                                          # tabPanel("Test d'indipendenza", value = "tabpanchisqtestmorfo",
+                                          #          br(),
+                                          #          fluidPage(
+                                          #            fluidRow(
+                                          #              column(5, box(width = NULL, title = strong("Tabella di contingenza"), status = "primary", tableOutput("contingtablemorfo"))),
+                                          #              column(6,
+                                          #                     fluidRow(
+                                          #                       box(width = NULL, title = strong("Test"), status = "primary", verbatimTextOutput("chisqmorfoprint"))
+                                          #                     ),
+                                          #                     
+                                          #                     fluidRow(
+                                          #                       conditionalPanel(condition = "output.signiftestchisqmorfoui == 'significativo'",
+                                          #                                        #box(width = NULL, title = strong("Grafico residui"), status = "primary", style = "text-align: justify;  text-align: center;",
+                                          #                                        shinycssloaders::withSpinner(image = "www/running_olive.gif", plotOutput("plotresidchisq"))
+                                          #                                        #   )
+                                          #                                        
+                                          #                       ),
+                                          #                       conditionalPanel(condition = "output.signiftestchisqmorfoui == 'non significativo'",
+                                          #                                        box(width = NULL, status = "warning", style = "text-align: justify;  text-align: center;",
+                                          #                                            tags$i(class = "fas fa-exclamation-triangle", style="font-size: 25px; color: rgb(243,156,18)"), 
+                                          #                                            h4(strong("Il p-value è maggiore del livello di significatività impostato. Le variabili sono indipendenti.", style = "color: rgb(243,156,18)"))
+                                          #                                        )
+                                          #                       )
+                                          #                     ) #end of fluidrow grafico
+                                          #              )
+                                          #            ) #end of first fluidrow
+                                          #          )
+                                          # )  
+                                        ) #end of tabset panel
+                                      ),
+                                      
+                                      
+                                    )# end tabbox integrazione
+                                  )
+                                )      
+                                      
+                                
                               ) #end tabitem integrazione
                               
                             )#end of tabitems

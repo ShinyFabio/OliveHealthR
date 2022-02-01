@@ -3369,15 +3369,542 @@ app_server <- function( input, output, session ) {
   }, deleteFile = TRUE)
   
   
-  ##### confronti meteo  #####
+  ##### confronti  #####
   
-  observeEvent(input$selvar1conf,{
-    list = c("Campionamento drupe e foglie", "Analisi sensoriali",
-             "Polifenoli totali", "Polifenoli individuali",
-             "Analisi morfometrica", "Dati meteo")
-    updateSelectInput(session, "selvar2conf", choices = list[!list %in% input$selvar1conf])
+  conf_type = reactive({
+    req(input$conf_type1, input$conf_type2)
+    paste0(input$conf_type1, input$conf_type2)
+  })
+  
+  observeEvent(conf_type(),{
+    if(conf_type() == "totind"){
+      updateSelectInput(session, "conf_selpoltot", choices = c("Foglie", "Drupe", "Olio", "Posa"))
+    }else{
+      updateSelectInput(session, "conf_selpoltot", choices = c("Foglie", "Drupe", "Olio", "Posa", "Sansa"))
+    }
   })
   
 
+  #scegli i dati in base alla selezione
+  poltot_conf_notsumm = reactive({
+    req(poliftot())
+    poliftot()[[input$conf_selpoltot]]
+  })
+  
+  
+  poltot_conf = reactive({
+    req(poltot_conf_notsumm())
+    
+    if(input$conf_selpoltot == "Foglie"){
+      temp = poltot_conf_notsumm() %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno) %>% 
+        dplyr::summarise(dplyr::across("Polifenoli (mg/g foglie)", mean, na.rm = T)) %>% dplyr::ungroup()
+    } else if(input$conf_selpoltot == "Drupe"){
+      temp = poltot_conf_notsumm() %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno) %>% 
+        dplyr::summarise(dplyr::across("Polifenoli (mg/g drupe)", mean, na.rm = T)) %>% dplyr::ungroup()
+    } else if (input$conf_selpoltot == "Olio"){
+      temp = poltot_conf_notsumm() %>% dplyr::group_by(Codice_azienda, N_campionamento, Tipo_olio, Anno) %>% 
+        dplyr::summarise(dplyr::across("Polifenoli (mg/kg olio)", mean, na.rm = T)) %>% dplyr::ungroup()
+    } else if(input$conf_selpoltot == "Posa"){
+      temp = poltot_conf_notsumm() %>% dplyr::group_by(Codice_azienda, N_campionamento, Tipo_olio, Anno) %>% 
+        dplyr::summarise(dplyr::across("Polifenoli (mg/kg posa)", mean, na.rm = T)) %>% dplyr::ungroup()
+    } else{
+      temp = poltot_conf_notsumm() %>% dplyr::group_by(Codice_azienda, N_campionamento, Tipo_olio, Anno) %>% 
+        dplyr::summarise(dplyr::across("Polifenoli (mg/kg sansa)", mean, na.rm = T)) %>% dplyr::ungroup()
+    }
+    
+    z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale)
+    dplyr::right_join(x = z, y = temp, by = "Codice_azienda")
+    
+  })
+  
+  #polind non mediato
+  polind_conf_notsumm = reactive({
+    req(polifind())
+    if(conf_type() == "totind"){
+      #scegli i dati polifenoli individuali in base alla selezione
+      datapolind1 = polifind()[[input$conf_selpoltot]]
+      if(input$conf_selpoltot == "Foglie" || input$conf_selpoltot == "Drupe"){
+        unit = " (ug/g)"
+        start = 5
+      }else{
+        unit = " (mg/kg)"
+        start = 6
+      }
+      for(i in seq(start,length(datapolind1))){
+        colnames(datapolind1)[i] = paste0(colnames(datapolind1)[i], unit)
+      }
+      datapolind1
+    }
+
+  })
+  
+  
+  
+
+  dataconf = reactive({
+    req(conf_type(), poltot_conf(), drupe(), data_meteo())
+    validate(need(input$conf_selyear != "", "Seleziona almeno un anno."))
+    if(conf_type() == "totcamp"){
+      
+      ## totali + campionamento
+      x = poltot_conf() %>% dplyr::left_join(drupe(), by = c("Codice_azienda","Anno", "N_campionamento")) %>% 
+        dplyr::filter(Anno == input$conf_selyear)
+    }else if(conf_type() == "totprec"){
+      
+      ## totali + precipitazioni
+      meteo = data_meteo()[[input$varmeteo_conf]] %>% dplyr::filter(lubridate::year(Tempo) == input$conf_selyear) %>% 
+        dplyr::group_by(Codice_azienda) %>% dplyr::summarise(Misura = mean(Misura)) %>% 
+        dplyr::rename(Misura_precipitazione = Misura)
+      x = poltot_conf() %>% dplyr::filter(Anno == input$conf_selyear) %>% dplyr::left_join(meteo, by = "Codice_azienda")
+    }else{
+      
+      ## totali + individuali
+      if(input$conf_selpoltot == "Foglie" || input$conf_selpoltot == "Drupe"){
+        polindsumm = polind_conf_notsumm() %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno) %>% 
+          dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% dplyr::ungroup()
+        x = poltot_conf() %>% dplyr::left_join(polindsumm, by = c("Codice_azienda","Anno", "N_campionamento")) %>% 
+          dplyr::filter(Anno == input$conf_selyear)
+      } else{  #olio e posa
+        polindsumm = polind_conf_notsumm() %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno, Tipo_olio) %>% 
+          dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% dplyr::ungroup()
+        x = poltot_conf() %>% dplyr::left_join(polindsumm, by = c("Codice_azienda","Anno", "N_campionamento", "Tipo_olio")) %>% 
+          dplyr::filter(Anno == input$conf_selyear)
+      }
+
+    }
+    
+
+    if(input$conf_selpoltot == "Foglie" || input$conf_selpoltot == "Drupe"){
+      x
+    }else{
+      x %>% dplyr::mutate(Codice_azienda = dplyr::case_when(
+        Tipo_olio ==  "denocciolato" ~ "SA_02_den",
+        TRUE ~ Codice_azienda
+      ))
+    }
+    
+  })
+  
+  
+  output$dt_conf = renderDT({
+    req(dataconf())
+    dataconf()
+  })
+
+  #### grafici confronti #####
+  
+  observeEvent(dataconf(),{
+    updateSelectInput(session, "scattx_conf", choices = colnames(dataconf()))
+    updateSelectInput(session, "scatty_conf", choices = colnames(dataconf()))
+    updateSelectInput(session, "scattfill_conf", choices = colnames(dataconf()))
+    updateSelectInput(session, "scattsize_conf", choices = c("Nessuna", colnames(dplyr::select(dataconf(), where(is.double)))))
+    updateSelectInput(session, "scattnum_conf", choices = unique(na.omit(dataconf()$N_campionamento)))
+    
+    updateSelectInput(session, "corrnum_conf", choices = unique(na.omit(dataconf()$N_campionamento)))
+  })
+  
+  #### scatterplot
+  output$scatterconf = plotly::renderPlotly({
+    req(dataconf())
+    data = dataconf()  %>% dplyr::filter(N_campionamento == input$scattnum_conf)
+    
+    if(input$scattsize_conf == "Nessuna"){
+      temp = ggplot(data) +
+        geom_count(aes_string(x = paste0("`",input$scattx_conf, "`"), y = paste0("`",input$scatty_conf, "`"), colour = paste0("`",input$scattfill_conf, "`")), 
+                   size = 2) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+    }else{
+      temp = ggplot(data) +
+        geom_count(aes_string(x = paste0("`",input$scattx_conf, "`"), y = paste0("`",input$scatty_conf, "`"), 
+                              colour = paste0("`",input$scattfill_conf, "`"), size = paste0("`",input$scattsize_conf, "`")))  
+    }
+
+    if(is.double(dplyr::pull(data, input$scattfill_conf)) == TRUE){
+      temp = temp + scale_colour_gradient(high = "#132B43", low = "#56B1F7")
+    }
+    
+    if(input$scattfacet_conf == TRUE && length(input$conf_selyear) > 1){
+      temp = temp + theme(axis.text.x = element_text(angle = 315, hjust = 0, margin=margin(t=20)),legend.title = element_blank()) + 
+        facet_grid(rows = vars(Anno), scales = "free", switch = "x")
+      plotly::ggplotly(temp, height = 600) %>% plotly::layout(legend = list(title = list(text = input$scattfill_conf)))
+    }else{
+      temp = temp + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+
+      plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$scattfill_conf)))
+    }
+
+  })
+  
+  
+
+  ###correlation plot
+  output$corrplotconf = plotly::renderPlotly({
+    req(dataconf())
+    validate(need(input$conf_type2 != "camp", "Non è possibile calcolare la correlazione per questo confronto."))
+    ###scegliere anno e  il campionamento (scatter plot)
+    datatemp = dataconf() %>% dplyr::filter(N_campionamento == input$corrnum_conf) %>% 
+      dplyr::select(where(is.double))
+    temp2 = round(stats::cor(datatemp, use = "na.or.complete"),1)
+    par(xpd = TRUE)
+    
+    plot = ggcorrplot::ggcorrplot(temp2, hc.order = TRUE, type = "lower", outline.col = "white", show.diag = TRUE)
+    plotly::ggplotly(plot)
+    
+  })
+  
+  ##### test d'ipotesi confronti ####
  
+  #dati non mediati
+  dataconf_notsumm = reactive({
+    req(conf_type(), poltot_conf_notsumm(), drupe(), data_meteo(),polind_conf_notsumm())
+    z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale)
+    poltot = dplyr::right_join(x = z, y = poltot_conf_notsumm(), by = "Codice_azienda")
+    
+    if(conf_type() == "totcamp"){
+      x = poltot %>% dplyr::left_join(drupe(), by = c("Codice_azienda","Anno", "N_campionamento")) %>% 
+        dplyr::filter(Anno == input$conf_selyear)
+    }else if (conf_type() == "totprec"){
+      ## totali + precipitazioni
+      meteo = data_meteo()[[input$varmeteo_conf]] %>% dplyr::filter(lubridate::year(Tempo) == input$conf_selyear) %>% 
+        dplyr::group_by(Codice_azienda) %>% dplyr::summarise(Misura = mean(Misura)) %>% 
+        dplyr::rename(Misura_precipitazione = Misura)
+      
+      x = poltot %>% dplyr::filter(Anno == input$conf_selyear) %>% dplyr::left_join(meteo, by = "Codice_azienda")
+    }else{
+      ## totali + individuali
+      if(input$conf_selpoltot == "Foglie" || input$conf_selpoltot == "Drupe"){
+        
+        x = poltot %>% dplyr::left_join(polind_conf_notsumm(), by = c("Codice_azienda","Anno", "N_campionamento", "Estrazione")) %>% 
+          dplyr::filter(Anno == input$conf_selyear)
+      } else{  #olio e posa
+        x = poltot %>% dplyr::left_join(polind_conf_notsumm(), by = c("Codice_azienda","Anno", "N_campionamento", "Tipo_olio","Estrazione")) %>% 
+          dplyr::filter(Anno == input$conf_selyear)
+      }
+    }
+    
+    if(input$conf_selpoltot == "Foglie" || input$conf_selpoltot == "Drupe"){
+      x
+    }else{
+      x %>% dplyr::mutate(Codice_azienda = dplyr::case_when(
+        Tipo_olio ==  "denocciolato" ~ "SA_02_den",
+        TRUE ~ Codice_azienda
+      ))
+    }
+  })
+  
+  
+  ######################### correlation test ____________________________
+  
+  #aggiorna il selectinput in base ai double presenti
+  observeEvent(dataconf_notsumm(), {
+    updateSelectInput(session, "corrtest1_conf", choices = colnames(dplyr::select(dataconf_notsumm(), where(is.double), -Anno)))
+    updateSelectInput(session, "corrtest2_conf", choices = colnames(dplyr::select(dataconf_notsumm(), where(is.double), -Anno)))
+    
+    updateSelectInput(session, "corrtestfill_conf", choices = colnames(dplyr::select(dataconf_notsumm(), !where(is.double)))) #is.character
+    
+  })
+  
+  #test normalità con shapiro test
+  output$shapirocorr1_conf = renderPrint({
+    req(dataconf_notsumm())
+    shp1 = dataconf_notsumm() %>% dplyr::pull(input$corrtest1_conf) %>% stats::shapiro.test()
+    shp1$data.name = paste(input$corrtest1_conf)
+    shp1
+  })
+  
+  output$shapirocorr2_conf = renderPrint({
+    req(dataconf_notsumm())
+    shp2 = dataconf_notsumm() %>% dplyr::pull(input$corrtest2_conf) %>% stats::shapiro.test()
+    shp2$data.name = paste(input$corrtest2_conf)
+    shp2
+  })
+  
+  #selectcorrtest
+  
+  #T-test
+  output$corrtest_conf = renderPrint({
+    req(dataconf_notsumm())
+    x = dataconf_notsumm() %>% dplyr::pull(input$corrtest1_conf)
+    y = dataconf_notsumm() %>% dplyr::pull(input$corrtest2_conf)
+    
+    test = stats::cor.test(x, y, method = input$selectcorrtest_conf)
+    test$data.name = paste(input$corrtest1_conf, "and", input$corrtest2_conf)
+    test
+  })
+  
+  
+  #scatterplot
+  output$scattcorrtest_conf = plotly::renderPlotly({
+    req(dataconf_notsumm())
+
+    #voglio un singol fit (linea della regressione lineare) o più fit?
+    if(input$numfitcorrtest_conf == FALSE){
+      temp = ggplot(data = dataconf_notsumm(), 
+                    mapping = aes_string(x = paste0("`",input$corrtest1_conf, "`"), y = paste0("`",input$corrtest2_conf, "`"))) + 
+        geom_point(mapping = aes_string(color = paste0("`",input$corrtestfill_conf, "`"))) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + 
+        geom_smooth(method = lm, mapping = aes_string(fill = paste0("`",input$corrtestfill_conf, "`")), se = input$selsecorrtest_conf)
+    } else{
+      temp = ggplot(data = dataconf_notsumm(),
+                    mapping = aes_string(x = paste0("`",input$corrtest1_conf, "`"), y = paste0("`",input$corrtest2_conf, "`"))) +
+        geom_point(mapping = aes_string(color = paste0("`",input$corrtestfill_conf, "`"))) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + 
+        geom_smooth(method=lm, se = input$selsecorrtest_conf)
+      
+    }
+    
+    plotly::ggplotly(temp) 
+  })
+  
+  
+  
+  ################ T-Test ___________________________________
+  
+  ###### t-test 
+  #aggiorna il selectinput "selvarttest" in base ai double presenti
+  observeEvent(dataconf_notsumm(), {
+    updateSelectInput(session, "catvarttest_conf", choices = colnames(dplyr::select(dataconf_notsumm(), where(is.character))))
+    updateSelectInput(session, "numvarttest_conf", choices = colnames(dplyr::select(dataconf_notsumm(), where(is.double), -Anno)))
+  })
+  
+  #culttest1 e 2
+  observeEvent(input$catvarttest_conf, {
+    updateSelectInput(session, "culttest1_conf", choices = unique(dplyr::select(dataconf_notsumm(), input$catvarttest_conf)))
+    updateSelectInput(session, "culttest2_conf", choices = unique(dplyr::select(dataconf_notsumm(), input$catvarttest_conf)))
+  })
+  
+  
+  #creo la variabile dei dati con le due opzioni
+  datattest_conf = reactive({
+    req(dataconf_notsumm())
+    dataconf_notsumm() %>% dplyr::filter(.data[[input$catvarttest_conf]] %in% c(input$culttest1_conf, input$culttest2_conf))
+    #datamorfo()[datamorfo()[[input$catvarttest]] %in% c(input$culttest1, input$culttest2),]
+    
+  })
+  
+  
+  #test normalità con shapiro test
+  shapiro1data_conf = reactive({
+    req(dataconf_notsumm())
+    req(input$catvarttest_conf)
+    req(input$culttest1_conf)
+    #shp1 = datamorfo()[datamorfo()[[input$catvarttest]] %in% input$culttest1,] %>% dplyr::pull(input$numvarttest) %>% 
+    # stats::shapiro.test()
+    shp1 = dataconf_notsumm() %>% dplyr::filter(.data[[input$catvarttest_conf]] %in% input$culttest1_conf) %>%
+      dplyr::pull(input$numvarttest_conf) %>%  stats::shapiro.test()
+    shp1$data.name = paste(input$culttest1_conf)
+    shp1 
+    
+  })
+  
+  output$shapiro1_conf = renderPrint({
+    req(shapiro1data_conf())
+    shapiro1data_conf()
+  })
+  
+  shapiro2data_conf = reactive({
+    req(dataconf_notsumm())
+    req(input$catvarttest_conf)
+    req(input$culttest2_conf)
+    shp2 = dataconf_notsumm() %>% dplyr::filter(.data[[input$catvarttest_conf]] %in% input$culttest2_conf) %>%
+      dplyr::pull(input$numvarttest_conf) %>%  stats::shapiro.test()
+    shp2$data.name = paste(input$culttest2_conf)
+    shp2
+  })
+  
+  output$shapiro2_conf = renderPrint({
+    req(shapiro2data_conf())
+    shapiro2data_conf()
+  })
+  
+  
+  #output per l'ui
+  output$shapttestmorfoui_conf = reactive({
+    if(shapiro1data_conf()$p.value < 0.05 && shapiro2data_conf()$p.value < 0.05){
+      "distribuzione normale"
+    }else{"distribuzione non normale"}
+  })
+  outputOptions(output, 'shapttestmorfoui_conf', suspendWhenHidden = FALSE)
+  
+  
+  #test varianza F-test
+  output$vartest1_conf = renderPrint({
+    req(datattest_conf())
+    num = datattest_conf() %>% dplyr::pull(input$numvarttest_conf)
+    cat = datattest_conf() %>% dplyr::pull(input$catvarttest_conf)
+    var1 = stats::var.test(num ~ cat)
+    var1$data.name = paste(input$numvarttest_conf, "~", input$catvarttest_conf)
+    var1
+  })
+  
+  
+  #Boxplot
+  output$boxttest_conf = plotly::renderPlotly({
+    req(datattest_conf())
+
+    temp = ggplot(data = datattest_conf(), 
+                  mapping = aes_string(x = paste0("`",input$catvarttest_conf, "`"), y = paste0("`",input$numvarttest_conf, "`"), fill = paste0("`",input$catvarttest_conf,"`"))) + 
+      geom_boxplot() + geom_jitter(width = 0.3) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$catvarttest_conf)))
+  })
+  
+  #T-test
+  output$ttest1_conf = renderPrint({
+    req(datattest_conf())
+    num = datattest_conf() %>% dplyr::pull(input$numvarttest_conf)
+    cat = datattest_conf() %>% dplyr::pull(input$catvarttest_conf)
+    if(input$selectttest_conf == "T-test"){
+      test = stats::t.test(num ~ cat, var.equal = input$selvarequal_conf)
+      test$data.name = paste(input$numvarttest_conf, "~", input$catvarttest_conf)
+    } else{
+      test = stats::wilcox.test(num ~ cat)
+      test$data.name = paste(input$numvarttest_conf, "~", input$catvarttest_conf)
+    }
+    test
+  })
+  
+  
+  ############################# ANOVA ____________
+  #aggiorna il selectinput "selvarttest" in base ai double presenti
+  observeEvent(dataconf_notsumm(), {
+    updateSelectInput(session, "anovanum_conf", choices = colnames(dplyr::select(dataconf_notsumm(), where(is.double), -Anno)))
+    updateSelectInput(session, "anovacat_conf", choices = colnames(dplyr::select(dataconf_notsumm(), where(is.character), -c(Azienda, N_campionamento))), selected = "Cultivar_principale")
+    updateSelectInput(session, "anovacat2_conf", choices = colnames(dplyr::select(dataconf_notsumm(), where(is.character), -c(Azienda, N_campionamento))))
+  })
+  
+  observeEvent(input$selectanovatest_conf,{
+    if(input$selectanovatest_conf == "Two-way ANOVA"){
+      updateAwesomeRadio(session, "selectanovatest2_conf", choices = "ANOVA", selected = "ANOVA")
+    }else{
+      updateAwesomeRadio(session, "selectanovatest2_conf", choices = c("ANOVA", "Kruskal-Wallis"))
+    }
+  })
+  
+  #test normalità con shapiro test
+  shapiroanova1data_conf = reactive({
+    req(dataconf_notsumm())
+    shp1 = dataconf_notsumm() %>% dplyr::pull(input$anovanum_conf) %>% stats::shapiro.test()
+    shp1$data.name = paste(input$anovanum_conf)
+    shp1
+  })
+  
+  output$shapiroanova1_conf = renderPrint({
+    req(shapiroanova1data_conf())
+    shapiroanova1data_conf()
+  })
+  
+  
+  #output per l'ui
+  output$shapanovamorfoui_conf = reactive({
+    if(shapiroanova1data_conf()$p.value < 0.05){
+      "distribuzione normale"
+    }else{"distribuzione non normale"}
+  })
+  outputOptions(output, 'shapanovamorfoui_conf', suspendWhenHidden = FALSE)
+  
+  
+  
+  #Boxplot anova
+  output$boxanova_conf = plotly::renderPlotly({
+    req(dataconf_notsumm())
+
+    temp = ggplot(data = dataconf_notsumm(), 
+                  mapping = aes_string(x = paste0("`",input = input$anovacat_conf, "`"), y = paste0("`",input$anovanum_conf, "`"), fill = paste0("`",input = input$anovacat_conf,"`"))) + 
+      geom_boxplot() + geom_jitter(width = 0.3) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$anovacat_conf)))
+  })
+  
+  
+  anova1morfo_conf = reactive({
+    req(dataconf_notsumm())
+    var_numerica = dataconf_notsumm() %>% dplyr::pull(input$anovanum_conf)
+    var_categorica = dataconf_notsumm() %>% dplyr::pull(input$anovacat_conf)
+    if(input$selectanovatest_conf == "Two-way ANOVA" ){
+      var_categorica1 = dataconf_notsumm() %>% dplyr::pull(input$anovacat_conf)
+      var_categorica2 = dataconf_notsumm() %>% dplyr::pull(input$anovacat2_conf)
+      if(input$anova2typemorfo_conf == "Modello additivo"){
+        stats::aov(var_numerica ~ var_categorica1 + var_categorica2)
+      }else{
+        stats::aov(var_numerica ~ var_categorica1 * var_categorica2) 
+      }
+    }else{
+      stats::aov(var_numerica ~ var_categorica)
+    }
+  })
+  
+  output$anova1morfoprint_conf = renderPrint({
+    summary(anova1morfo_conf())
+  })
+  
+  
+  
+  #kruskal-wallis data
+  kruskmorfodata_conf = reactive({
+    req(dataconf_notsumm())
+    var_numerica = dataconf_notsumm() %>% dplyr::pull(input$anovanum_conf)
+    var_categorica = dataconf_notsumm() %>% dplyr::pull(input$anovacat_conf)
+    kru = stats::kruskal.test(var_numerica ~ var_categorica)
+    kru$data.name = paste(input$anovanum_conf, "by", input$anovacat_conf)
+    kru
+  })
+  #kruskal-wallis
+  output$kruskmorfo_conf = renderPrint({
+    kruskmorfodata_conf()
+  })
+  
+  #variabile che mi dice se il test è significativo
+  signiftestmorfo_conf = reactive({
+    req(anova1morfo_conf())
+    anovasumm = summary(anova1morfo_conf())
+    if(round(anovasumm[[1]][["Pr(>F)"]][[1]], digits = 4) <= input$pvalanovamorfo_conf ||  kruskmorfodata_conf()$p.value <= input$pvalanovamorfo_conf){
+      "significativo"
+    } else{
+      "non significativo"
+    }
+  })
+  
+  #output per l'ui
+  output$signiftestmorfoui_conf = reactive({
+    req(signiftestmorfo_conf())
+    signiftestmorfo_conf()
+  })
+  outputOptions(output, 'signiftestmorfoui_conf', suspendWhenHidden = FALSE)
+  
+  #post hoc tukey o dunn
+  posthocmorfo_conf = reactive({
+    req(anova1morfo_conf())
+    if(signiftestmorfo_conf() == "significativo"){
+      if(input$selectanovatest2_conf == "Kruskal-Wallis"){
+        var_numerica = dataconf_notsumm() %>% dplyr::pull(input$anovanum_conf)
+        var_categorica = dataconf_notsumm() %>% dplyr::pull(input$anovacat_conf)
+        FSA::dunnTest(var_numerica ~ var_categorica, method = "bh")
+      } else{
+        anova1morfo_conf() %>% stats::TukeyHSD()
+      }
+    } 
+  })
+  
+  #mi serve perchè altrimenti quando passo da un file morfo all'altro mi si riduce la dimensione del grafico
+  cdata <- session$clientData
+  
+  #grafico post-hoc
+  output$posthocmorfograph_conf = plotly::renderPlotly({
+    req(posthocmorfo_conf())
+    if(input$selectanovatest2_conf == "Kruskal-Wallis"){
+      data = as.data.frame(posthocmorfo_conf()$res) %>% dplyr::select("Comparison", "P.adj") %>% tibble::as_tibble() %>% 
+        tidyr::separate(Comparison, c("Cultivar_2", "Cultivar_1"), sep = " - " )
+    } else{
+      #trasformo in df, prendo solo la colonna di p.adj, prendo i rownames e trasformo in tibble
+      data = as.data.frame(posthocmorfo_conf()[1:1]) %>% dplyr::select(ends_with("adj")) %>% rownames_to_column("Cultivar_principale") %>% tibble::as_tibble() 
+      #divido in due colonne le cultivar, rinomino la colonna dei p.adj e creo la colonna p_value
+      data = data %>% tidyr::separate(Cultivar_principale, c("Cultivar_1", "Cultivar_2"), sep = "-") %>% dplyr::rename("P.adj" = ends_with("adj"))
+    }
+    
+    data = data %>% dplyr::mutate(p_value = case_when(round(P.adj, digits = 4) > input$pvalanovamorfo_conf ~ "non significativo",
+                                                      round(P.adj, digits = 4) <= input$pvalanovamorfo_conf ~ "significativo"))
+    
+    temp = ggplot2::ggplot(data, aes_string(x = "Cultivar_1", y = "Cultivar_2", fill = "p_value")) + geom_tile(colour = "black") + 
+      theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + scale_fill_manual(values = c("significativo" = "#f8766d", "non significativo" = "#00bfc4"))
+    plotly::ggplotly(temp, width = cdata$output_posthocmorfograph_conf_width, height = cdata$output_posthocmorfograph_conf_height)
+  })
+  
+  
+  
 }
