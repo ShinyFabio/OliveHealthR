@@ -87,12 +87,6 @@ library(OliveHealthR)
 OliveHealthR::run_OliveHealthR()
 ```
 
-## How to use
-
-This shiny app performs various analysis and plotting based on files
-being uploaded. For now OliveHealthR accepts 4 different csv files, one
-is mandatory and contains all the info about the companies (name, id,
-coordinates…), the others 3 are different type of data.
 
 ## How to update the package
 
