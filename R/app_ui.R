@@ -1815,9 +1815,10 @@ app_ui <- function(request) {
                                     width = 2,
                                     h4(strong("Scegli un confronto")),
                                     radioGroupButtons("conf_type1", "Scegli una prima variabile",
-                                                      choiceValues = list("tot"),
+                                                      choiceValues = list("tot","ind"),
                                                       choiceNames = list(
-                                                        paste(icon("circle"), HTML("<b>&nbsp;Polifenoli totali</b>"))
+                                                        paste(icon("circle"), HTML("<b>&nbsp;Polifenoli totali</b>")),
+                                                        paste(icon("circle"), HTML("<b>&nbsp;Polifenoli individuali</b>"))
                                                       ),direction = "vertical", justified = TRUE, status = "primary"),
                                     
                                     radioGroupButtons("conf_type2", "Scegli una seconda variabile",

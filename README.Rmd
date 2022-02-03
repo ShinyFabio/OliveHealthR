@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 # OliveHealthR <img src="man/figures/OliveHealthRfavicon.png" align="right" height="139"/>
 
 <!-- badges: start -->
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-stable-succes.svg)](https://www.tidyverse.org/lifecycle/#stable)
 <!-- badges: end -->
 
 The goal of OliveHealthR is to analyze and map all the information obtained from the [OliveHealth](https://olivehealth.it) project. The planned activities will concern the mapping of the olive groves of the 5 Campania provinces (Italy) and the analysis of the health component (eg polyphenols) on samples such as leaves, drupes and oil.
@@ -49,7 +49,7 @@ install.packages("devtools")
 ``` r
 devtools::install_github("ShinyFabio/OliveHealthR")
 ```
-Be sure that your R version is at least 4.0.0. Click yes if R asks you something.
+Be sure that your R version is at least 4.0.0. If R asks you to Install packages that requires compilation, click "No" otherwise the installation will take a long time (especially if your computer is not powerful).
 
 
 <strong>6. When installation is completed, you can launch this code if you want to download all photos (this step is optional):</strong>
@@ -103,71 +103,6 @@ In order to update the package just run this code:
 ``` r
 devtools::update_packages("OliveHealthR", upgrade = "always")
 ```
-Se R ti chiede di installare i pacchetti che richiedono compilazione clicca su "No". Una volta completata l'installazione,
-dovrai riscaricare le foto (vedi step 6 dell'installazione).
 
-### "File aziende (.csv)"
-The most important file is "2_Dati_monitoraggio.csv". In order to make the app work, this csv file has some columns that have to follow some writing rules. The following columns are mandatory:
+If R asks you to Install packages that requires compilation, click "No". After the updating process is completed, you should downlad photos again if you need them (go to step 6 of installation).
 
-- __"Codice_azienda"__ filled with the code of the company (eg SA_01, AV_12 etc.)
-- __"Azienda"__ filled with the name (eg. Az.Agr.Perretta_Nicola). Don't use "-" or spaces in the name
-- __"Provincia"__ filled with the province (eg. SA, AV)
-- __"UTM_33T_E"__ filled with the UTM 33T East coordinate
-- __"UTM_33T_N"__ filled with the UTM 33T North coordinate
-- __"Cultivar_principale"__ filled with the main cultivar (use "_" instead of space)
-
-
-### "File descrizione .csv"
-
-This is an optional csv file containing some info about companies. It contains:
-
-- __"Codice_azienda"__ same
-- __"Descrizione"__ filled with the description of the company
-- __"Contatti"__ filled with the phone number, email and others infos
-
-
-### "file CSV con dati drupe"
-
-Here you can upload the phenological phase and ripening index extracted from the record cards. It follows the following structure:
-
-- __"Codice_azienda"__ same
-- __"N_campionamento"__ filled with "R1" or "R2" where R1 refers to the first sampling (September/October) and R2 refers to the last sampling (end of October/beginning of November i.e. when the olives are completely ripe)
-- __"Data_campionamento"__ filled with the sampling date (in the form of dd/mm/yyyy)
-- __"Fase_fenologica"__ (filled with a number)
-- __"Indice_maturazione"__ (filled with a number)
-- __"Note"__ filled with possible notes
-
-### "file CSV con dati polifenoli"
-
-Here you can upload the polyphenols datas. The csv file follows this structure:
-
-- __"Codice_azienda"__ same
-- __"N_campionamento"__ same
-- __"Polifenoli_tot"__ filled with the concentration of total polyphenols (mg/g drupes)
-- __"Presenza_larve"__ filled with the larvae presence indicator (from 0 to 2)
-- Various polyphenols (eg. "Acido_Gallico"). unit of measure: ug/ml of oil
-
-
-
-
-
-
-
-
-## Other 
-
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
-
-# ```{r cars}
-# summary(cars)
-# ```
-
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this. You could also use GitHub Actions to re-render `README.Rmd` every time you push. An example workflow can be found here: <https://github.com/r-lib/actions/tree/master/examples>.
-
-You can also embed plots, for example:
-
-# ```{r pressure, echo = FALSE}
-# plot(pressure)
-# ```
-
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.

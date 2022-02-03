@@ -26,6 +26,13 @@ golem::fill_desc(
 ## Set {golem} options ----
 golem::set_golem_options()
 
+#set package version
+golem::set_golem_version(
+  version = "0.9.0",
+  path = pkgload::pkg_path(),
+  talkative = TRUE
+)
+
 ## Create Common Files ----
 ## See ?usethis for more information
 usethis::use_mit_license( "Fabio Della Rocca" )  # You can set another license here
