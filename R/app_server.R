@@ -3441,22 +3441,25 @@ app_server <- function( input, output, session ) {
   #polind non mediato
   polind_conf_notsumm = reactive({
     req(polifind())
-    if(input$conf_type2 == "ind" || input$conf_type1 == "ind"){
-      #scegli i dati polifenoli individuali in base alla selezione
-      datapolind1 = polifind()[[input$conf_selpoltot]]
-      if(input$conf_selpoltot == "Foglie" || input$conf_selpoltot == "Drupe"){
-        unit = " (ug/g)"
-        start = 5
-      }else{
-        unit = " (mg/kg)"
-        start = 6
-      }
-      for(i in seq(start,length(datapolind1))){
-        colnames(datapolind1)[i] = paste0(colnames(datapolind1)[i], unit)
-      }
-      datapolind1
+    if(req(input$conf_selpoltot) != "Sansa"){
+    #scegli i dati polifenoli individuali in base alla selezione
+    datapolind1 = polifind()[[input$conf_selpoltot]]
+    if(input$conf_selpoltot == "Foglie" || input$conf_selpoltot == "Drupe"){
+      unit = " (ug/g)"
+      start = 5
+    }else{
+      unit = " (mg/kg)"
+      start = 6
+    }
+    for(i in seq(start,length(datapolind1))){
+      colnames(datapolind1)[i] = paste0(colnames(datapolind1)[i], unit)
+    }
+    datapolind1
+    }else{
+      return(NULL)
     }
 
+    
   })
   
   
@@ -3471,27 +3474,28 @@ app_server <- function( input, output, session ) {
       if(conf_type() == "totcamp"){
         #### totali + campionamento
         x = poltot_conf() %>% dplyr::left_join(drupe(), by = c("Codice_azienda","Anno", "N_campionamento")) %>% 
-          dplyr::filter(Anno == input$conf_selyear)
+          dplyr::filter(Anno %in% input$conf_selyear)
         
       }else if(conf_type() == "totprec"){
         #### totali + precipitazioni
         meteo = data_meteo()[[input$varmeteo_conf]] %>% dplyr::filter(lubridate::year(Tempo) == input$conf_selyear) %>% 
           dplyr::group_by(Codice_azienda) %>% dplyr::summarise(Misura = mean(Misura)) %>% 
           dplyr::rename(Misura_precipitazione = Misura)
-        x = poltot_conf() %>% dplyr::filter(Anno == input$conf_selyear) %>% dplyr::left_join(meteo, by = "Codice_azienda")
+        x = poltot_conf() %>% dplyr::filter(Anno %in% input$conf_selyear) %>% dplyr::left_join(meteo, by = "Codice_azienda")
         
       }else if(conf_type() == "totind"){
+        req(polind_conf_notsumm())
         #### totali + individuali
         if(input$conf_selpoltot == "Foglie" || input$conf_selpoltot == "Drupe"){
           polindsumm = polind_conf_notsumm() %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno) %>% 
             dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% dplyr::ungroup()
           x = poltot_conf() %>% dplyr::left_join(polindsumm, by = c("Codice_azienda","Anno", "N_campionamento")) %>% 
-            dplyr::filter(Anno == input$conf_selyear)
+            dplyr::filter(Anno %in% input$conf_selyear)
         } else{  #olio e posa
           polindsumm = polind_conf_notsumm() %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno, Tipo_olio) %>% 
             dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% dplyr::ungroup()
           x = poltot_conf() %>% dplyr::left_join(polindsumm, by = c("Codice_azienda","Anno", "N_campionamento", "Tipo_olio")) %>% 
-            dplyr::filter(Anno == input$conf_selyear)
+            dplyr::filter(Anno %in% input$conf_selyear)
         }
       }
     }
@@ -3509,7 +3513,7 @@ app_server <- function( input, output, session ) {
         polindsumm = dplyr::right_join(x = z, y = polindsumm, by = "Codice_azienda")
         
         x = poltot_conf() %>% dplyr::left_join(polindsumm, by = c("Codice_azienda","Anno", "N_campionamento")) %>% 
-          dplyr::filter(Anno == input$conf_selyear)
+          dplyr::filter(Anno %in% input$conf_selyear)
       } else{  #olio e posa
         polindsumm = polind_conf_notsumm() %>% dplyr::group_by(Codice_azienda, N_campionamento, Anno, Tipo_olio) %>% 
           dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% dplyr::ungroup()
@@ -3519,15 +3523,15 @@ app_server <- function( input, output, session ) {
       if(conf_type() == "indcamp"){
         #### individuali + campionamento
         x = polindsumm %>% dplyr::left_join(drupe(), by = c("Codice_azienda","Anno", "N_campionamento")) %>% 
-          dplyr::filter(Anno == input$conf_selyear)
+          dplyr::filter(Anno %in% input$conf_selyear)
         
       }else if(conf_type() == "indprec"){
         
         ## individuali + precipitazioni
-        meteo = data_meteo()[[input$varmeteo_conf]] %>% dplyr::filter(lubridate::year(Tempo) == input$conf_selyear) %>% 
+        meteo = data_meteo()[[input$varmeteo_conf]] %>% dplyr::filter(lubridate::year(Tempo) %in% input$conf_selyear) %>% 
           dplyr::group_by(Codice_azienda) %>% dplyr::summarise(Misura = mean(Misura)) %>% 
           dplyr::rename(Misura_precipitazione = Misura)
-        x = polindsumm %>% dplyr::filter(Anno == input$conf_selyear) %>% dplyr::left_join(meteo, by = "Codice_azienda")
+        x = polindsumm %>% dplyr::filter(Anno %in% input$conf_selyear) %>% dplyr::left_join(meteo, by = "Codice_azienda")
       }
     }
     
@@ -3614,7 +3618,7 @@ app_server <- function( input, output, session ) {
  
   #dati non mediati
   dataconf_notsumm = reactive({
-    req(conf_type(), poltot_conf_notsumm(), drupe(), data_meteo(),polind_conf_notsumm())
+    req(conf_type(), poltot_conf_notsumm(), drupe(), data_meteo())
     z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale)
     
     if(input$conf_type1 == "tot"){
@@ -3622,46 +3626,46 @@ app_server <- function( input, output, session ) {
       
       if(conf_type() == "totcamp"){
         x = poltot %>% dplyr::left_join(drupe(), by = c("Codice_azienda","Anno", "N_campionamento")) %>% 
-          dplyr::filter(Anno == input$conf_selyear)
+          dplyr::filter(Anno %in% input$conf_selyear)
       }else if (conf_type() == "totprec"){
         ## totali + precipitazioni
-        meteo = data_meteo()[[input$varmeteo_conf]] %>% dplyr::filter(lubridate::year(Tempo) == input$conf_selyear) %>% 
+        meteo = data_meteo()[[input$varmeteo_conf]] %>% dplyr::filter(lubridate::year(Tempo) %in% input$conf_selyear) %>% 
           dplyr::group_by(Codice_azienda) %>% dplyr::summarise(Misura = mean(Misura)) %>% 
           dplyr::rename(Misura_precipitazione = Misura)
         
-        x = poltot %>% dplyr::filter(Anno == input$conf_selyear) %>% dplyr::left_join(meteo, by = "Codice_azienda")
+        x = poltot %>% dplyr::filter(Anno %in% input$conf_selyear) %>% dplyr::left_join(meteo, by = "Codice_azienda")
       }else if (conf_type() == "totind"){
+        req(polind_conf_notsumm())
         ## totali + individuali
         if(input$conf_selpoltot == "Foglie" || input$conf_selpoltot == "Drupe"){
           
           x = poltot %>% dplyr::left_join(polind_conf_notsumm(), by = c("Codice_azienda","Anno", "N_campionamento", "Estrazione")) %>% 
-            dplyr::filter(Anno == input$conf_selyear)
+            dplyr::filter(Anno %in% input$conf_selyear)
         } else{  #olio e posa
           x = poltot %>% dplyr::left_join(polind_conf_notsumm(), by = c("Codice_azienda","Anno", "N_campionamento", "Tipo_olio","Estrazione")) %>% 
-            dplyr::filter(Anno == input$conf_selyear)
+            dplyr::filter(Anno %in% input$conf_selyear)
         }
       }
-    }
-
-    ##### prima variabile Individuali
-    if(input$conf_type1 == "ind"){
+      
+      ##### prima variabile Individuali
+    } else if(input$conf_type1 == "ind"){
+      req(polind_conf_notsumm())
       polind = dplyr::right_join(x = z, y = polind_conf_notsumm(), by = "Codice_azienda")
 
       if(conf_type() == "indcamp"){
-        x = polind %>% dplyr::left_join(drupe(), by = c("Codice_azienda","Anno", "N_campionamento")) %>% 
-          dplyr::filter(Anno == input$conf_selyear)
+        x = polind %>% dplyr::left_join(drupe(), by = c("Codice_azienda","Anno", "N_campionamento")) %>%
+          dplyr::filter(Anno %in% input$conf_selyear)
 
       }else if(conf_type() == "indprec"){
         ## individuali + precipitazioni
-        meteo = data_meteo()[[input$varmeteo_conf]] %>% dplyr::filter(lubridate::year(Tempo) == input$conf_selyear) %>% 
-          dplyr::group_by(Codice_azienda) %>% dplyr::summarise(Misura = mean(Misura)) %>% 
+        meteo = data_meteo()[[input$varmeteo_conf]] %>% dplyr::filter(lubridate::year(Tempo) %in% input$conf_selyear) %>%
+          dplyr::group_by(Codice_azienda) %>% dplyr::summarise(Misura = mean(Misura)) %>%
           dplyr::rename(Misura_precipitazione = Misura)
-        
-        x = polind %>% dplyr::filter(Anno == input$conf_selyear) %>% dplyr::left_join(meteo, by = "Codice_azienda")
+
+        x = polind %>% dplyr::filter(Anno %in% input$conf_selyear) %>% dplyr::left_join(meteo, by = "Codice_azienda")
       }
     }
-    
-    
+
     if(input$conf_selpoltot == "Foglie" || input$conf_selpoltot == "Drupe"){
       x
     }else{
@@ -3672,7 +3676,7 @@ app_server <- function( input, output, session ) {
     }
   })
   
-  
+
   ######################### correlation test ____________________________
   
   #aggiorna il selectinput in base ai double presenti
