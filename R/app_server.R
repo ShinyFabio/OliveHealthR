@@ -427,16 +427,24 @@ app_server <- function( input, output, session ) {
   })
   
 
-  observeEvent(data(), {
+  observeEvent(datmap1(), {
     updateSelectInput(session, "select3", choices = colnames(datmap1()))
+    updateSelectInput(session, "filt_cult_mapp", choices = c("Tutte", unique(datmap1()$Cultivar_principale)))
   })
   
   
   ###stampa mappa
   output$map1 = renderTmap({
-    req(data())
-    colmap = Olv_select_col(data = datmap1(), input = input$select3)
-    make_tmap(data = data(), dotlegend = colmap)
+    req(datmap1())
+    data1 = data()
+    data2 = datmap1()
+    validate(need(input$filt_cult_mapp, "Seleziona qualcosa nel filtraggio delle cultivar. Se non si vuole filtrare, selezionare 'Tutte'"))
+    if(!("Tutte" %in% input$filt_cult_mapp)){
+      data1 = data1 %>% dplyr::filter(Cultivar_principale %in% input$filt_cult_mapp)
+      data2 = data2 %>% dplyr::filter(Cultivar_principale %in% input$filt_cult_mapp)
+    }
+    colmap = Olv_select_col(data = data2, input = input$select3)
+    make_tmap(data = data1, dotlegend = colmap)
   })
 
   
@@ -3478,10 +3486,11 @@ app_server <- function( input, output, session ) {
         
       }else if(conf_type() == "totprec"){
         #### totali + precipitazioni
-        meteo = data_meteo()[[input$varmeteo_conf]] %>% dplyr::filter(lubridate::year(Tempo) == input$conf_selyear) %>% 
-          dplyr::group_by(Codice_azienda) %>% dplyr::summarise(Misura = mean(Misura)) %>% 
+        meteo = data_meteo()[[input$varmeteo_conf]] %>% dplyr::mutate(Anno = factor(lubridate::year(Tempo))) %>% 
+          dplyr::filter(Anno %in% input$conf_selyear) %>% 
+          dplyr::group_by(Codice_azienda, Anno) %>% dplyr::summarise(Misura = mean(Misura)) %>% 
           dplyr::rename(Misura_precipitazione = Misura)
-        x = poltot_conf() %>% dplyr::filter(Anno %in% input$conf_selyear) %>% dplyr::left_join(meteo, by = "Codice_azienda")
+        x = poltot_conf() %>% dplyr::filter(Anno %in% input$conf_selyear) %>% dplyr::left_join(meteo, by = c("Codice_azienda", "Anno"))
         
       }else if(conf_type() == "totind"){
         req(polind_conf_notsumm())
@@ -3526,12 +3535,13 @@ app_server <- function( input, output, session ) {
           dplyr::filter(Anno %in% input$conf_selyear)
         
       }else if(conf_type() == "indprec"){
-        
+   
         ## individuali + precipitazioni
-        meteo = data_meteo()[[input$varmeteo_conf]] %>% dplyr::filter(lubridate::year(Tempo) %in% input$conf_selyear) %>% 
-          dplyr::group_by(Codice_azienda) %>% dplyr::summarise(Misura = mean(Misura)) %>% 
+        meteo = data_meteo()[[input$varmeteo_conf]] %>% dplyr::mutate(Anno = factor(lubridate::year(Tempo))) %>% 
+          dplyr::filter(Anno %in% input$conf_selyear) %>%
+          dplyr::group_by(Codice_azienda, Anno) %>% dplyr::summarise(Misura = mean(Misura)) %>% 
           dplyr::rename(Misura_precipitazione = Misura)
-        x = polindsumm %>% dplyr::filter(Anno %in% input$conf_selyear) %>% dplyr::left_join(meteo, by = "Codice_azienda")
+        x = polindsumm %>% dplyr::filter(Anno %in% input$conf_selyear) %>% dplyr::left_join(meteo, by = c("Codice_azienda", "Anno"))
       }
     }
     
@@ -3573,11 +3583,12 @@ app_server <- function( input, output, session ) {
     
     if(input$scattsize_conf == "Nessuna"){
       temp = ggplot(data) +
-        geom_count(aes_string(x = paste0("`",input$scattx_conf, "`"), y = paste0("`",input$scatty_conf, "`"), colour = paste0("`",input$scattfill_conf, "`")), 
+        geom_count(aes_string(x = paste0("`",input$scattx_conf, "`"), y = paste0("`",input$scatty_conf, "`"), colour = paste0("`",input$scattfill_conf, "`"),
+                              label = "Anno"), 
                    size = 2) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
     }else{
       temp = ggplot(data) +
-        geom_count(aes_string(x = paste0("`",input$scattx_conf, "`"), y = paste0("`",input$scatty_conf, "`"), 
+        geom_count(aes_string(x = paste0("`",input$scattx_conf, "`"), y = paste0("`",input$scatty_conf, "`"), label = "Anno",
                               colour = paste0("`",input$scattfill_conf, "`"), size = paste0("`",input$scattsize_conf, "`")))  
     }
 

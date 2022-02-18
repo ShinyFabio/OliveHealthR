@@ -230,17 +230,18 @@ app_ui <- function(request) {
                                   ), #end of tabbox dati meteo
                                   
                                   
-                                  
+                                  # Mappa azienda
                                   tabPanel(tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")),
                                     sidebarLayout(
                                       sidebarPanel(width = 3,
                                         div(actionButton("update", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:160%'), align = "center"),
                                         hr(), 
-                                        selectInput("select3", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE)
+                                        selectInput("select3", "Seleziona la colonna da visualizzare", choices = "", multiple = FALSE),
+                                        selectInput("filt_cult_mapp", "Filtra per cultivar", choices = "", multiple = TRUE)
                                       ),
                                       mainPanel(width = 9,
                                         conditionalPanel(condition = "input.update != 0",
-                                          shinycssloaders::withSpinner(tmapOutput("map1")),
+                                          shinycssloaders::withSpinner(tmapOutput("map1",height = 650)),
                                         )
                                       )
                                     )
