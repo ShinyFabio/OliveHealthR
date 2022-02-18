@@ -429,7 +429,7 @@ app_server <- function( input, output, session ) {
 
   observeEvent(datmap1(), {
     updateSelectInput(session, "select3", choices = colnames(datmap1()))
-    updateSelectInput(session, "filt_cult_mapp", choices = c("Tutte", unique(datmap1()$Cultivar_principale)))
+    updateSelectInput(session, "filt_cult_mapp", choices = c("Tutte", unique(datmap1()$Cultivar_principale)), selected = "Tutte")
   })
   
   
