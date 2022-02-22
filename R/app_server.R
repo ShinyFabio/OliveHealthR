@@ -3563,6 +3563,16 @@ app_server <- function( input, output, session ) {
     req(dataconf())
     dataconf()
   })
+  
+  #download dati conf
+  output$down_integrazione <- downloadHandler(
+    filename = function() {
+      paste0("Confronto_", conf_type(),"_",input$conf_selpoltot, "_",Sys.Date(), ".xlsx")
+    },
+    content = function(file) {
+      openxlsx::write.xlsx(dataconf(), file)
+    }
+  )
 
   #### grafici confronti #####
   
@@ -3571,7 +3581,11 @@ app_server <- function( input, output, session ) {
     updateSelectInput(session, "scatty_conf", choices = colnames(dataconf()))
     updateSelectInput(session, "scattfill_conf", choices = colnames(dataconf()))
     updateSelectInput(session, "scattsize_conf", choices = c("Nessuna", colnames(dplyr::select(dataconf(), where(is.double)))))
-    updateSelectInput(session, "scattnum_conf", choices = unique(na.omit(dataconf()$N_campionamento)))
+    updateSelectInput(session, "scattnum_conf", choices = unique(na.omit(dataconf()$N_campionamento)), selected = "R1")
+    updateSelectInput(session, "scattshape_conf", choices = c("Nessuna", colnames(dplyr::select(dataconf(), !where(is.double)))))
+    
+    updateSelectInput(session, "selcult_scatt_conf", choices = unique(na.omit(dataconf()$Cultivar_principale)), 
+                      selected =unique(na.omit(dataconf()$Cultivar_principale))[1])
     
     updateSelectInput(session, "corrnum_conf", choices = unique(na.omit(dataconf()$N_campionamento)))
   })
@@ -3579,21 +3593,40 @@ app_server <- function( input, output, session ) {
   #### scatterplot
   output$scatterconf = plotly::renderPlotly({
     req(dataconf())
-    data = dataconf()  %>% dplyr::filter(N_campionamento == input$scattnum_conf)
+    validate(need(input$scattnum_conf != "", "Seleziona almeno un campionamento"))
+    
+    data = dataconf()  %>% dplyr::filter(N_campionamento %in% input$scattnum_conf)
+    
+    if(input$typescatt_conf == "Filtra per cultivar"){
+      data = data %>% dplyr::filter(Cultivar_principale %in% input$selcult_scatt_conf)
+    }
+    
+    if(input$scattshape_conf == "Nessuna") shape_col = NULL else{shape_col = input$scattshape_conf}
     
     if(input$scattsize_conf == "Nessuna"){
-      temp = ggplot(data) +
-        geom_count(aes_string(x = paste0("`",input$scattx_conf, "`"), y = paste0("`",input$scatty_conf, "`"), colour = paste0("`",input$scattfill_conf, "`"),
-                              label = "Anno"), 
+      temp = ggplot(data, aes_string(x = paste0("`",input$scattx_conf, "`"), y = paste0("`",input$scatty_conf, "`"))) +
+        geom_count(aes_string(colour = paste0("`",input$scattfill_conf, "`"),
+                              shape = shape_col, label = "Anno"), 
                    size = 2) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
     }else{
-      temp = ggplot(data) +
-        geom_count(aes_string(x = paste0("`",input$scattx_conf, "`"), y = paste0("`",input$scatty_conf, "`"), label = "Anno",
-                              colour = paste0("`",input$scattfill_conf, "`"), size = paste0("`",input$scattsize_conf, "`")))  
+      temp = ggplot(data, aes_string(x = paste0("`",input$scattx_conf, "`"), y = paste0("`",input$scatty_conf, "`"))) +
+        geom_count(aes_string(label = "Anno",
+                              colour = paste0("`",input$scattfill_conf, "`"), size = paste0("`",input$scattsize_conf, "`"),
+                              shape = shape_col))  
     }
+    
+
 
     if(is.double(dplyr::pull(data, input$scattfill_conf)) == TRUE){
       temp = temp + scale_colour_gradient(high = "#132B43", low = "#56B1F7")
+    }
+    
+    if(input$scatt_fit_conf == TRUE){
+      temp = temp + geom_smooth(method = input$scatt_selmodfit_conf, aes_string(colour = paste0("`",input$scattfill_conf, "`")), se = T)
+    }
+    
+    if(input$scatt_dens_conf == TRUE){
+      temp = temp + geom_density_2d(aes_string(linetype = paste0("`",input$scattfill_conf, "`"), col = paste0("`",input$scattfill_conf, "`")))
     }
     
     if(input$scattfacet_conf == TRUE && length(input$conf_selyear) > 1){
@@ -3737,12 +3770,12 @@ app_server <- function( input, output, session ) {
       temp = ggplot(data = dataconf_notsumm(), 
                     mapping = aes_string(x = paste0("`",input$corrtest1_conf, "`"), y = paste0("`",input$corrtest2_conf, "`"))) + 
         geom_point(mapping = aes_string(color = paste0("`",input$corrtestfill_conf, "`"))) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + 
-        geom_smooth(method = lm, mapping = aes_string(fill = paste0("`",input$corrtestfill_conf, "`")), se = input$selsecorrtest_conf)
+        geom_smooth(method = input$selmod_fit_conf, mapping = aes_string(color = paste0("`",input$corrtestfill_conf, "`"), fill = paste0("`",input$corrtestfill_conf, "`")), se = input$selsecorrtest_conf)
     } else{
       temp = ggplot(data = dataconf_notsumm(),
                     mapping = aes_string(x = paste0("`",input$corrtest1_conf, "`"), y = paste0("`",input$corrtest2_conf, "`"))) +
         geom_point(mapping = aes_string(color = paste0("`",input$corrtestfill_conf, "`"))) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank()) + 
-        geom_smooth(method=lm, se = input$selsecorrtest_conf)
+        geom_smooth(method=input$selmod_fit_conf, se = input$selsecorrtest_conf)
       
     }
     

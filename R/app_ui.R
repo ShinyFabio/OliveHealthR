@@ -1845,11 +1845,28 @@ app_ui <- function(request) {
                                     conditionalPanel(
                                       condition = "input.tabboxconf == 'tabpan_graphconf' && input.boxconfgraph == 'tabgraph_scattconf'",
                                       h4(strong("Impostazioni grafici")),
+                                      awesomeRadio("typescatt_conf", "Dati da analizzare", choices = c("Tutti", "Filtra per cultivar")),
+                                      conditionalPanel(
+                                        condition = "input.typescatt_conf == 'Filtra per cultivar'",
+                                        selectInput("selcult_scatt_conf", "Scegli la/le cultivar", choices = "", multiple = TRUE)),
+                                      
                                       selectInput("scattx_conf", "Seleziona la colonna X", choices = ""),
                                       selectInput("scatty_conf", "Seleziona la colonna Y", choices = ""),
+                                      h4(strong("Altre opzioni")),
                                       conditionalPanel(
                                         condition = "input.conf_selyear.length > 1",
                                         awesomeCheckbox("scattfacet_conf", "Dividi gli anni in due grafici", value = FALSE)
+                                      ),
+                                      conditionalPanel(
+                                        condition = "input.typescatt_conf == 'Filtra per cultivar'",
+                                        awesomeCheckbox("scatt_dens_conf", "Density plot 2D", value = FALSE),
+                                        fluidRow(
+                                          column(4, br(), awesomeCheckbox("scatt_fit_conf", "Fit", value = FALSE)),
+                                          conditionalPanel(
+                                            condition = "input.scatt_fit_conf == true",
+                                            column(8, awesomeRadio("scatt_selmodfit_conf", "Modello fit", choices = c("lm", "loess"),inline = T))
+                                          ))
+                                        
                                       )
                                       
                                       
@@ -1873,6 +1890,7 @@ app_ui <- function(request) {
                                         selectInput("corrtestfill_conf", "Colonna riempimento", choices = "", multiple = FALSE),
                                         awesomeCheckbox("numfitcorrtest_conf", "Singolo fit", value = TRUE),
                                         awesomeCheckbox("selsecorrtest_conf", "Intervallo di confidenza", value = TRUE),
+                                        awesomeRadio("selmod_fit_conf", "Seleziona un metodo per il fit", choices = c("lm", "loess", "auto"))
                                         
                                       ),
                                       
@@ -1934,7 +1952,8 @@ app_ui <- function(request) {
                                       
                                       ###tabella
                                       tabPanel(tagList(icon("table"), HTML("&nbsp;Tabella")), value = "tabpan_tableconf",
-                                        fluidPage(box(width=12, status = "primary", style = "overflow-x: scroll;", DT::DTOutput("dt_conf")))
+                                        fluidPage(box(width=12, status = "primary", style = "overflow-x: scroll;", DT::DTOutput("dt_conf"))),
+                                        downloadButton("down_integrazione", "Download dati")
                                       ),
                                       
                                       
@@ -1949,9 +1968,10 @@ app_ui <- function(request) {
                                             fluidPage(
                                               box(width=NULL, status = "primary",
                                                   fluidRow(
-                                                    column(3, selectInput("scattnum_conf", "Scegli il numero di campionamento", choices = "", multiple = FALSE)),
+                                                    column(3, selectInput("scattnum_conf", "Scegli il numero di campionamento", choices = "", multiple = TRUE)),
                                                     column(3, selectInput("scattfill_conf", "Colonna da usare come riempimento", choices = "", multiple = FALSE)),
-                                                    column(3, selectInput("scattsize_conf", "Colonna da usare come dimensione", choices = ""))
+                                                    column(3, selectInput("scattsize_conf", "Colonna da usare come dimensione", choices = "")),
+                                                    column(3, selectInput("scattshape_conf", "Colonna da usare come forma", choices = ""))
                                                   )),
                                               plotly::plotlyOutput("scatterconf",height = "100%"),
                                             )
