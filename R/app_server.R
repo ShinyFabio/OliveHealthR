@@ -3598,6 +3598,14 @@ app_server <- function( input, output, session ) {
     
     data = dataconf()  %>% dplyr::filter(N_campionamento %in% input$scattnum_conf)
     
+    #jitter se c'è almeno una colonna char o fct
+    if(TRUE %in% (c("character", "factor") %in% sapply(dplyr::select(data, input$scattx_conf, input$scatty_conf), class))){
+      pos_jitter = "jitter"
+    }else{
+      pos_jitter = "identity"
+    }
+    
+    
     if(input$typescatt_conf == "Filtra per cultivar"){
       data = data %>% dplyr::filter(Cultivar_principale %in% input$selcult_scatt_conf)
     }
@@ -3607,13 +3615,13 @@ app_server <- function( input, output, session ) {
     if(input$scattsize_conf == "Nessuna"){
       temp = ggplot(data, aes_string(x = paste0("`",input$scattx_conf, "`"), y = paste0("`",input$scatty_conf, "`"))) +
         geom_count(aes_string(colour = paste0("`",input$scattfill_conf, "`"),
-                              shape = shape_col, label = "Anno"), 
+                              shape = shape_col, label = "Anno"), position = pos_jitter,
                    size = 2) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
     }else{
       temp = ggplot(data, aes_string(x = paste0("`",input$scattx_conf, "`"), y = paste0("`",input$scatty_conf, "`"))) +
         geom_count(aes_string(label = "Anno",
                               colour = paste0("`",input$scattfill_conf, "`"), size = paste0("`",input$scattsize_conf, "`"),
-                              shape = shape_col))  
+                              shape = shape_col), position = pos_jitter)  
     }
     
 
@@ -3629,6 +3637,9 @@ app_server <- function( input, output, session ) {
     if(input$scatt_dens_conf == TRUE){
       temp = temp + geom_density_2d(aes_string(linetype = paste0("`",input$scattfill_conf, "`"), col = paste0("`",input$scattfill_conf, "`")))
     }
+    
+
+    
     
     if(input$scattfacet_conf == TRUE && length(input$conf_selyear) > 1){
       temp = temp + theme(axis.text.x = element_text(angle = 315, hjust = 0, margin=margin(t=20)),legend.title = element_blank()) + 

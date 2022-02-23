@@ -1861,6 +1861,7 @@ app_ui <- function(request) {
                                       
                                       selectInput("scattx_conf", "Seleziona la colonna X", choices = ""),
                                       selectInput("scatty_conf", "Seleziona la colonna Y", choices = ""),
+                                      hr(),
                                       h4(strong("Altre opzioni")),
                                       conditionalPanel(
                                         condition = "input.conf_selyear.length > 1",
