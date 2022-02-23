@@ -180,18 +180,6 @@ app_ui <- function(request) {
                                           trigger = c("hover","click"),
                                           options = list(container = "body")
                                         ),
-                                        # selectInput("varmeteo", 
-                                        #             label = tags$span(
-                                        #               "Variabile meteo", 
-                                        #               tags$i(
-                                        #                 class = "glyphicon glyphicon-info-sign", 
-                                        #                 style = "color:#0072B2;",
-                                        #                 title = "Per ulteriori informazioni vai qui: 
-                                        #                 https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-land-monthly-means?tab=overview"
-                                        #               )),
-                                        #             choices = c("Precipitazioni totali" = "tp", 
-                                        #                         "Volume d'acqua nel suolo (7-28cm)" = "swvl2", 
-                                        #                         "Volume d'acqua nel suolo (28-100cm)" = "swvl3")),
                                         conditionalPanel(
                                           condition = "input.tabsetmeteo == 'tabpanmeteomap'",
                                           awesomeRadio("type_mapmeteo", "Tipo di mappa", choices = c("Statica","Animata")),
