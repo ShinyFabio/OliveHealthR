@@ -59,7 +59,6 @@ Depends:
     R (>= 4.0.0),
     tmap,
     tmaptools,
-    shinythemes,
     shinydashboard,
     shinyWidgets,
     ggfortify,

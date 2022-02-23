@@ -24,7 +24,8 @@ app_ui <- function(request) {
     shinyjs::useShinyjs(),
     
     # Your application UI logic 
-    navbarPage(title = "OliveHealthR", theme = shinytheme("spacelab"), id = "navb1", 
+    navbarPage(title = "OliveHealthR", theme = "www/spacelab.min.css",
+               id = "navb1", 
                 #margin-right:auto; margin-left:auto;
       tags$head(tags$style(type = "text/css", ".container-fluid{padding-left:0px; padding-right:0px ; }")),         
       tabPanel(title = "Welcome", value = "panel1",
