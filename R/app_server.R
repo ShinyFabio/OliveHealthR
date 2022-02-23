@@ -3241,7 +3241,7 @@ app_server <- function( input, output, session ) {
   data_meteo = reactive({
     req(data())
     destpath = base::system.file(package = "OliveHealthR")
-    destpath = paste0(destpath, "/data_precipitazioni/precipitazioni_2020_2021.nc")
+    destpath = paste0(destpath, "/data/precipitazioni_2020_2021.nc")
     nc_meteofile = ncdf4::nc_open(destpath)
     
     makedata_meteo(ncfile = nc_meteofile, dati_aziende = data())
