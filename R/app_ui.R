@@ -164,17 +164,34 @@ app_ui <- function(request) {
                                       sidebarPanel(
                                         width = 2,
                                         selectInput("varmeteo", 
-                                                    label = tags$span(
-                                                      "Variabile meteo", 
-                                                      tags$i(
-                                                        class = "glyphicon glyphicon-info-sign", 
-                                                        style = "color:#0072B2;",
-                                                        title = "Per ulteriori informazioni vai qui: 
-                                                        https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-land-monthly-means?tab=overview"
-                                                      )),
+                                                    label = tags$span("Variabile meteo", circleButton("hintmeteo", icon = icon("info"), status = "info", size = "xs")),
                                                     choices = c("Precipitazioni totali" = "tp", 
                                                                 "Volume d'acqua nel suolo (7-28cm)" = "swvl2", 
-                                                                "Volume d'acqua nel suolo (28-100cm)" = "swvl3")),
+                                                                "Volume d'acqua nel suolo (28-100cm)" = "swvl3")
+                                        ),
+                                        shinyBS::bsPopover(
+                                          id = "hintmeteo",
+                                          title = "Variabili meteo",
+                                          content = paste0(
+                                            "Per ulteriori informazioni sulle misure di precipitazione clicca sul seguente link ",
+                                            a("copernicus.eu", href = "https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-land-monthly-means?tab=overview", target="_blank")
+                                          ),
+                                          placement = "right",
+                                          trigger = c("hover","click"),
+                                          options = list(container = "body")
+                                        ),
+                                        # selectInput("varmeteo", 
+                                        #             label = tags$span(
+                                        #               "Variabile meteo", 
+                                        #               tags$i(
+                                        #                 class = "glyphicon glyphicon-info-sign", 
+                                        #                 style = "color:#0072B2;",
+                                        #                 title = "Per ulteriori informazioni vai qui: 
+                                        #                 https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-land-monthly-means?tab=overview"
+                                        #               )),
+                                        #             choices = c("Precipitazioni totali" = "tp", 
+                                        #                         "Volume d'acqua nel suolo (7-28cm)" = "swvl2", 
+                                        #                         "Volume d'acqua nel suolo (28-100cm)" = "swvl3")),
                                         conditionalPanel(
                                           condition = "input.tabsetmeteo == 'tabpanmeteomap'",
                                           awesomeRadio("type_mapmeteo", "Tipo di mappa", choices = c("Statica","Animata")),
@@ -1376,7 +1393,7 @@ app_ui <- function(request) {
                                     #Test d'ipotesi
                                     conditionalPanel(condition = "input.tabboxmorfo == 'tabpanmorfotest'",
                                       h4(strong("Opzioni test")),
-                                      selectInput("selyearttestmorfo", "Scegli l'anno", choices = "", multiple = FALSE),
+                                      selectInput("selyearttestmorfo", "Scegli l'anno", choices = "", multiple = TRUE),
                                       hr(),
                                       
                                       #T-test
@@ -1838,7 +1855,11 @@ app_ui <- function(request) {
                                                                                                                   "Volume d'acqua nel suolo (7-28cm)" = "swvl2", 
                                                                                                                   "Volume d'acqua nel suolo (28-100cm)" = "swvl3"))
                                     ),
-                                    selectInput("conf_selyear", "Scegli un anno", choices = c("2020", "2021"), multiple = TRUE, selected = "2020"),
+                                    selectInput("conf_selyear", "Scegli uno o più anni", choices = c("2020", "2021"), multiple = TRUE, selected = "2020"),
+                                    conditionalPanel(
+                                      condition = "input.tabboxconf == 'tabpan_testconf'",
+                                      selectInput("conf_selcamp_test", "Scegli uno o più campionamenti", choices = "", multiple = TRUE)
+                                      ),
                                     hr(),
                                     
                                     #grafici
@@ -1983,7 +2004,7 @@ app_ui <- function(request) {
                                             fluidPage(
                                               box(width=NULL, status = "primary",
                                                   fluidRow(
-                                                    column(3, selectInput("corrnum_conf", "Scegli il numero di campionamento", choices = "", multiple = FALSE)),
+                                                    column(3, selectInput("corrnum_conf", "Scegli il numero di campionamento", choices = "", multiple = TRUE)),
                                                   )),
                                               plotly::plotlyOutput("corrplotconf")
                                             )

@@ -2793,12 +2793,13 @@ app_server <- function( input, output, session ) {
   
   #dati filtrati per anno
   observeEvent(datamorfo(), {
-    updateSelectInput(session, "selyearttestmorfo", choices = row.names(table(dplyr::select(datamorfo(), Anno))))
+    updateSelectInput(session, "selyearttestmorfo", choices = na.omit(unique(datamorfo()$Anno)), selected = na.omit(unique(datamorfo()$Anno))[1])
   })
   
   datamorfoyeartest = reactive({
     req(datamorfo())
-    datamorfo() %>% dplyr::filter(Anno == input$selyearttestmorfo)
+    validate(need(input$selyearttestmorfo != "", "Seleziona almeno un anno."))
+    datamorfo() %>% dplyr::filter(Anno %in% input$selyearttestmorfo)
   })
   
   ###### t-test 
@@ -3587,7 +3588,7 @@ app_server <- function( input, output, session ) {
     updateSelectInput(session, "selcult_scatt_conf", choices = unique(na.omit(dataconf()$Cultivar_principale)), 
                       selected =unique(na.omit(dataconf()$Cultivar_principale))[1])
     
-    updateSelectInput(session, "corrnum_conf", choices = unique(na.omit(dataconf()$N_campionamento)))
+    updateSelectInput(session, "corrnum_conf", choices = unique(na.omit(dataconf()$N_campionamento)), selected = unique(na.omit(dataconf()$N_campionamento))[1])
   })
   
   #### scatterplot
@@ -3636,7 +3637,7 @@ app_server <- function( input, output, session ) {
     }else{
       temp = temp + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
 
-      plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$scattfill_conf)))
+      plotly::ggplotly(temp, height = 600) %>% plotly::layout(legend = list(title = list(text = input$scattfill_conf)))
     }
 
   })
@@ -3647,8 +3648,9 @@ app_server <- function( input, output, session ) {
   output$corrplotconf = plotly::renderPlotly({
     req(dataconf())
     validate(need(input$conf_type2 != "camp", "Non è possibile calcolare la correlazione per questo confronto."))
+    validate(need(input$corrnum_conf != "", "Scegli almeno un campionamento."))
     ###scegliere anno e  il campionamento (scatter plot)
-    datatemp = dataconf() %>% dplyr::filter(N_campionamento == input$corrnum_conf) %>% 
+    datatemp = dataconf() %>% dplyr::filter(N_campionamento %in% input$corrnum_conf) %>% 
       dplyr::select(where(is.double))
     temp2 = round(stats::cor(datatemp, use = "na.or.complete"),1)
     par(xpd = TRUE)
@@ -3661,7 +3663,7 @@ app_server <- function( input, output, session ) {
   ##### test d'ipotesi confronti ####
  
   #dati non mediati
-  dataconf_notsumm = reactive({
+  dataconf_notsumm1 = reactive({
     req(conf_type(), poltot_conf_notsumm(), drupe(), data_meteo())
     z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale)
     
@@ -3720,13 +3722,24 @@ app_server <- function( input, output, session ) {
     }
   })
   
+  observeEvent(dataconf_notsumm1(),{
+    updateSelectInput(session, "conf_selcamp_test", choices = na.omit(unique(dataconf_notsumm1()$N_campionamento)), 
+                      selected = na.omit(unique(dataconf_notsumm1()$N_campionamento))[1])
+  })
+  
+  dataconf_notsumm = reactive({
+    req(dataconf_notsumm1())
+    validate(need(input$conf_selcamp_test != "", "Seleziona almeno un campionamento"))
+    dataconf_notsumm1() %>% dplyr::filter(N_campionamento %in% input$conf_selcamp_test)
+  })
 
   ######################### correlation test ____________________________
   
   #aggiorna il selectinput in base ai double presenti
   observeEvent(dataconf_notsumm(), {
     updateSelectInput(session, "corrtest1_conf", choices = colnames(dplyr::select(dataconf_notsumm(), where(is.double), -Anno)))
-    updateSelectInput(session, "corrtest2_conf", choices = colnames(dplyr::select(dataconf_notsumm(), where(is.double), -Anno)))
+    updateSelectInput(session, "corrtest2_conf", choices = colnames(dplyr::select(dataconf_notsumm(), where(is.double), -Anno)),
+                      selected = colnames(dplyr::select(dataconf_notsumm(), where(is.double), -Anno))[2])
     
     updateSelectInput(session, "corrtestfill_conf", choices = colnames(dplyr::select(dataconf_notsumm(), !where(is.double)))) #is.character
     
