@@ -557,6 +557,8 @@ app_ui <- function(request) {
                                       )
                                     ),
                                     
+                                   
+                                    
                                     # MAPPA __________________________________________________________
                                     conditionalPanel(condition = "input.tabboxpoltot == 'tabpoltotmap'",
                                       div(actionButton("updatepoltotmap", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:160%'), align = "center"),
@@ -614,6 +616,7 @@ app_ui <- function(request) {
                                                  
                                                ) #end of tabsetpanel grafici
                                       ), #end of tabpanel grafici
+                                      
                                       
                                       #tabpanel mappa
                                       tabPanel(tagList(shiny::icon("map-marked-alt"), HTML("&nbsp;Mappa")), value = "tabpoltotmap",
@@ -763,6 +766,21 @@ app_ui <- function(request) {
                                     ),
                                     
                                     
+                                    # CLUSTERING _____________
+                                    conditionalPanel(
+                                      condition = "input.tabboxpolind == 'tabclustpolind'",
+                                      selectInput("selcolclustpolind", "Seleziona variabile", choices = c("Codice_azienda", "Cultivar_principale")),
+                                      selectInput("selyearclustpolind", "Seleziona l'anno", choices = "", multiple = TRUE),
+                                      selectInput("numclustpolind", "Scegli il numero di campionamento", choices = "", multiple = FALSE),
+                                      #materialSwitch(inputId = "summarizeclustmorfo", label = "Sintetizza i dati", status = "primary", value = TRUE),
+                                      radioGroupButtons("selclustmethodpolind", "Tipo di clustering", choices = c("Gerarchico", "Partizionale"), justified = TRUE, status = "primary"),
+                                      conditionalPanel(
+                                        condition = "input.selclustmethodpolind == 'Partizionale'",
+                                        selectInput("selclusthpolind", "Seleziona l'algoritmo di clustering", choices = c("K-means", "PAM", "Clara"), selected = "K-means", multiple = FALSE),
+                                      )
+                                    ),
+                                    
+                                    
                                     # MAPPA __________________________________________________________
                                     conditionalPanel(condition = "input.tabboxpolind == 'tabpolindmap'",
                                       div(actionButton("updatepolindmap", "Carica mappa", class = "btn-primary", style = 'padding:4px; font-size:160%'), align = "center"),
@@ -892,6 +910,41 @@ app_ui <- function(request) {
                                         ) #end of tabsetpanel
                                       ), #end of tabpanel PCA
                                       
+                                      
+                                      # Clustering
+                                      tabPanel(
+                                        tagList(tags$img(src = "www/clustering_icon.png", height = "16px", width = "16px"), HTML("&nbsp;Clustering")), value = "tabclustpolind",
+                                        tabsetPanel(
+                                          
+                                          tabPanel("Cluster plot",
+                                                   br(),
+                                                   fluidPage(
+                                                     fluidRow(
+                                                       column(
+                                                         4, 
+                                                         box(width = NULL, status = "primary",
+                                                             sliderInput("selnumclustpolind", "Numero cluster:", min = 1, max = 10, value = 2))),
+                                                       
+                                                       column(
+                                                         4, 
+                                                         conditionalPanel(
+                                                           condition = "input.selclustmethodpolind == 'Gerarchico'",
+                                                           box(width=NULL, status = "primary",
+                                                               selectInput("selhclustmethpolind", "Seleziona metodo agglomerazione", choices = c("single", "complete", "ward.D", "ward.D2"), selected = "ward.D2"))
+                                                         )
+                                                       )
+                                                     ), 
+                                                     shinycssloaders::withSpinner(image = "www/running_olive.gif", plotOutput("plotclusterpolind", height = "600px"))
+                                                   )
+                                          ),
+                                          
+                                          tabPanel("Numero cluster",
+                                                   br(),
+                                                   shinycssloaders::withSpinner(image = "www/running_olive.gif", plotOutput("numclustergraphpolind", height = "800px"))
+                                          )
+                                          
+                                        )
+                                      ), #end of tabpanel clustering
                                       
                                       
                                       #tab galleria (ovvero i cromatogrammi)
@@ -1366,14 +1419,15 @@ app_ui <- function(request) {
                                     #  Clustering
                                     conditionalPanel(
                                       condition = "input.tabboxmorfo == 'tabclustmor'",
-                                      selectInput("selyearclustmorfo", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                      selectInput("selcolclustmorfo", "Seleziona variabile", choices = c("Codice_azienda", "Cultivar_principale")),
+                                      selectInput("selyearclustmorfo", "Seleziona l'anno", choices = "", multiple = TRUE),
                                       selectInput("numclustmorfo", "Scegli il numero di campionamento", choices = "", multiple = FALSE),
                                       #materialSwitch(inputId = "summarizeclustmorfo", label = "Sintetizza i dati", status = "primary", value = TRUE),
                                       radioGroupButtons("selclustmethod", "Tipo di clustering", choices = c("Gerarchico", "Partizionale"), justified = TRUE, status = "primary"),
                                       conditionalPanel(
                                         condition = "input.selclustmethod == 'Partizionale'",
                                         selectInput("selclusthmorfo", "Seleziona l'algoritmo di clustering", choices = c("K-means", "PAM", "Clara"), selected = "K-means", multiple = FALSE),
-                                      ) 
+                                      )
                                     ),
                                     
                                     
@@ -1607,11 +1661,7 @@ app_ui <- function(request) {
                                       # Clustering
                                       tabPanel(tagList(tags$img(src = "www/clustering_icon.png", height = "16px", width = "16px"), HTML("&nbsp;Clustering")), value = "tabclustmor",
                                         tabsetPanel(
-                                          tabPanel("Numero cluster",
-                                            br(),
-                                            shinycssloaders::withSpinner(image = "www/running_olive.gif", plotOutput("numclustergraph", height = "800px"))
-                                          ),
-                                                  
+                                          
                                           tabPanel("Cluster plot",
                                             br(),
                                             fluidPage(
@@ -1629,6 +1679,11 @@ app_ui <- function(request) {
                                               ), 
                                               shinycssloaders::withSpinner(image = "www/running_olive.gif", plotOutput("plotclustermorfo", height = "600px"))
                                             )
+                                          ),
+                                          
+                                          tabPanel("Numero cluster",
+                                                   br(),
+                                                   shinycssloaders::withSpinner(image = "www/running_olive.gif", plotOutput("numclustergraph", height = "800px"))
                                           )
                                           
                                         )

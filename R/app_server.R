@@ -1006,9 +1006,9 @@ app_server <- function( input, output, session ) {
   
   dataforselect_poltot = reactive({
     if(input$summpoltot == TRUE){
-      data = datapoltot_summ() 
+      datapoltot_summ() 
     } else{
-      data = datapoltot()
+      datapoltot()
     }
   })
   
@@ -1106,7 +1106,7 @@ app_server <- function( input, output, session ) {
   })
   
   
-
+  
   
   
   #################### Mappa Polifenoli totali ###########################################
@@ -1649,6 +1649,76 @@ app_server <- function( input, output, session ) {
   })
 
 
+  ##################### CLUSTERING polifenoli individuali ###################
+
+  #aggiorna il selectinput , "selyearheatind" in base agli anni presenti e filtra
+  observeEvent(datapolind(), {
+    updateSelectInput(session, "selyearclustpolind", choices = na.omit(unique(datapolind()$Anno)), selected = na.omit(unique(datapolind()$Anno))[1])
+    updateSelectInput(session, "numclustpolind", choices = row.names(table(dplyr::select(datapolind(), "N_campionamento"))))
+  })
+  
+  dataclustpolind = reactive({
+    req(datapolind())
+    #filtro in base agli anni presenti e scelgo anche il num campionamento
+    datapre = datapolind() %>% dplyr::filter(Anno %in% input$selyearclustpolind) %>% dplyr::filter(N_campionamento == input$numclustpolind)
+    
+    datapre = datapre %>% dplyr::select(input$selcolclustpolind, where(is.double)) %>% 
+      dplyr::group_by(dplyr::across(input$selcolclustpolind)) %>% dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% stats::na.exclude()
+    datapre %>% as.data.frame() %>% tibble::column_to_rownames(input$selcolclustpolind) %>% scale()
+  })
+  
+  #grafici per la scelta del numero di cluster
+  output$numclustergraphpolind = renderPlot({
+    req(dataclustpolind())
+    
+    if(input$selclusthpolind == "K-means"){
+      p1 = factoextra::fviz_nbclust(dataclustpolind(), stats::kmeans, method = "gap_stat")
+      p2 = factoextra::fviz_nbclust(dataclustpolind(), stats::kmeans, method = "wss")
+      p3 = factoextra::fviz_nbclust(dataclustpolind(), stats::kmeans, method = "silhouette")
+    } else if(input$selclusthpolind == "PAM"){
+      p1 = factoextra::fviz_nbclust(dataclustpolind(), cluster::pam, method = "gap_stat")
+      p2 = factoextra::fviz_nbclust(dataclustpolind(), cluster::pam, method = "wss")
+      p3 = factoextra::fviz_nbclust(dataclustpolind(), cluster::pam, method = "silhouette")
+    } else{
+      p1 = factoextra::fviz_nbclust(dataclustpolind(), cluster::clara, method = "gap_stat")
+      p2 = factoextra::fviz_nbclust(dataclustpolind(), cluster::clara, method = "wss")
+      p3 = factoextra::fviz_nbclust(dataclustpolind(), cluster::clara, method = "silhouette")
+    }
+    
+    if(input$selclustmethodpolind == "Partizionale"){
+      gridExtra::grid.arrange(p1, p2, p3, ncol = 2)
+    } else{
+      meth = c("single","complete","ward.D","ward.D2")
+      d = stats::dist(dataclustpolind())
+      par(mfrow=c(2,2))
+      for(i in seq(1,4)){
+        hs = stats::hclust(d, method = meth[i])
+        plot(hs$height, pch=16, main = meth[i], ylab = "Height")
+      }
+    }
+  })
+  
+  #data cluster
+  output$plotclusterpolind = renderPlot({
+    req(dataclustpolind())
+    if(input$selclustmethodpolind == "Partizionale"){
+      if(input$selclusthpolind == "K-means"){
+        clust = stats::kmeans(dataclustpolind(), centers = input$selnumclustpolind, nstart = 25)
+      } else if (input$selclusthpolind == "PAM"){
+        clust = cluster::pam(dataclustpolind(), k = input$selnumclustpolind)
+      } else {
+        clust = cluster::clara(dataclustpolind(), k = input$selnumclustpolind)
+      }
+      factoextra::fviz_cluster(clust, data = dataclustpolind(), ellipse.type = "convex", palette = "jco", ggtheme = theme_minimal())
+    } else {
+      hcluster = factoextra::eclust(dataclustpolind(), "hclust", hc_method = input$selhclustmethpolind, k = input$selnumclustpolind)
+      p1 = factoextra::fviz_dend(hcluster, palette = "jco", rect = TRUE, show_labels = FALSE)
+      p2 = factoextra::fviz_silhouette(hcluster)
+      gridExtra::grid.arrange(p1, p2, ncol = 2)
+    }
+  })
+  
+  
 
   #################### Mappa Polifenoli individuali ###########################################
 
@@ -2719,21 +2789,19 @@ app_server <- function( input, output, session ) {
   
   #aggiorna il selectinput , "selyearheatind" in base agli anni presenti e filtra
   observeEvent(datamorfo(), {
-    updateSelectInput(session, "selyearclustmorfo", choices = row.names(table(dplyr::select(datamorfo(), Anno))))
+    updateSelectInput(session, "selyearclustmorfo", choices = na.omit(unique(datamorfo()$Anno)), selected = na.omit(unique(datamorfo()$Anno))[1])
     updateSelectInput(session, "numclustmorfo", choices = row.names(table(dplyr::select(datamorfo(), "N_campionamento"))))
   })
   
   dataclustmorfo = reactive({
     req(datamorfo())
     #filtro in base agli anni presenti e scelgo anche il num campionamento
-    datapre = datamorfo() %>% dplyr::filter(Anno == input$selyearclustmorfo) %>% dplyr::filter(N_campionamento == input$numclustmorfo)
+    datapre = datamorfo() %>% dplyr::filter(Anno %in% input$selyearclustmorfo) %>% dplyr::filter(N_campionamento == input$numclustmorfo)
 
-    #se scelgo di summarizzare tolgo tutto tranne codice_azienda e i double, summarizzo e trasformo codice_azienda
-    #in rownames
-    datapre = datapre %>% dplyr::select(Codice_azienda, where(is.double), -dplyr::any_of(c("Anno", colnames(dplyr::select(datapre, starts_with("ID")))))) %>%
-        dplyr::group_by(Codice_azienda) %>% dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% stats::na.exclude()
-    datapre %>% as.data.frame() %>% tibble::column_to_rownames("Codice_azienda") %>% scale()
-
+    datapre = datapre %>% dplyr::select(input$selcolclustmorfo, where(is.double), -dplyr::any_of(c("Anno", colnames(dplyr::select(datapre, starts_with("ID")))))) %>%
+      dplyr::group_by(dplyr::across(input$selcolclustmorfo)) %>% dplyr::summarise(dplyr::across(where(is.double), mean, na.rm = T)) %>% stats::na.exclude()
+    datapre %>% as.data.frame() %>% tibble::column_to_rownames(input$selcolclustmorfo) %>% scale()
+    
   })
 
   #grafici per la scelta del numero di cluster
