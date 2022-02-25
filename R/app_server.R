@@ -3510,7 +3510,7 @@ app_server <- function( input, output, session ) {
         dplyr::summarise(dplyr::across("Polifenoli (mg/kg sansa)", mean, na.rm = T)) %>% dplyr::ungroup()
     }
     
-    z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale)
+    z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale, Clima)
     dplyr::right_join(x = z, y = temp, by = "Codice_azienda")
     
   })
@@ -3581,7 +3581,7 @@ app_server <- function( input, output, session ) {
     
     ##### prima variabile Individuali
     if(input$conf_type1 == "ind"){
-      z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale)
+      z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale, Clima)
       
       #summarizzo i polind e unisco con data
       if(input$conf_selpoltot == "Foglie" || input$conf_selpoltot == "Drupe"){
@@ -3744,7 +3744,7 @@ app_server <- function( input, output, session ) {
   #dati non mediati
   dataconf_notsumm1 = reactive({
     req(conf_type(), poltot_conf_notsumm(), drupe(), data_meteo())
-    z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale)
+    z = data() %>% dplyr::select(Codice_azienda, Provincia, Azienda, Cultivar_principale, Clima)
     
     if(input$conf_type1 == "tot"){
       poltot = dplyr::right_join(x = z, y = poltot_conf_notsumm(), by = "Codice_azienda")

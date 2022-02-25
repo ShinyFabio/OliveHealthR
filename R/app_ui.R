@@ -82,7 +82,7 @@ app_ui <- function(request) {
                                        menuSubItem("Drupe e foglie", tabName = "drupleafsub"),
                                        menuSubItem("Olio", tabName = "oliosub"),
                                        menuSubItem("Calendario campionamenti", tabName = "calendar"),
-                                       menuSubItem("Analisi sensoriali", tabName = "assaggsub")),
+                                       shinyjs::hidden(menuSubItem("Analisi sensoriali", tabName = "assaggsub"))),
                               menuItem("Analisi laboratorio", tabName = "anlab", icon = icon("flask"),
                                        menuSubItem("Polifenoli totali", tabName = "totpolsub"),
                                        menuSubItem("Polifenoli individuali", tabName = "inpolsub"),
