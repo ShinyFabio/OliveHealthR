@@ -9,101 +9,128 @@
 experimental](https://img.shields.io/badge/lifecycle-stable-succes.svg)](https://www.tidyverse.org/lifecycle/#stable)
 <!-- badges: end -->
 
-The goal of OliveHealthR is to analyze and map all the information
-obtained from the [OliveHealth](https://olivehealth.it) project. The
-planned activities will concern the mapping of the olive groves of the 5
-Campania provinces (Italy) and the analysis of the health component (eg
-polyphenols) on samples such as leaves, drupes and oil.
+OliveHealthR è un software che svolge analisi sui dati provenienti dal
+progetto OliveHealth. L’obiettivo principale del progetto è quello di
+identificare le componenti salutistiche (es. polifenoli) in prodotti
+della filiera olivicola (quali foglie, drupe e olio) correlandole alla
+geo-localizzazione di ciascun appezzamento. Sulla base di queste
+informazioni verranno prodotti dataset delle variabili rappresentative
+delle principali caratteristiche fenotipiche, biochimiche e genetiche
+associate all’ulivo dalle quali nascerà un database messo a disposizione
+ai produttori olivicoli campani.Per maggiori informazioni sul progetto
+clicca [qui](https://olivehealth.it).  
 
-## Installation
+## Come si installa
 
-<strong>1. Install R. For Windows use this link:</strong>
+OliveHealthR è un pacchetto creato utilizzando le librerie shiny di R e,
+pertanto, per poter utilizzarlo bisogna installare i softwareR e
+Rstudio. Se li hai già installati puoi saltare questi passaggi e andare
+allo step 3.
 
-    https://cran.r-project.org/bin/windows/base/
+### 1 Installazione dei software necessari
 
-<strong>2. Install RStudio from this link. Choose your OS.</strong>
+#### I. Installare R
 
-    https://www.rstudio.com/products/rstudio/download/#download
+Scarica e installa R da uno di questi link. Scegli in base al sistema
+operativo utilizzato.
 
-<strong>3. If you are on Windows, install Rtools from this link
-otherwise skip this line.</strong>
+-   **Windows:** <https://cran.r-project.org/bin/windows/base/>
+-   **OS:** <https://cran.r-project.org/bin/macosx/>
+-   **Ubuntu:** in questo caso segui la procedura qui descritta
+    <https://www.r-bloggers.com/2013/03/download-and-install-r-in-ubuntu/>
 
-    https://cran.r-project.org/bin/windows/Rtools
+#### II. Installa RStudio
 
-<strong>4. Now open RStudio and install devtools if not already
-installed. Just copy this code in the Console (on the left) and click
-enter. Click yes if R asks you something.</strong>
+Dopo aver installato R, installare RStudio. Apri il seguente link
+<https://www.rstudio.com/products/rstudio/download/#download> e
+scegliere la versione corrispondente al tuo sistema operativo.
+
+#### III. Operazioni aggiuntive in base al sistema operativo
+
+Per poter far funzionare correttamente il software è necessario eseguire
+alcuni passaggi supplementari che cambiano in base al tuo sistema
+operativo:
+
+-   **Solo per utenti Windows.**  
+    Se sei un utente Windows è necessario installare anche Rtools
+    utilizzando questo link:
+    <https://cran.r-project.org/bin/windows/Rtools>. Se il tuo computer
+    non ha Windows puoi tranquillamente saltare questo passaggio.
+
+-   **Solo per utenti MacOS (da controllare).**  
+    Se sei un utente MacOS è necessario lanciare questa riga di comando
+    dal Terminale del computer:
+
+    ``` r
+    brew install imagemagick@6
+    ```
+
+-   **Solo per utenti Ubuntu (testato su 18.04).**  
+    Se sei un utente Ubuntu bisogna installare delle librerie aggiuntive
+    lanciando dal terminale le seguenti linee di codice:  
+
+        sudo apt install build-essential libcurl4-gnutls-dev libxml2-dev libssl-dev
+        sudo apt-get install libcairo2-dev
+        sudo apt-get install libxt-dev
+        sudo apt install libudunits2-dev
+        sudo apt install libgdal-dev
+        sudo apt install libmagick++-dev
+        sudo apt-get install libc6
+
+### 2. Installazione dei pacchetti di R
+
+Ora che hai installato tutti i software necessari, avvia il programma
+Rstudio. Al primo avvio la schermata iniziale è la seguente:
+
+<img src="C:/Users/fabio/Desktop/OliveHealthR/vignettes/rstudio.png" width="100%" />
+
+Tutti i codici di R che dovrai utilizzare nei passaggi seguenti dovranno
+essere copiati e incollati nella parte evidenziata nella figura
+precedente. Una volta incollati, per eseguire il comando basta premere
+il tasto Invio.
+
+Detto ciò, procediamo all’installazione del pacchetto OliveHealthR
+lanciando i codici qui sotto:
 
 ``` r
-install.packages("devtools")
-```
-
-<strong>5. Now you can install OliveHealthR copying and launching this
-code in the Console:</strong>
-
-``` r
+if(!requireNamespace("devtools"))install.packages("devtools")
 devtools::install_github("ShinyFabio/OliveHealthR")
 ```
 
-Be sure that your R version is at least 4.0.0. If R asks you to Install
-packages that requires compilation, click “No” otherwise the
-installation will take a long time (especially if your computer is not
-powerful).
+Per farlo seleziona semplicemente le due righe di codice, incollale in
+RStudio e premi Invio. Se esce un messaggio come questo nella figura
+sottostante cliccare su <strong>No</strong>.
 
-<strong>6. When installation is completed, you can launch this code if
-you want to download all photos (this step is optional):</strong>
+<img src="C:/Users/fabio/Desktop/OliveHealthR/vignettes/compilazione.png" width="400px" style="display: block; margin: auto;" />
+
+Il processo di installazione richiede qualche minuto. Al termine
+OliveHealthR sarà pronto all’uso. Prima di avviare il software, puoi
+decidere di installare tutte le immagini accessorie (cromatogrammi, foto
+di drupe, foto di foglie etc.). Questo passaggio è facoltativo. Per
+farlo lancia il codice qui sotto riportato:
 
 ``` r
 OliveHealthR::download_photo()
 ```
 
-### Ubuntu (tested on 18.04)
+### 3. Avvio di OliveHealthR
 
-If your OS is Ubuntu you have to perform some additional steps. In
-command line run these lines:
-
-``` r
-sudo apt install build-essential libcurl4-gnutls-dev libxml2-dev libssl-dev   #for {devtools} library
-sudo apt-get install libcairo2-dev                                            #for {Cairo} library
-sudo apt-get install libxt-dev                                                #for {Cairo} library
-sudo apt install libudunits2-dev                                              #for {units} library
-sudo apt install libgdal-dev                                                  #for {sf} library
-sudo apt install libmagick++-dev                                              #for {magick} library
-sudo apt-get install libc6
-```
-
-### MacOS (should be tested again)
-
-If you’re a MacOS user, you have to run this line in the Terminal:
-
-``` r
-brew install imagemagick@6
-```
-
-## Launch
-
-To launch the app use this code
+Arrivati a questo punto sei pronto per lanciare OliveHealthR. Esegui
+semplicemente le due righe di codice qui riportate:
 
 ``` r
 library(OliveHealthR)
 OliveHealthR::run_OliveHealthR()
 ```
 
-## How to use
+### 4. Aggiornamento
 
-This shiny app performs various analysis and plotting based on files
-being uploaded. For now OliveHealthR accepts 4 different csv files, one
-is mandatory and contains all the info about the companies (name, id,
-coordinates…), the others 3 are different type of data.
-
-## How to update the package
-
-In order to update the package just run this code:
+Qualora fossero disponibili versioni più aggiornate del software, per
+eseguire l’aggiornamento è sufficiente lanciare questo codice:
 
 ``` r
 devtools::update_packages("OliveHealthR", upgrade = "always")
 ```
 
-If R asks you to Install packages that requires compilation, click “No”.
-After the updating process is completed, you should downlad photos again
-if you need them (go to step 6 of installation).
+Dopo che l’aggiornamento è completato, è necessario riscaricare le foto
+(vedi step 2).
