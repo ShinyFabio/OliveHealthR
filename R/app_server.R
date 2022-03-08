@@ -2348,10 +2348,11 @@ app_server <- function( input, output, session ) {
   
   output$dtmorfo = DT::renderDT({
     req(datamorfo())
-    datadt = datamorfo() %>% dplyr::filter(Anno == input$selyeardtmorfo)
+    validate(need(input$selyeardtmorfo != "", "Seleziona almeno un anno."))
+    datadt = datamorfo() %>% dplyr::filter(Anno %in% input$selyeardtmorfo)
     if(input$summarizetab == TRUE){
-      x = Olv_select_col(data = datadt, input = input$selectdtmorfo)
-      dt = datadt %>% dplyr::group_by(dplyr::across(colnames(x))) %>% 
+      #x = Olv_select_col(data = datadt, input = input$selectdtmorfo)
+      dt = datadt %>% dplyr::group_by(dplyr::across(input$selectdtmorfo)) %>% 
         dplyr::summarise(dplyr::across(where(is.double), ~round(mean(., na.rm = TRUE),input$selroundmorfo)), n = dplyr::n()) %>% 
         dplyr::rename(!! paste(nfoglieolivenew()) := n) %>% dplyr::select(!starts_with("ID"))
       # "!!paste() := n" permette di rinominare usando un vettore contenente il nome. n è il colnames vecchio.
@@ -2453,27 +2454,38 @@ app_server <- function( input, output, session ) {
     updateSelectInput(session, "selyearmorfomap2", choices = row.names(table(dplyr::select(datamorfo(), "Anno"))))
     updateSelectInput(session, "nummorfomap2", choices = row.names(table(dplyr::select(datamorfo(), "N_campionamento"))))
     #tabella
-    updateSelectInput(session, "selyeardtmorfo", choices = row.names(table(dplyr::select(datamorfo(), "Anno"))))
+    updateSelectInput(session, "selyeardtmorfo", choices = unique(datamorfo()$Anno), selected =  unique(datamorfo()$Anno)[1])
   })
   
   
   
   ### Grafico a barre
+  
+  observeEvent(datamorfo(),{
+    updateCheckboxGroupInput(session, "selyearbarmorfo", choices = unique(datamorfo()$Anno), selected = unique(datamorfo()$Anno)[1])
+  })
+  
   output$barmorfo = renderPlotly({
     req(datamorfo())
-    x = Olv_select_col(data = datamorfo(), input = input$selectxmorfobb)
-    y =  Olv_select_col(data = datamorfo(), input = input$selectymorfobb)
-    fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfobb)
-    summ = datamorfo() %>% dplyr::group_by(Codice_azienda, dplyr::across(c(colnames(x), colnames(fill)))) %>%
-      dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE), n = dplyr::n()) %>%
-      dplyr::rename(!! paste(nfoglieolivenew()) := n) %>% dplyr::select(!starts_with("ID"))
+
+    data_err = datamorfo() %>% dplyr::filter(Anno %in% input$selyearbarmorfo)
     
-    temp = ggplot(data = summ, mapping = aes_string(x = colnames(x), y = paste0("`",colnames(y), "`"), 
-                                                   fill = paste0("`",colnames(fill),"`"))) + geom_col() + 
-      ggplot2::stat_summary(data = datamorfo(), geom = "errorbar", fun.data = mean_se) +
+    summ = datamorfo() %>% dplyr::group_by(Codice_azienda, dplyr::across(c(input$selectxmorfobb, input$selectfillmorfobb, "Anno"))) %>%
+      dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE), n = dplyr::n()) %>%
+      dplyr::rename(!! paste(nfoglieolivenew()) := n) %>% dplyr::select(!starts_with("ID")) %>% 
+      dplyr::filter(Anno %in% input$selyearbarmorfo)
+    
+    temp = ggplot(data = summ, mapping = aes_string(x = input$selectxmorfobb, y = paste0("`",input$selectymorfobb, "`"),
+                                                   fill = input$selectfillmorfobb, group = "Anno")) + 
+      geom_col(position = position_dodge2(preserve = "single")) +
+      ggplot2::stat_summary(data = data_err, geom = "errorbar", fun.data = mean_se,
+                            position = position_dodge2(padding = 1.6, preserve = "single")) +
       theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
-    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
+    plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = input$selectfillmorfobb)))
   })
+
+
+  
   
   
   
@@ -2484,7 +2496,7 @@ app_server <- function( input, output, session ) {
     y =  Olv_select_col(data = datamorfo(), input = input$selectymorfobb)
     fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfobb)
     temp = ggplot(data = datamorfo(), 
-                  mapping = aes_string(x = input$selectxmorfobb, y = paste0("`",colnames(y), "`"), fill = paste0("`",colnames(fill),"`"))) + 
+                  mapping = aes_string(x = input$selectxmorfobb, y = paste0("`",colnames(y), "`"), fill = paste0("`",colnames(fill),"`"), text = "Anno")) + 
     geom_boxplot() + geom_jitter(width = 0.3) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
     plotly::ggplotly(temp) %>% plotly::layout(legend = list(title = list(text = colnames(fill))))
   })
@@ -2496,12 +2508,12 @@ app_server <- function( input, output, session ) {
     req(datamorfo())
     if(input$summarizescatt == TRUE){
       x = Olv_select_col(data = datamorfo(), input = input$selectsummscatt)
-      dt = datamorfo() %>% dplyr::group_by(dplyr::across(colnames(x))) %>% 
+      datamorfo() %>% dplyr::group_by(dplyr::across(colnames(x))) %>% 
         dplyr::summarise(dplyr::across(where(is.double), mean , na.rm = TRUE), n = dplyr::n()) %>% 
         dplyr::rename(!! paste(nfoglieolivenew()) := n) %>% select(!starts_with("ID"))
 
     } else{
-      dt = datamorfo()
+      datamorfo()
     }
   })
   
@@ -2519,7 +2531,7 @@ app_server <- function( input, output, session ) {
     fill = Olv_select_col(data = dt, input = input$selectfillmorfoscatt)
     temp = ggplot(data = dt, 
                   mapping = aes_string(x = paste0("`",colnames(x), "`"), y = paste0("`",colnames(y), "`"), color = paste0("`",colnames(fill),"`"))) + 
-      geom_count(size = 2)  + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
+      geom_jitter(size = 2, width = 0.25) + theme(axis.text.x = element_text(angle = 315, hjust = 0),legend.title = element_blank())
     
     #in jitter se voglio colorare i punti aggiungo aes_string(color = paste0("`",colnames(fill),"`"))
     if(is.double(dplyr::pull(dt, colnames(fill))) == TRUE){
@@ -2534,6 +2546,7 @@ app_server <- function( input, output, session ) {
   
   output$iocmorfo = renderPlotly({
     req(datamorfo())
+    validate(need(input$selfilemorfo %in% c("foglie","drupe"), "Grafici IOC solo per foglie e drupe."))
     fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfoioc)
     if(input$selplotioc == "2"){
       if(input$iocselfreq == "Frequenza assoluta"){
@@ -2556,6 +2569,8 @@ app_server <- function( input, output, session ) {
   #secondo grafico IOC
   output$iocmorfo2 = renderPlotly({
     req(datamorfo())
+    validate(need(input$selfilemorfo %in% c("foglie","drupe"), "Grafici IOC solo per foglie e drupe."))
+    
     fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfoioc2)
     if(input$selplotioc2 == "2"){
       if(input$iocselfreq2 == "Frequenza assoluta"){

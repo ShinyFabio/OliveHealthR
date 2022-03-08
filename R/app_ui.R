@@ -1277,7 +1277,7 @@ app_ui <- function(request) {
                                     # Tabella
                                     conditionalPanel(condition = "input.tabboxmorfo == 'tabdtmor'",
                                       h4(strong("Parametri sintesi")),
-                                      selectInput("selyeardtmorfo", "Seleziona l'anno", choices = "", multiple = FALSE),
+                                      selectInput("selyeardtmorfo", "Seleziona l'anno", choices = "", multiple = TRUE),
                                       numericInput("selroundmorfo", value = 3,
                                                    label = tags$span("Numero di cifre decimali", 
                                                        tags$i(class = "glyphicon glyphicon-info-sign", style = "color:#0072B2;",
@@ -1302,8 +1302,9 @@ app_ui <- function(request) {
                                                                       title = "La variabile per cui sintetizzare i dati. 
                                                                       Esempio: con 'Codice_azienda' le misure di ogni azienda sono mediate e si avrà una sola riga per ogni azienda,
                                                                       mentre se si seleziona 'Cultivar_principale' e 'Provincia' la sintesi è eseguita per queste due variabili 
-                                                                      e, dunque, si avranno cinque valori per ogni cultivar, uno per provincia (es. Ravece-SA, Ravece-AV...).")), 
-                                                             choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale"), selected = "Codice_azienda")
+                                                                      e, dunque, si avranno cinque valori per ogni cultivar, uno per provincia (es. Ravece-SA, Ravece-AV...). Aggiungendo
+                                                                      'Anno', le misure tra i vari anni non verranno mediate ma rimarranno separate.")), 
+                                                             choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale", "Anno"), selected = c("Codice_azienda", "Anno"))
                                       )
                                     ),
                                     
@@ -1317,15 +1318,19 @@ app_ui <- function(request) {
                                       selectInput("selectxmorfobb", "Seleziona la colonna X", choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale"), multiple = FALSE),
                                       selectInput("selectymorfobb", "Seleziona la colonna Y", choices = "", multiple = FALSE),
                                       selectInput("selectfillmorfobb", "Colonna da usare come riempimento", choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale"), multiple = FALSE)
-
+                                      
                                     ),
-                                    
+                                    conditionalPanel(
+                                        "input.boxmorfograph == 'tabpanbarmorfo'",
+                                        checkboxGroupInput("selyearbarmorfo", "Seleziona anno", choices = "")
+                                    ),
                                     #scatterplot
                                     conditionalPanel(
                                       condition = "input.boxmorfograph == 'tabpanscattmorfo'",
                                       materialSwitch(inputId = "summarizescatt", label = "Sintetizza i dati", value = TRUE, status = "primary"),
                                       conditionalPanel(condition = "input.summarizescatt == true",
-                                                       selectInput("selectsummscatt", "Seleziona la colonna da usare per la sintesi", choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale"), multiple = TRUE),
+                                                       selectInput("selectsummscatt", "Seleziona la colonna da usare per la sintesi", choices = c("Codice_azienda", "Provincia", "Azienda", "Cultivar_principale", "Anno"), 
+                                                                   selected = c("Codice_azienda","Anno"), multiple = TRUE),
                                                        hr(),
                                       ),
                                       selectInput("selectxmorfoscatt", "Seleziona la colonna X", choices = "", multiple = FALSE),
