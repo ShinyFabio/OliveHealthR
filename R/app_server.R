@@ -2546,7 +2546,7 @@ app_server <- function( input, output, session ) {
   
   output$iocmorfo = renderPlotly({
     req(datamorfo())
-    validate(need(input$selfilemorfo %in% c("foglie","drupe"), "Grafici IOC solo per foglie e drupe."))
+    validate(need(input$selfilemorfo != "rapporti", "Grafici IOC non disponibili per rapporti."))
     fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfoioc)
     if(input$selplotioc == "2"){
       if(input$iocselfreq == "Frequenza assoluta"){
@@ -2569,7 +2569,7 @@ app_server <- function( input, output, session ) {
   #secondo grafico IOC
   output$iocmorfo2 = renderPlotly({
     req(datamorfo())
-    validate(need(input$selfilemorfo %in% c("foglie","drupe"), "Grafici IOC solo per foglie e drupe."))
+    validate(need(input$selfilemorfo != "rapporti", "Grafici IOC non disponibili per rapporti."))
     
     fill = Olv_select_col(data = datamorfo(), input = input$selectfillmorfoioc2)
     if(input$selplotioc2 == "2"){
