@@ -17,7 +17,7 @@ geo-localizzazione di ciascun appezzamento. Sulla base di queste
 informazioni verranno prodotti dataset delle variabili rappresentative
 delle principali caratteristiche fenotipiche, biochimiche e genetiche
 associate all’ulivo dalle quali nascerà un database messo a disposizione
-ai produttori olivicoli campani.Per maggiori informazioni sul progetto
+ai produttori olivicoli campani. Per maggiori informazioni sul progetto
 clicca [qui](https://olivehealth.it).  
 
 ## Come si installa
@@ -122,6 +122,9 @@ semplicemente le due righe di codice qui riportate:
 library(OliveHealthR)
 OliveHealthR::run_OliveHealthR()
 ```
+
+La **guida all'uso** del software è disponibile al seguente link:
+https://shinyfabio.github.io/OliveHealthR/
 
 ### 4. Aggiornamento
 
