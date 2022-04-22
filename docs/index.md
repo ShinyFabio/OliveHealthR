@@ -99,6 +99,15 @@ library(OliveHealthR)
 OliveHealthR::run_OliveHealthR()
 ```
 
+## 2.4. Aggiornamento
+Qualora fossero disponibili versioni più aggiornate del software, per eseguire l’aggiornamento è sufficiente lanciare questo codice:
+
+``` r
+devtools::install_github("ShinyFabio/OliveHealthR")
+```
+
+Dopo che l’aggiornamento è completato, è necessario riscaricare le foto (vedi step 2.2).
+
 ***
 
 
