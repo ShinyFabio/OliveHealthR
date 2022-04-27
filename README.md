@@ -132,7 +132,7 @@ Qualora fossero disponibili versioni più aggiornate del software, per
 eseguire l’aggiornamento è sufficiente lanciare questo codice:
 
 ``` r
-devtools::update_packages("OliveHealthR", upgrade = "always")
+devtools::install_github("ShinyFabio/OliveHealthR")
 ```
 
 Dopo che l’aggiornamento è completato, è necessario riscaricare le foto
