@@ -16,8 +16,8 @@
    |        If you want to download all the images use download_photo()         |
    |                      before launch OliveHealthR.                           |
    |                                                                            |
-   |        If you need the data file (.csv) download from this link:           |
-   |          http://bioinfo.na.iac.cnr.it/olivehealth/File_csv.rar             |
+   |        If you need the data file (.xlsx) download from this link:          |
+   |         https://bioinfo.na.iac.cnr.it/olivehealth/File_excel.rar           |
    |                                                                            |
    |                                                                            |
    |Github page: https://github.com/ShinyFabio/OliveHealthR                     |
