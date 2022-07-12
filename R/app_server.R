@@ -1712,8 +1712,8 @@ app_server <- function( input, output, session ) {
       factoextra::fviz_cluster(clust, data = dataclustpolind(), ellipse.type = "convex", palette = "jco", ggtheme = theme_minimal())
     } else {
       hcluster = factoextra::eclust(dataclustpolind(), "hclust", hc_method = input$selhclustmethpolind, k = input$selnumclustpolind)
-      p1 = factoextra::fviz_dend(hcluster, palette = "jco", rect = TRUE, show_labels = FALSE)
-      p2 = factoextra::fviz_silhouette(hcluster)
+      p1 = factoextra::fviz_dend(hcluster, palette = "jco", rect = TRUE, show_labels = TRUE)
+      p2 = factoextra::fviz_silhouette(hcluster, label = TRUE)
       gridExtra::grid.arrange(p1, p2, ncol = 2)
     }
   })
@@ -2910,8 +2910,8 @@ app_server <- function( input, output, session ) {
       factoextra::fviz_cluster(clust, data = dataclustmorfo(), ellipse.type = "convex", palette = "jco", ggtheme = theme_minimal())
     } else {
       hcluster = factoextra::eclust(dataclustmorfo(), "hclust", hc_method = input$selhclustmeth, k = input$selnumclustmorfo)
-      p1 = factoextra::fviz_dend(hcluster, palette = "jco", rect = TRUE, show_labels = FALSE)
-      p2 = factoextra::fviz_silhouette(hcluster)
+      p1 = factoextra::fviz_dend(hcluster, palette = "jco", rect = TRUE, show_labels = TRUE)
+      p2 = factoextra::fviz_silhouette(hcluster, label  = TRUE)
       gridExtra::grid.arrange(p1, p2, ncol = 2)
     }
   })

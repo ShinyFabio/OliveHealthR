@@ -1,4 +1,4 @@
-Codice_azienda;N_campionamento;Anno;ID_oliva;Volume_(cm3);Area_superficie_(cm2);Lunghezza_(mm);Larghezza_(mm);Forma_(L/W);Forma_(IOC);Sfericità;Volume_mesocarpo_(cm3);Coefficiente_asimmetria;Asimmetria_(IOC);Posizione_MTD_(%L);Posizione_MTD_(IOC)
+Codice_azienda;N_campionamento;Anno;ID_oliva;Volume_(cm3);Area_superficie_(cm2);Lunghezza_(cm);Larghezza_(cm);Forma_(L/W);Forma_(IOC);Sfericità;Volume_mesocarpo_(cm3);Coefficiente_asimmetria;Asimmetria_(IOC);Posizione_MTD_(%L);Posizione_MTD_(IOC)
 AV_01;R2;2020;1;4,0071;12,9384;2,6288;1,6495;1,5936;elongated;0,86469018;3,571062051;0,75;slightly asymmetric;-1,81710712;towards base
 AV_01;R2;2020;2;2,4668;9,1754;2,2443;1,4615;1,5356;elongated;0,88413138;2,091749855;0,47;asymmetric;-2,359310253;towards base
 AV_01;R2;2020;3;2,9418;10,4591;2,3845;1,5271;1,5615;elongated;0,87232375;2,521368438;0,86;symmetric;-2,164229282;towards base
