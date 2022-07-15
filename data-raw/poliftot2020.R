@@ -13,7 +13,7 @@ cv <- function(x) 100*(sd(x)/mean(x))
 #header del file:
 #Codice_azienda	| N_campionamento	| Anno | Estrazione | Replicato	| Polifenoli_replicati_mg.ml | ml_estrazione	| g_drupe_estrazione | Presenza_larve
 
-drupe = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/polifenoli veri/polif_tot_drupe.xlsx") %>%
+drupe = readxl::read_xlsx("C:/Users/fabio/Desktop/OliveHealthR/data-raw/polifenoli/polif_tot_drupe.xlsx") %>%
   janitor::remove_empty("rows")
 
 drupe = drupe %>% tidyr::unite(col = cod_rep, Codice_azienda , Estrazione , remove = FALSE) %>% 
@@ -44,7 +44,7 @@ drupe$Anno = factor(drupe$Anno)
 #### foglie ####
 #header del file:
 #Codice_azienda	| N_campionamento	| Anno | Estrazione | Replicato	| Polifenoli_replicati_mg.ml | ml_estrazione	| g_foglie_estrazione
-foglie = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/polifenoli veri/polif_tot_foglie.xlsx") %>% 
+foglie = readxl::read_xlsx("C:/Users/fabio/Desktop/OliveHealthR/data-raw/polifenoli/polif_tot_foglie.xlsx") %>% 
   janitor::remove_empty("rows")
 
 foglie = foglie %>% tidyr::unite(col = cod_rep, Codice_azienda , Estrazione , remove = FALSE) %>% 
@@ -70,7 +70,7 @@ foglie$Anno = factor(foglie$Anno)
 #### olio ####
 #header del file:
 #Codice_azienda	| Tipo_olio | Anno |	Estrazione | Replicato | Polifenoli_replicati_mg.ml | ml_estrazione | g_olio_estrazione
-olio = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/polifenoli veri/polif_tot_olio.xlsx") %>% 
+olio = readxl::read_xlsx("C:/Users/fabio/Desktop/OliveHealthR/data-raw/polifenoli/polif_tot_olio.xlsx") %>% 
   janitor::remove_empty("rows")
 
 olio = olio %>% tidyr::unite(col = cod_rep, Codice_azienda , Estrazione , remove = FALSE) %>% 
@@ -96,7 +96,7 @@ olio$Anno = factor(olio$Anno)
 #### posa ####
 #header del file:
 #Codice_azienda	| Tipo_olio | Anno |	Estrazione | Replicato | Polifenoli_replicati_mg.ml | ml_estrazione | g_posa_estrazione
-posa = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/polifenoli veri/polif_tot_posa.xlsx") %>% 
+posa = readxl::read_xlsx("C:/Users/fabio/Desktop/OliveHealthR/data-raw/polifenoli/polif_tot_posa.xlsx") %>% 
   janitor::remove_empty("rows")
 
 posa = posa %>% tidyr::unite(col = cod_rep, Codice_azienda , Estrazione , remove = FALSE) %>% 
@@ -122,7 +122,7 @@ posa$Anno = factor(posa$Anno)
 #### sansa ####
 #header del file:
 #Codice_azienda	| Tipo_olio | Anno |	Estrazione | Replicato | Polifenoli_replicati_mg.ml | ml_estrazione | g_sansa_estrazione
-sansa = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/polifenoli veri/polif_tot_sansa.xlsx") %>% 
+sansa = readxl::read_xlsx("C:/Users/fabio/Desktop/OliveHealthR/data-raw/polifenoli/polif_tot_sansa.xlsx") %>% 
   janitor::remove_empty("rows")
 
 sansa = sansa %>% tidyr::unite(col = cod_rep, Codice_azienda , Estrazione , remove = FALSE) %>% 

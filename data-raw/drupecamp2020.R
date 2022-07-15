@@ -7,7 +7,7 @@ library(usethis)
 library(lubridate)
 
 #datidrupe
-drupecamp2020 = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/dati_drupe_campionamenti.xlsx") %>% 
+drupecamp2020 = readxl::read_xlsx("C:/Users/fabio/Desktop/OliveHealthR/data-raw/dati_drupe_campionamenti.xlsx") %>% 
   janitor::remove_empty("rows")
 drupecamp2020$Data_campionamento = lubridate::as_date(drupecamp2020$Data_campionamento)
 drupecamp2020$Indice_maturazione = factor(drupecamp2020$Indice_maturazione, levels = c(0:8), ordered = TRUE)

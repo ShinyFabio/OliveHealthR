@@ -2402,6 +2402,8 @@ app_server <- function( input, output, session ) {
       path3d1 = paste0(path3d, "_ol1.jpg")
       path3d2 = paste0(path3d, "_ol2.jpg")
       path3d3 = paste0(path3d, "_ol3.jpg")
+      path3d4 = paste0(path3d, "_ol4.jpg")
+      path3d5 = paste0(path3d, "_ol5.jpg")
       
       fluidPage(
         fluidRow(
@@ -2422,7 +2424,19 @@ app_server <- function( input, output, session ) {
                 fluidRow(
                   h5("Drupa 3"),
                   tags$img(src = path3d3, width = "65%", height = "65%")
-                )
+                ),
+                conditionalPanel(
+                  condition = "input.selyearfotomorfo == '2021'",
+                  fluidRow(
+                    h5("Drupa 4"),
+                    tags$img(src = path3d4, width = "65%", height = "65%")
+                  ),
+                  fluidRow(
+                    h5("Drupa 5"),
+                    tags$img(src = path3d5, width = "65%", height = "65%")
+                  )
+                  )
+
                 ))
             )
           )

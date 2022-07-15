@@ -5,7 +5,7 @@ library(readxl)
 library(janitor)
 library(usethis)
 
-data_aziende = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/2_Dati_monitoraggio.xlsx") %>% 
+data_aziende = readxl::read_xlsx("C:/Users/fabio/Desktop/OliveHealthR/data-raw/2_Dati_monitoraggio.xlsx") %>% 
   janitor::remove_empty("rows")
 
 usethis::use_data(data_aziende, overwrite = TRUE)

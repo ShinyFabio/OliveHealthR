@@ -7,20 +7,20 @@ library(usethis)
 
 
 
-foglie = readr::read_delim("C:/Users/fabio/Desktop/file progetto/cromatogrammi precisi/Tabelle campioni foglie.csv", delim = ";", col_names = T, local = readr::locale(decimal_mark = ",", encoding = "windows-1252")) %>% 
+foglie = readr::read_delim("C:/Users/fabio/Desktop/OliveHealthR/data-raw/cromatogrammi_precisi_2020/Tabelle campioni foglie.csv", delim = ";", col_names = T, local = readr::locale(decimal_mark = ",", encoding = "windows-1252")) %>% 
   janitor::remove_empty("rows")
 
 
-drupe = readr::read_delim("C:/Users/fabio/Desktop/file progetto/cromatogrammi precisi/Tabelle campioni drupe.csv", delim = ";", col_names = T, local = readr::locale(decimal_mark = ",", encoding = "windows-1252")) %>% 
+drupe = readr::read_delim("C:/Users/fabio/Desktop/OliveHealthR/data-raw/cromatogrammi_precisi_2020/Tabelle campioni drupe.csv", delim = ";", col_names = T, local = readr::locale(decimal_mark = ",", encoding = "windows-1252")) %>% 
   janitor::remove_empty("rows")
 
-olio = readr::read_delim("C:/Users/fabio/Desktop/file progetto/cromatogrammi precisi/Tabelle campioni oli.csv", delim = ";", col_names = T, local = readr::locale(decimal_mark = ",", encoding = "windows-1252")) %>% 
+olio = readr::read_delim("C:/Users/fabio/Desktop/OliveHealthR/data-raw/cromatogrammi_precisi_2020/Tabelle campioni oli.csv", delim = ";", col_names = T, local = readr::locale(decimal_mark = ",", encoding = "windows-1252")) %>% 
   janitor::remove_empty("rows")
 
-posa = readr::read_delim("C:/Users/fabio/Desktop/file progetto/cromatogrammi precisi/Tabelle campioni posa.csv", delim = ";", col_names = T, local = readr::locale(decimal_mark = ",", encoding = "windows-1252")) %>% 
+posa = readr::read_delim("C:/Users/fabio/Desktop/OliveHealthR/data-raw/cromatogrammi_precisi_2020/Tabelle campioni posa.csv", delim = ";", col_names = T, local = readr::locale(decimal_mark = ",", encoding = "windows-1252")) %>% 
   janitor::remove_empty("rows")
 
-sansa = readr::read_delim("C:/Users/fabio/Desktop/file progetto/cromatogrammi precisi/Tabelle campioni sansa.csv", delim = ";", col_names = T, local = readr::locale(decimal_mark = ",", encoding = "windows-1252")) %>% 
+sansa = readr::read_delim("C:/Users/fabio/Desktop/OliveHealthR/data-raw/cromatogrammi_precisi_2020/Tabelle campioni sansa.csv", delim = ";", col_names = T, local = readr::locale(decimal_mark = ",", encoding = "windows-1252")) %>% 
   janitor::remove_empty("rows")
 
 

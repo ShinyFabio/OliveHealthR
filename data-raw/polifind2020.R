@@ -13,7 +13,7 @@ library(tidyr)
 #Codice_azienda, N_campionamento, Anno, Estrazione, Fattore_diluizione, ml_estrazione, g_drupe_estrazione,Acido_Gallico,
 #Idrossitirosolo, Acido_siringico, Acido_p.Cumarico, Acido_trans.Ferulico, Oleuropeina, Quercetina
 
-drupe_ind = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/polifenoli veri/polifenoli_HPLC_drupe.xlsx") %>% 
+drupe_ind = readxl::read_xlsx("C:/Users/fabio/Desktop/OliveHealthR/data-raw/polifenoli/polifenoli_HPLC_drupe.xlsx") %>% 
   janitor::remove_empty("rows")
 
 drupe_ind = drupe_ind %>% dplyr::mutate(dplyr::across(8:14, ~.x * Fattore_diluizione * ml_estrazione / g_drupe_estrazione), .keep ="unused") %>% 
@@ -31,7 +31,7 @@ drupe_ind$Anno = factor(drupe_ind$Anno)
 #Codice_azienda, N_campionamento, Anno, Estrazione, Fattore_diluizione, ml_estrazione, g_foglie_estrazione,Acido_Gallico,
 #Idrossitirosolo, Acido_siringico, Acido_p.Cumarico, Acido_trans.Ferulico, Oleuropeina, Quercetina
 
-foglie_ind = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/polifenoli veri/polifenoli_HPLC_foglie.xlsx") %>% 
+foglie_ind = readxl::read_xlsx("C:/Users/fabio/Desktop/OliveHealthR/data-raw/polifenoli/polifenoli_HPLC_foglie.xlsx") %>% 
   janitor::remove_empty("rows")
 
 foglie_ind = foglie_ind %>% dplyr::mutate(dplyr::across(8:14, ~.x * Fattore_diluizione * ml_estrazione / g_foglie_estrazione), .keep ="unused") %>% 
@@ -50,7 +50,7 @@ foglie_ind$Anno = factor(foglie_ind$Anno)
 #Codice_azienda, Tipo_olio, Anno, Estrazione, Fattore_diluizione, ml_estrazione, g_olio_estrazione,Acido_Gallico,
 #Idrossitirosolo, Acido_siringico, Acido_p.Cumarico, Acido_trans.Ferulico, Oleuropeina, Quercetina
 
-olio_ind = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/polifenoli veri/polifenoli_HPLC_olio.xlsx") %>% 
+olio_ind = readxl::read_xlsx("C:/Users/fabio/Desktop/OliveHealthR/data-raw/polifenoli/polifenoli_HPLC_olio.xlsx") %>% 
   janitor::remove_empty("rows")
 
 olio_ind = olio_ind %>% dplyr::mutate(dplyr::across(9:14, ~.x * Fattore_diluizione * ml_estrazione/ g_olio_estrazione), .keep ="unused") %>% 
@@ -69,7 +69,7 @@ olio_ind$Anno = factor(olio_ind$Anno)
 #Codice_azienda, Tipo_olio, Anno, Estrazione, Fattore_diluizione, ml_estrazione, g_posa_estrazione,Acido_Gallico,
 #Idrossitirosolo, Acido_siringico, Acido_p.Cumarico, Acido_trans.Ferulico, Oleuropeina, Quercetina
 
-posa_ind = readxl::read_xlsx("C:/Users/fabio/Desktop/file progetto/polifenoli veri/polifenoli_HPLC_posa.xlsx") %>% 
+posa_ind = readxl::read_xlsx("C:/Users/fabio/Desktop/OliveHealthR/data-raw/polifenoli/polifenoli_HPLC_posa.xlsx") %>% 
   janitor::remove_empty("rows")
 
 posa_ind = posa_ind %>% dplyr::mutate(dplyr::across(9:14, ~.x * Fattore_diluizione * ml_estrazione / g_posa_estrazione), .keep ="unused") %>% 
