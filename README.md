@@ -76,6 +76,7 @@ operativo:
         sudo apt install libgdal-dev
         sudo apt install libmagick++-dev
         sudo apt-get install libc6
+        sudo apt-get install cargo
 
 ### 2. Installazione dei pacchetti di R
 
