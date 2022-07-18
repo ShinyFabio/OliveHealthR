@@ -55,6 +55,7 @@ Se sei un utente Ubuntu bisogna installare delle librerie aggiuntive lanciando d
   sudo apt install libgdal-dev
   sudo apt install libmagick++-dev
   sudo apt-get install libc6
+  sudo apt-get install cargo
   ```
 
 
