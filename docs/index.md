@@ -13,7 +13,7 @@ produttori olivicoli campani.Per maggiori informazioni sul progetto clicca [qui]
 
 
 # 2. Come si installa
-OliveHealthR è un pacchetto creato utilizzando le librerie shiny di R e, pertanto, per poter utilizzarlo bisogna installare i softwareR e Rstudio. Se li hai già installati puoi saltare questi passaggi e andare allo step 3.
+OliveHealthR è un pacchetto creato utilizzando le librerie shiny di R e, pertanto, per poter utilizzarlo bisogna installare i software R e Rstudio. Se li hai già installati puoi saltare questi passaggi e andare allo step 3.
 
 ## 2.1 Installazione dei software necessari
 ### I. Installare R
