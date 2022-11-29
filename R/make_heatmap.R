@@ -126,8 +126,7 @@ make_heatmap = function(datasorted, add_annot, scale_data, row_dend, row_nclust,
                                  row_gap = unit(2, "mm"), column_gap = unit(2, "mm"), #spazio tra le divisioni
                                  col = legend_col
                                  )
-    ht = ComplexHeatmap::draw(ht, padding = unit(bordi, "mm"))
-
+    ComplexHeatmap::draw(ht, padding = unit(bordi, "mm"))
 
 
 }
