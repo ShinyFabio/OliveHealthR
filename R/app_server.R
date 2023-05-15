@@ -3152,6 +3152,8 @@ app_server <- function( input, output, session ) {
   
   chisqmorfo = reactive({
     req(datachisqmorfo())
+    req(input$chisqtest1)
+    req(input$chisqtest2)
     x = datachisqmorfo() %>% dplyr::pull(input$chisqtest1)
     ioc = datachisqmorfo() %>% dplyr::pull(input$chisqtest2)
     if(input$selectchisqtest == "Test d'indipendenza Chi-quadro"){
@@ -3165,6 +3167,7 @@ app_server <- function( input, output, session ) {
   
   #output per l'ui
   signiftestchisqmorfo = reactive({
+    req(chisqmorfo())
     if(chisqmorfo()$p.value < input$pvalchisqmorfo){
       "significativo"
     } else{
@@ -3174,6 +3177,7 @@ app_server <- function( input, output, session ) {
   
 
   output$signiftestchisqmorfoui = reactive({
+    req(signiftestchisqmorfo())
     signiftestchisqmorfo()
   })
   outputOptions(output, 'signiftestchisqmorfoui', suspendWhenHidden = FALSE)
@@ -3188,6 +3192,7 @@ app_server <- function( input, output, session ) {
   #corrplot dei residui di chi-square
 
   output$plotresidchisq = renderPlot({
+    req(chisqmorfo())
     if(input$selectchisqtest == "Test d'indipendenza Chi-quadro"){
       col2 = grDevices::colorRampPalette(c("#053061", "#2166AC", "#4393C3", "#92C5DE", "#D1E5F0", "#FFFFFF", "#FDDBC7", "#F4A582", "#D6604D", "#B2182B", "#67001F"))
       corrplot::corrplot(t(chisqmorfo()$residuals), is.cor = FALSE, mar = c(1, 1, 1, 1), col = col2(200), tl.srt = 45, title = "Corrplot dei residui",cl.lim = c(-max(abs(chisqmorfo()$residuals)), max(abs(chisqmorfo()$residuals))))
@@ -3216,6 +3221,7 @@ app_server <- function( input, output, session ) {
   #test normalità con shapiro test
   shapiroanova1data = reactive({
     req(datamorfoyeartest())
+    req(input$anovanum)
     shp1 = datamorfoyeartest() %>% dplyr::pull(input$anovanum) %>% stats::shapiro.test()
     shp1$data.name = paste(input$anovanum)
     shp1
@@ -3229,6 +3235,7 @@ app_server <- function( input, output, session ) {
   
   #output per l'ui
   output$shapanovamorfoui = reactive({
+    req(shapiroanova1data())
     if(shapiroanova1data()$p.value < 0.05){
       "distribuzione normale"
     }else{"distribuzione non normale"}
@@ -3252,9 +3259,12 @@ app_server <- function( input, output, session ) {
 
   anova1morfo = reactive({
     req(datamorfoyeartest())
+    req(input$anovanum)
+    req(input$anovacat)
     var_numerica = datamorfoyeartest() %>% dplyr::pull(input$anovanum)
     var_categorica = datamorfoyeartest() %>% dplyr::pull(input$anovacat)
     if(input$selectanovatest == "Two-way ANOVA" ){
+      req(input$anovacat2)
       var_categorica1 = datamorfoyeartest() %>% dplyr::pull(input$anovacat)
       var_categorica2 = datamorfoyeartest() %>% dplyr::pull(input$anovacat2)
       if(input$anova2typemorfo == "Modello additivo"){
@@ -3268,6 +3278,7 @@ app_server <- function( input, output, session ) {
   })
   
   output$anova1morfoprint = renderPrint({
+    req(anova1morfo())
     summary(anova1morfo())
   })
   
@@ -3276,6 +3287,8 @@ app_server <- function( input, output, session ) {
   #kruskal-wallis data
   kruskmorfodata = reactive({
     req(datamorfoyeartest())
+    req(input$anovanum)
+    req(input$anovacat)
     var_numerica = datamorfoyeartest() %>% dplyr::pull(input$anovanum)
     var_categorica = datamorfoyeartest() %>% dplyr::pull(input$anovacat)
     kru = stats::kruskal.test(var_numerica ~ var_categorica)
@@ -3284,12 +3297,14 @@ app_server <- function( input, output, session ) {
   })
   #kruskal-wallis
   output$kruskmorfo = renderPrint({
+    req(kruskmorfodata())
     kruskmorfodata()
   })
   
   #variabile che mi dice se il test è significativo
   signiftestmorfo = reactive({
     req(anova1morfo())
+    req(input$pvalanovamorfo)
     anovasumm = summary(anova1morfo())
     if(round(anovasumm[[1]][["Pr(>F)"]][[1]], digits = 4) <= input$pvalanovamorfo ||  kruskmorfodata()$p.value <= input$pvalanovamorfo){
       "significativo"
@@ -3981,6 +3996,7 @@ app_server <- function( input, output, session ) {
     req(dataconf_notsumm())
     req(input$catvarttest_conf)
     req(input$culttest1_conf)
+    req(input$numvarttest_conf)
     #shp1 = datamorfo()[datamorfo()[[input$catvarttest]] %in% input$culttest1,] %>% dplyr::pull(input$numvarttest) %>% 
     # stats::shapiro.test()
     shp1 = dataconf_notsumm() %>% dplyr::filter(.data[[input$catvarttest_conf]] %in% input$culttest1_conf) %>%
@@ -3999,6 +4015,7 @@ app_server <- function( input, output, session ) {
     req(dataconf_notsumm())
     req(input$catvarttest_conf)
     req(input$culttest2_conf)
+    req(input$numvarttest_conf)
     shp2 = dataconf_notsumm() %>% dplyr::filter(.data[[input$catvarttest_conf]] %in% input$culttest2_conf) %>%
       dplyr::pull(input$numvarttest_conf) %>%  stats::shapiro.test()
     shp2$data.name = paste(input$culttest2_conf)
@@ -4013,6 +4030,8 @@ app_server <- function( input, output, session ) {
   
   #output per l'ui
   output$shapttestmorfoui_conf = reactive({
+    req(shapiro2data_conf())
+    req(shapiro1data_conf())
     if(shapiro1data_conf()$p.value < 0.05 && shapiro2data_conf()$p.value < 0.05){
       "distribuzione normale"
     }else{"distribuzione non normale"}
@@ -4023,6 +4042,8 @@ app_server <- function( input, output, session ) {
   #test varianza F-test
   output$vartest1_conf = renderPrint({
     req(datattest_conf())
+    req(input$numvarttest_conf)
+    req(input$catvarttest_conf)
     num = datattest_conf() %>% dplyr::pull(input$numvarttest_conf)
     cat = datattest_conf() %>% dplyr::pull(input$catvarttest_conf)
     var1 = stats::var.test(num ~ cat)
@@ -4076,6 +4097,7 @@ app_server <- function( input, output, session ) {
   #test normalità con shapiro test
   shapiroanova1data_conf = reactive({
     req(dataconf_notsumm())
+    req(input$anovanum_conf)
     shp1 = dataconf_notsumm() %>% dplyr::pull(input$anovanum_conf) %>% stats::shapiro.test()
     shp1$data.name = paste(input$anovanum_conf)
     shp1
@@ -4089,6 +4111,7 @@ app_server <- function( input, output, session ) {
   
   #output per l'ui
   output$shapanovamorfoui_conf = reactive({
+    req(shapiroanova1data_conf())
     if(shapiroanova1data_conf()$p.value < 0.05){
       "distribuzione normale"
     }else{"distribuzione non normale"}
@@ -4110,9 +4133,12 @@ app_server <- function( input, output, session ) {
   
   anova1morfo_conf = reactive({
     req(dataconf_notsumm())
+    req(input$anovanum_conf)
+    req(input$anovacat_conf)
     var_numerica = dataconf_notsumm() %>% dplyr::pull(input$anovanum_conf)
     var_categorica = dataconf_notsumm() %>% dplyr::pull(input$anovacat_conf)
     if(input$selectanovatest_conf == "Two-way ANOVA" ){
+      req(input$anovacat2_conf)
       var_categorica1 = dataconf_notsumm() %>% dplyr::pull(input$anovacat_conf)
       var_categorica2 = dataconf_notsumm() %>% dplyr::pull(input$anovacat2_conf)
       if(input$anova2typemorfo_conf == "Modello additivo"){
@@ -4126,6 +4152,7 @@ app_server <- function( input, output, session ) {
   })
   
   output$anova1morfoprint_conf = renderPrint({
+    req(anova1morfo_conf())
     summary(anova1morfo_conf())
   })
   
@@ -4134,6 +4161,8 @@ app_server <- function( input, output, session ) {
   #kruskal-wallis data
   kruskmorfodata_conf = reactive({
     req(dataconf_notsumm())
+    req(input$anovanum_conf)
+    req(input$anovacat_conf)
     var_numerica = dataconf_notsumm() %>% dplyr::pull(input$anovanum_conf)
     var_categorica = dataconf_notsumm() %>% dplyr::pull(input$anovacat_conf)
     kru = stats::kruskal.test(var_numerica ~ var_categorica)
@@ -4142,12 +4171,14 @@ app_server <- function( input, output, session ) {
   })
   #kruskal-wallis
   output$kruskmorfo_conf = renderPrint({
+    req(kruskmorfodata_conf())
     kruskmorfodata_conf()
   })
   
   #variabile che mi dice se il test è significativo
   signiftestmorfo_conf = reactive({
     req(anova1morfo_conf())
+    req(input$pvalanovamorfo_conf)
     anovasumm = summary(anova1morfo_conf())
     if(round(anovasumm[[1]][["Pr(>F)"]][[1]], digits = 4) <= input$pvalanovamorfo_conf ||  kruskmorfodata_conf()$p.value <= input$pvalanovamorfo_conf){
       "significativo"
@@ -4166,8 +4197,11 @@ app_server <- function( input, output, session ) {
   #post hoc tukey o dunn
   posthocmorfo_conf = reactive({
     req(anova1morfo_conf())
+
     if(signiftestmorfo_conf() == "significativo"){
       if(input$selectanovatest2_conf == "Kruskal-Wallis"){
+        req(input$anovanum_conf)
+        req(input$anovacat_conf)
         var_numerica = dataconf_notsumm() %>% dplyr::pull(input$anovanum_conf)
         var_categorica = dataconf_notsumm() %>% dplyr::pull(input$anovacat_conf)
         FSA::dunnTest(var_numerica ~ var_categorica, method = "bh")

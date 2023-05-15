@@ -28,8 +28,7 @@ golem::set_golem_options()
 
 #set package version
 golem::set_golem_version(
-  version = "1.0.1",
-  path = pkgload::pkg_path(),
+  version = "1.0.2",
   talkative = TRUE
 )
 

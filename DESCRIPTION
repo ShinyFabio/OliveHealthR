@@ -1,6 +1,6 @@
 Package: OliveHealthR
 Title: A Shiny App for statistical and graphical analysis of data from the Olivehealth project
-Version: 1.0.1
+Version: 1.0.2
 Authors@R: person('Fabio', 'Della Rocca', email = 'fabiodellarocca94@gmail.com', role = c('cre', 'aut'))
 Description: OliveHealthR analyzes and maps all the information obtained from the OliveHealth project. The planned activities will concern the mapping of the olive groves of the 5 Campania provinces (Italy) and the analysis of the health component (eg polyphenols) on samples such as leaves, drupes and oil.
 License: MIT + file LICENSE
@@ -48,7 +48,7 @@ Imports:
     openxlsx
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 URL: https://github.com/ShinyFabio/OliveHealthR.git
 BugReports: https://github.com/ShinyFabio/OliveHealthR.git/issues
 Suggests: 

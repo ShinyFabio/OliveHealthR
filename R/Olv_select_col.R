@@ -26,7 +26,7 @@
 
 Olv_select_col = function(data, input){
     req(data)
-    if (is.null(input) || input == "")
+    if (is.null(input)) # || input == ""
       return(data)
     else
       data[, colnames(data) %in% input]
