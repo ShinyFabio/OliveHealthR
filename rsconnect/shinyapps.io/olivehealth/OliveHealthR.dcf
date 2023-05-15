@@ -4,9 +4,10 @@ username:
 account: olivehealth
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
-appId: 3714392
-bundleId: 4289566
+appId: 9110228
+bundleId: 7219247
 url: https://olivehealth.shinyapps.io/OliveHealthR/
-when: 1614677426.41224
+when: 1684148705.5472
+lastSyncTime: 1684148705.54721
 asMultiple: FALSE
 asStatic: FALSE
