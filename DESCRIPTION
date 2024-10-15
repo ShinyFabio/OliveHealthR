@@ -5,6 +5,7 @@ Authors@R: person('Fabio', 'Della Rocca', email = 'fabiodellarocca94@gmail.com',
 Description: OliveHealthR analyzes and maps all the information obtained from the OliveHealth project. The planned activities will concern the mapping of the olive groves of the 5 Campania provinces (Italy) and the analysis of the health component (eg polyphenols) on samples such as leaves, drupes and oil.
 License: MIT + file LICENSE
 Imports: 
+    BiocManager,
     config,
     golem,
     shiny,
@@ -73,6 +74,4 @@ Depends:
     tibble,
     stats
 VignetteBuilder: knitr
-Remotes: 
-    github::jokergoo/ComplexHeatmap,
-    github::jokergoo/InteractiveComplexHeatmap
+biocViews: ComplexHeatmap, InteractiveComplexHeatmap
