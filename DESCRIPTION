@@ -73,6 +73,3 @@ Depends:
     tibble,
     stats
 VignetteBuilder: knitr
-Remotes: 
-	github::jokergoo/ComplexHeatmap,
-	github::jokergoo/InteractiveComplexHeatmap
