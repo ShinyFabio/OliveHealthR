@@ -16,6 +16,9 @@
    |        If you want to download all the images use download_photo()         |
    |                      before launch OliveHealthR.                           |
    |                                                                            |
+   |                To start just use run_OliveHealthR().                       |
+   |                                                                            |
+   |                                                                            |
    |        If you need the data file (.xlsx) download from this link:          |
    |         https://bioinfo.na.iac.cnr.it/olivehealth/File_excel.rar           |
    |                                                                            |
