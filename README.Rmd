@@ -79,7 +79,7 @@ Ora che hai installato tutti i software necessari, avvia il programma Rstudio. A
 
 
 ```{r  echo=F}
-knitr::include_graphics("vignettes/rstudio.png")
+knitr::include_graphics("man/figures/rstudio.png")
 ```
 
 Tutti i codici di R che dovrai utilizzare nei passaggi seguenti dovranno essere copiati e incollati nella parte evidenziata nella figura precedente. Una volta incollati, per eseguire il comando basta premere il tasto Invio. 
@@ -94,7 +94,7 @@ devtools::install_github("ShinyFabio/OliveHealthR")
 Per farlo seleziona semplicemente le due righe di codice, incollale in RStudio e premi Invio. Se esce un messaggio come questo nella figura sottostante cliccare su <strong>No</strong>.
 
 ```{r out.width='400px', echo=F, fig.align="center"}
-knitr::include_graphics("vignettes/compilazione.png")
+knitr::include_graphics("man/figures/compilazione.png")
 ```
 
 

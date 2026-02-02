@@ -82,7 +82,7 @@ operativo:
 Ora che hai installato tutti i software necessari, avvia il programma
 Rstudio. Al primo avvio la schermata iniziale è la seguente:
 
-<img src="vignettes/rstudio.png" alt="" width="100%" />
+<img src="man/figures/rstudio.png" alt="" width="100%" />
 
 Tutti i codici di R che dovrai utilizzare nei passaggi seguenti dovranno
 essere copiati e incollati nella parte evidenziata nella figura
@@ -101,7 +101,7 @@ Per farlo seleziona semplicemente le due righe di codice, incollale in
 RStudio e premi Invio. Se esce un messaggio come questo nella figura
 sottostante cliccare su <strong>No</strong>.
 
-<img src="vignettes/compilazione.png" alt="" width="400px" style="display: block; margin: auto;" />
+<img src="man/figures/compilazione.png" alt="" width="400px" style="display: block; margin: auto;" />
 
 Il processo di installazione richiede qualche minuto. Al termine
 OliveHealthR sarà pronto all’uso. Prima di avviare il software, puoi
