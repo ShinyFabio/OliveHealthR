@@ -17,7 +17,7 @@ geo-localizzazione di ciascun appezzamento. Sulla base di queste
 informazioni verranno prodotti dataset delle variabili rappresentative
 delle principali caratteristiche fenotipiche, biochimiche e genetiche
 associate all’ulivo dalle quali nascerà un database messo a disposizione
-ai produttori olivicoli campani. Per maggiori informazioni sul progetto
+ai produttori olivicoli campani.Per maggiori informazioni sul progetto
 clicca [qui](https://olivehealth.it).  
 
 ## Come si installa
@@ -34,10 +34,10 @@ allo step 3.
 Scarica e installa R da uno di questi link. Scegli in base al sistema
 operativo utilizzato.
 
--   **Windows:** <https://cran.r-project.org/bin/windows/base/>
--   **OS:** <https://cran.r-project.org/bin/macosx/>
--   **Ubuntu:** in questo caso segui la procedura qui descritta
-    <https://www.r-bloggers.com/2013/03/download-and-install-r-in-ubuntu/>
+- **Windows:** <https://cran.r-project.org/bin/windows/base/>
+- **OS:** <https://cran.r-project.org/bin/macosx/>
+- **Ubuntu:** in questo caso segui la procedura qui descritta
+  <https://www.r-bloggers.com/2013/03/download-and-install-r-in-ubuntu/>
 
 #### II. Installa RStudio
 
@@ -51,39 +51,38 @@ Per poter far funzionare correttamente il software è necessario eseguire
 alcuni passaggi supplementari che cambiano in base al tuo sistema
 operativo:
 
--   **Solo per utenti Windows.**  
-    Se sei un utente Windows è necessario installare anche Rtools
-    utilizzando questo link:
-    <https://cran.r-project.org/bin/windows/Rtools>. Se il tuo computer
-    non ha Windows puoi tranquillamente saltare questo passaggio.
+- **Solo per utenti Windows.**  
+  Se sei un utente Windows è necessario installare anche Rtools
+  utilizzando questo link:
+  <https://cran.r-project.org/bin/windows/Rtools>. Se il tuo computer
+  non ha Windows puoi tranquillamente saltare questo passaggio.
 
--   **Solo per utenti MacOS (da controllare).**  
-    Se sei un utente MacOS è necessario lanciare questa riga di comando
-    dal Terminale del computer:
+- **Solo per utenti MacOS (da controllare).**  
+  Se sei un utente MacOS è necessario lanciare questa riga di comando
+  dal Terminale del computer:
 
-    ``` r
-    brew install imagemagick@6
-    ```
+  ``` r
+  brew install imagemagick@6
+  ```
 
--   **Solo per utenti Ubuntu (testato su 18.04).**  
-    Se sei un utente Ubuntu bisogna installare delle librerie aggiuntive
-    lanciando dal terminale le seguenti linee di codice:  
+- **Solo per utenti Ubuntu (testato su 18.04).**  
+  Se sei un utente Ubuntu bisogna installare delle librerie aggiuntive
+  lanciando dal terminale le seguenti linee di codice:  
 
-        sudo apt install build-essential libcurl4-gnutls-dev libxml2-dev libssl-dev
-        sudo apt-get install libcairo2-dev
-        sudo apt-get install libxt-dev
-        sudo apt install libudunits2-dev
-        sudo apt install libgdal-dev
-        sudo apt install libmagick++-dev
-        sudo apt-get install libc6
-        sudo apt-get install cargo
+      sudo apt install build-essential libcurl4-gnutls-dev libxml2-dev libssl-dev
+      sudo apt-get install libcairo2-dev
+      sudo apt-get install libxt-dev
+      sudo apt install libudunits2-dev
+      sudo apt install libgdal-dev
+      sudo apt install libmagick++-dev
+      sudo apt-get install libc6
 
 ### 2. Installazione dei pacchetti di R
 
 Ora che hai installato tutti i software necessari, avvia il programma
 Rstudio. Al primo avvio la schermata iniziale è la seguente:
 
-<img src="C:/Users/fabio/Desktop/OliveHealthR/vignettes/rstudio.png" width="100%" />
+<img src="vignettes/rstudio.png" alt="" width="100%" />
 
 Tutti i codici di R che dovrai utilizzare nei passaggi seguenti dovranno
 essere copiati e incollati nella parte evidenziata nella figura
@@ -102,7 +101,7 @@ Per farlo seleziona semplicemente le due righe di codice, incollale in
 RStudio e premi Invio. Se esce un messaggio come questo nella figura
 sottostante cliccare su <strong>No</strong>.
 
-<img src="C:/Users/fabio/Desktop/OliveHealthR/vignettes/compilazione.png" width="400px" style="display: block; margin: auto;" />
+<img src="vignettes/compilazione.png" alt="" width="400px" style="display: block; margin: auto;" />
 
 Il processo di installazione richiede qualche minuto. Al termine
 OliveHealthR sarà pronto all’uso. Prima di avviare il software, puoi
@@ -124,16 +123,13 @@ library(OliveHealthR)
 OliveHealthR::run_OliveHealthR()
 ```
 
-La **guida all'uso** del software è disponibile al seguente link:
-https://shinyfabio.github.io/OliveHealthR/
-
 ### 4. Aggiornamento
 
 Qualora fossero disponibili versioni più aggiornate del software, per
 eseguire l’aggiornamento è sufficiente lanciare questo codice:
 
 ``` r
-devtools::install_github("ShinyFabio/OliveHealthR")
+devtools::update_packages("OliveHealthR", upgrade = "always")
 ```
 
 Dopo che l’aggiornamento è completato, è necessario riscaricare le foto
