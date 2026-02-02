@@ -1,8 +1,0 @@
-COME PRENDERE VALORI DI PRECIPITAZIONE E UNIRLI A DEI PUNTI
-1. scaricare i file netcdf delle precipitazioni da qui:
-https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-land-monthly-means?tab=form
-2. Caricare il file su qgis. Ogni banda rappresenta un mese.
-3. Caricare il file delle coordinate delle aziende. Se non lo tieni carica un csv con le coordinate (prima utm E oppure prima long).
-   Fai attenzione ai sistemi di riferimento (cambiali se vedi che non carica nulla).
-4. Ora che hai il raster da una parte e lo shapefile dei punti, vai in processing poi strumenti e cerca la funzione "Campiona valori raster" ("Sample raster values").
-   Metti lo shape e il raster e tac. Ora basta salvare il file come csv.

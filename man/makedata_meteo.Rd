@@ -2,26 +2,15 @@
 % Please edit documentation in R/data_meteo.R
 \name{makedata_meteo}
 \alias{makedata_meteo}
-\title{Make a tmap object that can be rendered in shiny}
+\title{Legge netcdf da ERA5-LAND mensile e assegna i valori ai punti delle aziende}
 \usage{
 makedata_meteo(ncfile, dati_aziende)
 }
 \arguments{
-\item{ncfile}{ncfile opened with ncdf4::nc_open()}
+\item{ncfile}{ncfile path}
 
-\item{data}{A dataframe with the coordinates columns(UTM_33T_N and UTM_33T_E) and relative infos. Use data()}
+\item{dati_aziende}{A dataframe with the coordinates columns(UTM_33T_N and UTM_33T_E) and relative infos. Use data()}
 }
 \description{
-This function render a tmap using a shapefile (campania) as background and a table with coordinates for the points.
-}
-\examples{
-\dontrun{
-
-output$map1 = make_tmap(
- data = data = dtdrupfilt(), dotlegend = showcolumnmap2()
- )
-}
-
-
-
+Questa funzione Legge netcdf da ERA5-LAND mensile e assegna i valori ai punti delle aziende
 }

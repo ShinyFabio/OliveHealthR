@@ -100,7 +100,7 @@
 #'   \item{`Volume_mesocarpo_(cm3)`}{volume del mesocarpo della drupa in cm3}
 #'   \item{Coefficiente_asimmetria}{coefficiente di asimmetria della drupa (rapporto tra due porzioni di drupa opportunamente scelte)}
 #'   \item{`Asimmetria_(IOC)`}{coefficiente di asimmetria espresso secondo la classificazione dell'IOC (symmetric, slightly asymmetric, asymmetric)}
-#'   \item{`Posizione_MTD_(%L)`}{posizione del maximum transverse diameter espresso come % della lunghezza della drupa (il valore negativo indica che il diametro trasversale massimo si trova verso la base dell’oliva)}
+#'   \item{`Posizione_MTD_(\%L)`}{posizione del maximum transverse diameter espresso come \% della lunghezza della drupa (il valore negativo indica che il diametro trasversale massimo si trova verso la base dell’oliva)}
 #'   \item{`Posizione_MTD_(IOC)`}{posizione del maximum transverse diameter espresso secondo la classificazione dell'IOC (central, toward base)}
 #'  }
 #'  \item{\strong{Endocarpo}}

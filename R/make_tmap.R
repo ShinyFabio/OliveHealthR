@@ -5,7 +5,7 @@
 #' @param data A dataframe with the coordinates columns(UTM_33T_N and UTM_33T_E) and relative infos.
 #' @param dotlegend An informative column used for the legend and for the mapping of the dots (e.g. "Polifenoli_totali" or "Azienda").
 #' @param shp A shapefile used for the background in the UTM 33T coordinate system. By default shp = campania (a shapefile saved in .rda format).
-#' @param palette A palette name from Color Brewer palettes. The default is NULL (means tmap decides which one to use).
+#' @param palette A palette name from Color Brewer palettes. The default is brewer.set3. Check cols4all::c4a_gui() for other palettes.
 #' 
 #' 
 #' @import tmap
@@ -23,7 +23,7 @@
 #' 
 
 
-make_tmap = function(data, dotlegend, shp = campania, palette = NULL){
+make_tmap = function(data, dotlegend, shp = campania, palette = "brewer.set3"){
 
 
   data2 = as.data.frame(data)
@@ -32,7 +32,7 @@ make_tmap = function(data, dotlegend, shp = campania, palette = NULL){
 
   sf::st_crs(shp) = 32633
 
-  tm_shape(shp)+ tm_polygons(col= "provincia", alpha = 0.8) + tm_shape(utmcoord23) +
-      tm_dots(col = colnames(dotlegend), scale = 1.5, palette = palette, id= colnames(dotlegend), popup.vars = TRUE)
+  tm_shape(shp)+ tm_polygons(fill= "provincia", fill_alpha = 0.8) + tm_shape(utmcoord23) +
+      tm_dots(fill = colnames(dotlegend), size = 1, fill.scale = tm_scale(values = palette), id= colnames(dotlegend), popup.vars = TRUE)
 
 }

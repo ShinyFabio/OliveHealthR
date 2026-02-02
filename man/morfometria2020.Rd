@@ -5,7 +5,72 @@
 \alias{morfometria2020}
 \title{Morfometria di drupe, foglie ed endocarpo della stagione 2020}
 \format{
-
+Una lista con 4 dataset:
+\itemize{
+\item{\strong{Foglie}}
+\describe{
+Un dataset con 222 righe e 16 variabili:
+  \item{Codice_azienda}{codice identificativo dell'azienda (es. SA_01)}
+  \item{N_campionamento}{codice utilizzato per distinguere il primo dal secondo campionamento (R1, R2)}
+  \item{Anno}{l'anno del campionamento (es. 2020)}
+  \item{ID_foglia}{codice identificativo della foglia}
+  \item{`Area_(cm3)`}{area della foglia in cm3}
+  \item{`Lunghezza_(cm)`}{lunghezza della foglia in cm}
+  \item{`Lunghezza_(IOC)`}{lunghezza della foglia espresso secondo la classificazione dell'IOC (short, medium, long)}
+  \item{`Larghezza_(cm)`}{larghezza della foglia in cm}
+  \item{`Larghezza_(IOC)`}{larghezza della foglia espresso secondo la classificazione dell'IOC (narrow, medium, broad)}
+  \item{`Forma_(L/W)`}{rapporto tra lunghezza e larghezza}
+  \item{`Shape (IOC)`}{forma della foglia espresso secondo la classificazione dell'IOC (elliptic, medium, lanceolate)}
+  \item{Circolarità}{valore di circolarità della foglia}
+  \item{Rotondità}{valore di rotondità della foglia}
+  \item{`Perimetro_(cm)`}{perimetro della foglia in cm}
+  \item{Aspect_ratio}{aspect ratio della foglia}
+  \item{Irregolarità_contorno}{irregolarità del contorno della foglia}
+  }
+ \item{\strong{Drupe}}
+ \describe{
+ Un dataset con 78 righe e 16 variabili:
+  \item{Codice_azienda}{codice identificativo dell'azienda (es. SA_01)}
+  \item{N_campionamento}{codice utilizzato per distinguere il primo dal secondo campionamento (R1, R2)}
+  \item{Anno}{l'anno del campionamento (es. 2020)}
+  \item{ID_oliva}{codice identificativo della drupa}
+  \item{`Volume_(cm3)`}{volume della drupa in cm3}
+  \item{`Area_superficie_(cm2)`}{area superficie della drupa in cm2}
+  \item{`Lunghezza_(mm)`}{lunghezza della drupa in mm}
+  \item{`Larghezza_(mm)`}{larghezza della drupa in mm}
+  \item{`Forma_(L/W)`}{forma della drupa (rapporto tra lunghezza e larghezza)}
+  \item{`Forma_(IOC)`}{forma della drupa espresso secondo la classificazione dell'IOC (spherical, ovoid, elongated)}
+  \item{Sfericità}{rapporto tra il volume della sfera di superficie pari a quella della drupa e il volume della drupa}
+  \item{`Volume_mesocarpo_(cm3)`}{volume del mesocarpo della drupa in cm3}
+  \item{Coefficiente_asimmetria}{coefficiente di asimmetria della drupa (rapporto tra due porzioni di drupa opportunamente scelte)}
+  \item{`Asimmetria_(IOC)`}{coefficiente di asimmetria espresso secondo la classificazione dell'IOC (symmetric, slightly asymmetric, asymmetric)}
+  \item{`Posizione_MTD_(\%L)`}{posizione del maximum transverse diameter espresso come \% della lunghezza della drupa (il valore negativo indica che il diametro trasversale massimo si trova verso la base dell’oliva)}
+  \item{`Posizione_MTD_(IOC)`}{posizione del maximum transverse diameter espresso secondo la classificazione dell'IOC (central, toward base)}
+ }
+ \item{\strong{Endocarpo}}
+ \describe{
+  \item{Codice_azienda}{codice identificativo dell'azienda (es. SA_01)}
+  \item{N_campionamento}{codice utilizzato per distinguere il primo dal secondo campionamento (R1, R2)}
+  \item{Anno}{l'anno del campionamento (es. 2020)}
+  \item{ID_oliva}{codice identificativo dell'endocarpo}
+  \item{`Volume_(cm3)`}{volume dell'endocarpo in cm3}
+  \item{`Area_superficie_(cm2)`}{area superficie dell'endocarpo in cm2}
+  \item{`Lunghezza_(mm)`}{lunghezza dell'endocarpo in mm}
+  \item{`Larghezza_(mm)`}{larghezza dell'endocarpo in mm}
+  \item{Sfericità}{misura della sfericità dell'endocarpo}
+  \item{`Forma_(L/W)`}{forma dell'endocarpo (rapporto tra lunghezza e larghezza)}
+ }
+ \item{\strong{Rapporti}}
+ \describe{
+  \item{Codice_azienda}{codice identificativo dell'azienda (es. SA_01)}
+  \item{N_campionamento}{codice utilizzato per distinguere il primo dal secondo campionamento (R1, R2)}
+  \item{Anno}{l'anno del campionamento (es. 2020)}
+  \item{ID_oliva}{codice identificativo dell'endocarpo}
+  \item{Rapporto_volume_mesocarpo}{rapporto tra il volume del mesocarpo e il volume della drupa intera}
+  \item{Rapporto_lunghezza}{rapporto tra la lunghezza della drupa e la lunghezza dell’endocarpo}
+  \item{Rapporto_larghezza}{rapporto tra la larghezza della drupa e la larghezza dell’endocarpo}
+ }
+}
 }
 \source{
 \url{http://bioinfo.na.iac.cnr.it/olivehealth/File_csv.rar}

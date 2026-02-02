@@ -639,7 +639,7 @@ app_server <- function( input, output, session ) {
     datamap = dplyr::left_join(x = data, y = datayear, by = "Codice_azienda")
 
     colmap = Olv_select_col(data = oliocamp(), input = input$selcoloilmap)
-    make_tmap(data = datamap, dotlegend = colmap, palette = "Set1")
+    make_tmap(data = datamap, dotlegend = colmap, palette = "brewer.set1")
   })
   
   
@@ -3398,11 +3398,9 @@ app_server <- function( input, output, session ) {
   
   data_meteo = reactive({
     req(data())
-    destpath = base::system.file(package = "OliveHealthR")
-    destpath = paste0(destpath, "/data/precipitazioni_2020_2021.nc")
-    nc_meteofile = ncdf4::nc_open(destpath)
-    
-    makedata_meteo(ncfile = nc_meteofile, dati_aziende = data())
+
+    destpath = paste0(base::system.file(package = "OliveHealthR"), "/data/precipitazioni_2020_2021.nc")
+    makedata_meteo(ncfile = destpath, dati_aziende = data())
   })
   
 
@@ -3439,8 +3437,8 @@ app_server <- function( input, output, session ) {
     utmcoord23 = sf::st_as_sf(data2, coords = c("UTM_33T_E", "UTM_33T_N" ), crs= 32633)
     sf::st_crs(campania) = 32633
     
-    tm_shape(campania)+ tm_polygons(col= "provincia", alpha = 0.8) + tm_shape(utmcoord23) +
-      tm_dots(col = colnames(dplyr::select(data2, Misura)), scale = 1.5, title = namevar, popup.vars = TRUE)
+    tm_shape(campania)+ tm_polygons(fill= "provincia", fill_alpha = 0.8) + tm_shape(utmcoord23) +
+      tm_dots(fill = colnames(dplyr::select(data2, Misura)), size = 1, popup.vars = TRUE) + tm_title(text = namevar)
   })
   
   
@@ -3452,7 +3450,8 @@ app_server <- function( input, output, session ) {
     }
 
     utmcoord23 = sf::st_as_sf(data2, coords = c("UTM_33T_E", "UTM_33T_N" ), crs= 32633)
-
+    utmcoord23$Tempo <- as.factor(utmcoord23$Tempo)
+    
     namevar = ifelse(input$varmeteo == "tp", "Precipitazioni totali (mm)", 
                           ifelse(input$varmeteo == "swvl2", "Volume d'acqua nel suolo (7-28cm) (m3/m-3)", 
                                  "Volume d'acqua nel suolo (28-100cm) (m3/m-3)"))
@@ -3461,12 +3460,12 @@ app_server <- function( input, output, session ) {
     #utm_long = utmcoord23 %>% tidyr::pivot_longer(cols = 2:9, names_to = "month", values_to = namevar)
     #utm_long$month = factor(utm_long$month, ordered =T, levels = unique(utm_long$month))
     sf::st_crs(campania) = 32633
-    anim = tm_shape(campania)+ tm_polygons(col= "provincia", alpha = 0.8) + tm_shape(utmcoord23) +
-      tm_dots(col = "Misura", scale = 4.5, title = namevar) + tm_facets(along= "Tempo", free.coords = FALSE)
+    anim = tm_shape(campania)+ tm_polygons(fill= "provincia", fill_alpha = 0.8) + tm_shape(utmcoord23) +
+      tm_dots(fill = "Misura", size = 1) + tm_title(text = namevar) + tm_animate(frames= "Tempo", free.coords = FALSE,delay = 800)
 
     outfile <- tempfile(fileext='.gif')
     
-    tmap_animation(anim, "outfile.gif",delay = 130)
+    tmap_animation(anim, "outfile.gif")
     
     list(src = "outfile.gif",
          contentType = 'image/gif'

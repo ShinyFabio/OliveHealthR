@@ -4,7 +4,7 @@
 \alias{make_tmap}
 \title{Make a tmap object that can be rendered in shiny}
 \usage{
-make_tmap(data, dotlegend, shp = campania, palette = NULL)
+make_tmap(data, dotlegend, shp = campania, palette = "brewer.set3")
 }
 \arguments{
 \item{data}{A dataframe with the coordinates columns(UTM_33T_N and UTM_33T_E) and relative infos.}
@@ -13,7 +13,7 @@ make_tmap(data, dotlegend, shp = campania, palette = NULL)
 
 \item{shp}{A shapefile used for the background in the UTM 33T coordinate system. By default shp = campania (a shapefile saved in .rda format).}
 
-\item{palette}{A palette name from Color Brewer palettes. The default is NULL (means tmap decides which one to use).}
+\item{palette}{A palette name from Color Brewer palettes. The default is brewer.set3. Check cols4all::c4a_gui() for other palettes.}
 }
 \description{
 This function render a tmap using a shapefile (campania) as background and a table with coordinates for the points.
